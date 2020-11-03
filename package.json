@@ -1,6 +1,6 @@
 {
   "name": "openbio-components",
-  "version": "1.0",
+  "version": "1.0.0",
   "description": "Openbio view components",
   "module": "dist/esm/index.js",
   "main": "dist/index.js",
@@ -9,5 +9,9 @@
   "collection": "dist/collection/collection-manifest.json",
   "files": [
     "dist/"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openbio-dev/openbio-components"
+  }
 }
