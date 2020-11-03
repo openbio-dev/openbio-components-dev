@@ -1,0 +1,218 @@
+{
+  "tags": [
+    {
+      "label": "loader-component",
+      "description": "",
+      "attributes": [
+        {
+          "label": "enabled",
+          "description": "",
+          "required": false
+        }
+      ]
+    },
+    {
+      "label": "my-component",
+      "description": "",
+      "attributes": [
+        {
+          "label": "first",
+          "description": "The first name",
+          "required": false
+        },
+        {
+          "label": "last",
+          "description": "The last name",
+          "required": false
+        },
+        {
+          "label": "middle",
+          "description": "The middle name",
+          "required": false
+        }
+      ]
+    },
+    {
+      "label": "notification-component",
+      "description": "",
+      "attributes": [
+        {
+          "label": "notification-type",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "text",
+          "description": "",
+          "required": false
+        }
+      ]
+    },
+    {
+      "label": "openbio-face",
+      "description": "",
+      "attributes": [
+        {
+          "label": "detached",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "is-tag-component",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "temp-face",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "temp-person",
+          "description": "",
+          "required": false
+        }
+      ]
+    },
+    {
+      "label": "openbio-face-validation-box-component",
+      "description": "",
+      "attributes": [
+        {
+          "label": "detached",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "left-icon",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "status",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "type",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "type-title",
+          "description": "",
+          "required": false
+        }
+      ]
+    },
+    {
+      "label": "openbio-finger",
+      "description": "",
+      "attributes": [
+        {
+          "label": "detached",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "is-tag-component",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "temp-fingers",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "temp-person",
+          "description": "",
+          "required": false
+        }
+      ]
+    },
+    {
+      "label": "openbio-finger-image-component",
+      "description": "",
+      "attributes": [
+        {
+          "label": "edit-finger-callback",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "finger",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "finger-name",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "parent-component-context",
+          "description": "",
+          "required": false
+        }
+      ]
+    },
+    {
+      "label": "openbio-mugshot",
+      "description": "",
+      "attributes": [
+        {
+          "label": "allow-configuration",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "detached",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "is-tag-component",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "temp-mugshot-photos",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "temp-person",
+          "description": "",
+          "required": false
+        }
+      ]
+    },
+    {
+      "label": "openbio-signature",
+      "description": "",
+      "attributes": [
+        {
+          "label": "detached",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "is-tag-component",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "temp-person",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "temp-signature",
+          "description": "",
+          "required": false
+        }
+      ]
+    }
+  ]
+}

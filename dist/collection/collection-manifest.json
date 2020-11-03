@@ -1,0 +1,785 @@
+{
+  "components": [
+    {
+      "tag": "loader-component",
+      "dependencies": [],
+      "componentClass": "LoaderComponent",
+      "componentPath": "components/loader-component/loader-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/loader-component/loader-component.scss"
+          ]
+        }
+      },
+      "props": [
+        {
+          "name": "enabled",
+          "type": "Boolean",
+          "mutable": true,
+          "attr": "enabled",
+          "watch": [
+            "listenEnable"
+          ]
+        }
+      ],
+      "shadow": true
+    },
+    {
+      "tag": "my-component",
+      "dependencies": [],
+      "componentClass": "MyComponent",
+      "componentPath": "components/my-component/my-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/my-component/my-component.scss"
+          ]
+        }
+      },
+      "props": [
+        {
+          "name": "first",
+          "type": "String",
+          "attr": "first"
+        },
+        {
+          "name": "last",
+          "type": "String",
+          "attr": "last"
+        },
+        {
+          "name": "middle",
+          "type": "String",
+          "attr": "middle"
+        }
+      ],
+      "shadow": true
+    },
+    {
+      "tag": "notification-component",
+      "dependencies": [],
+      "componentClass": "NotificationComponent",
+      "componentPath": "components/notification-component/notification-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/notification-component/notification-component.scss"
+          ]
+        }
+      },
+      "props": [
+        {
+          "name": "notificationType",
+          "type": "String",
+          "attr": "notification-type"
+        },
+        {
+          "name": "text",
+          "type": "String",
+          "attr": "text"
+        }
+      ],
+      "shadow": true
+    },
+    {
+      "tag": "openbio-face",
+      "dependencies": [
+        "loader-component",
+        "openbio-face-validation-box-component"
+      ],
+      "componentClass": "OpenbioFaceComponent",
+      "componentPath": "components/openbio-face-component/openbio-face-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/openbio-face-component/openbio-face-component.scss"
+          ]
+        }
+      },
+      "props": [
+        {
+          "name": "detached",
+          "type": "Boolean",
+          "attr": "detached"
+        },
+        {
+          "name": "isTagComponent",
+          "type": "Boolean",
+          "attr": "is-tag-component"
+        },
+        {
+          "name": "tempFace",
+          "type": "Any",
+          "attr": "temp-face"
+        },
+        {
+          "name": "tempPerson",
+          "type": "Any",
+          "attr": "temp-person"
+        }
+      ],
+      "states": [
+        {
+          "name": "allowConfiguration"
+        },
+        {
+          "name": "anomaly"
+        },
+        {
+          "name": "anomalyOptions"
+        },
+        {
+          "name": "aperture"
+        },
+        {
+          "name": "autoCapture"
+        },
+        {
+          "name": "autoCaptureCount"
+        },
+        {
+          "name": "autoCaptureInterval"
+        },
+        {
+          "name": "autoCapturing"
+        },
+        {
+          "name": "backendSession"
+        },
+        {
+          "name": "brand"
+        },
+        {
+          "name": "cameraPresetOptions"
+        },
+        {
+          "name": "cameraSettingsOptions"
+        },
+        {
+          "name": "centerLineLocationRatio"
+        },
+        {
+          "name": "crop"
+        },
+        {
+          "name": "croppedImage"
+        },
+        {
+          "name": "deviceReady"
+        },
+        {
+          "name": "deviceStatus"
+        },
+        {
+          "name": "dpiValue"
+        },
+        {
+          "name": "evaluations"
+        },
+        {
+          "name": "eyeAxisLocationRatio"
+        },
+        {
+          "name": "eyeAxysAngle"
+        },
+        {
+          "name": "eyeSeparation"
+        },
+        {
+          "name": "face"
+        },
+        {
+          "name": "faceDetected"
+        },
+        {
+          "name": "flashCharge"
+        },
+        {
+          "name": "flashProperty"
+        },
+        {
+          "name": "flashWidth"
+        },
+        {
+          "name": "imageFormat"
+        },
+        {
+          "name": "isCapturing"
+        },
+        {
+          "name": "isoValue"
+        },
+        {
+          "name": "manualEyeSelection"
+        },
+        {
+          "name": "model"
+        },
+        {
+          "name": "offAngleGaze"
+        },
+        {
+          "name": "originalImage"
+        },
+        {
+          "name": "poseAngleYaw"
+        },
+        {
+          "name": "preset"
+        },
+        {
+          "name": "previewSize"
+        },
+        {
+          "name": "previewType"
+        },
+        {
+          "name": "rightOrLeftEyeClosed"
+        },
+        {
+          "name": "segmentation"
+        },
+        {
+          "name": "segmentedImage"
+        },
+        {
+          "name": "serial"
+        },
+        {
+          "name": "shallCapture"
+        },
+        {
+          "name": "showLoader"
+        },
+        {
+          "name": "showPreviewTemplate"
+        },
+        {
+          "name": "shutterSpeed"
+        },
+        {
+          "name": "tab"
+        },
+        {
+          "name": "track"
+        },
+        {
+          "name": "validation"
+        },
+        {
+          "name": "video"
+        },
+        {
+          "name": "whiteBalance"
+        }
+      ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
+      "shadow": true
+    },
+    {
+      "tag": "openbio-face-validation-box-component",
+      "dependencies": [],
+      "componentClass": "OpenbioFaceValidationBoxComponent",
+      "componentPath": "components/openbio-face-validation-box-component/openbio-face-validation-box-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/openbio-face-validation-box-component/openbio-face-validation-box-component.scss"
+          ]
+        }
+      },
+      "props": [
+        {
+          "name": "detached",
+          "type": "Boolean",
+          "attr": "detached"
+        },
+        {
+          "name": "leftIcon",
+          "type": "Boolean",
+          "attr": "left-icon"
+        },
+        {
+          "name": "status",
+          "type": "Any",
+          "attr": "status"
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "attr": "type"
+        },
+        {
+          "name": "typeTitle",
+          "type": "String",
+          "attr": "type-title"
+        }
+      ],
+      "states": [
+        {
+          "name": "statusMessage"
+        }
+      ],
+      "shadow": true
+    },
+    {
+      "tag": "openbio-finger",
+      "dependencies": [
+        "loader-component",
+        "openbio-finger-image-component"
+      ],
+      "componentClass": "OpenbioFingerComponent",
+      "componentPath": "components/openbio-finger-component/openbio-finger-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/openbio-finger-component/openbio-finger-component.scss"
+          ]
+        }
+      },
+      "props": [
+        {
+          "name": "detached",
+          "type": "Boolean",
+          "attr": "detached"
+        },
+        {
+          "name": "isTagComponent",
+          "type": "Boolean",
+          "attr": "is-tag-component"
+        },
+        {
+          "name": "tempFingers",
+          "type": "Any",
+          "attr": "temp-fingers"
+        },
+        {
+          "name": "tempPerson",
+          "type": "Any",
+          "attr": "temp-person"
+        }
+      ],
+      "states": [
+        {
+          "name": "anomaly"
+        },
+        {
+          "name": "anomalyOptions"
+        },
+        {
+          "name": "backendSession"
+        },
+        {
+          "name": "badNfiqQualityCount"
+        },
+        {
+          "name": "brand"
+        },
+        {
+          "name": "capturedData"
+        },
+        {
+          "name": "captureType"
+        },
+        {
+          "name": "captureTypeName"
+        },
+        {
+          "name": "currentFingerImage"
+        },
+        {
+          "name": "currentFingerNames"
+        },
+        {
+          "name": "currentFingerSequence"
+        },
+        {
+          "name": "currentRollingStatus"
+        },
+        {
+          "name": "currentStatusLineX"
+        },
+        {
+          "name": "deviceReady"
+        },
+        {
+          "name": "disabledControls"
+        },
+        {
+          "name": "editingId"
+        },
+        {
+          "name": "failControl"
+        },
+        {
+          "name": "fingers"
+        },
+        {
+          "name": "fingerSequence"
+        },
+        {
+          "name": "flowOptions"
+        },
+        {
+          "name": "flowType"
+        },
+        {
+          "name": "generateBMP"
+        },
+        {
+          "name": "isEditing"
+        },
+        {
+          "name": "match"
+        },
+        {
+          "name": "model"
+        },
+        {
+          "name": "nfiqScore"
+        },
+        {
+          "name": "opened"
+        },
+        {
+          "name": "originalImage"
+        },
+        {
+          "name": "repeatedCount"
+        },
+        {
+          "name": "repetitionControl"
+        },
+        {
+          "name": "serial"
+        },
+        {
+          "name": "showControlDisable"
+        },
+        {
+          "name": "showLoader"
+        },
+        {
+          "name": "smearCount"
+        },
+        {
+          "name": "stepPhase"
+        },
+        {
+          "name": "storeOriginalImage"
+        },
+        {
+          "name": "tab"
+        },
+        {
+          "name": "unmatchCount"
+        }
+      ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
+      "shadow": true
+    },
+    {
+      "tag": "openbio-finger-image-component",
+      "dependencies": [],
+      "componentClass": "OpenbioFingerImageComponent",
+      "componentPath": "components/openbio-finger-image-component/openbio-finger-image-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/openbio-finger-image-component/openbio-finger-image-component.scss"
+          ]
+        }
+      },
+      "props": [
+        {
+          "name": "editFingerCallback",
+          "type": "Any",
+          "attr": "edit-finger-callback"
+        },
+        {
+          "name": "finger",
+          "type": "Any",
+          "attr": "finger"
+        },
+        {
+          "name": "fingerName",
+          "type": "String",
+          "attr": "finger-name"
+        },
+        {
+          "name": "parentComponentContext",
+          "type": "Any",
+          "attr": "parent-component-context"
+        }
+      ],
+      "states": [
+        {
+          "name": "isModalShown"
+        }
+      ],
+      "shadow": true
+    },
+    {
+      "tag": "openbio-mugshot",
+      "dependencies": [
+        "loader-component"
+      ],
+      "componentClass": "OpenbioMugshotComponent",
+      "componentPath": "components/openbio-mugshot-component/openbio-mugshot-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/openbio-mugshot-component/openbio-mugshot-component.scss"
+          ]
+        }
+      },
+      "props": [
+        {
+          "name": "allowConfiguration",
+          "type": "Any",
+          "attr": "allow-configuration"
+        },
+        {
+          "name": "detached",
+          "type": "Boolean",
+          "attr": "detached"
+        },
+        {
+          "name": "isTagComponent",
+          "type": "Boolean",
+          "attr": "is-tag-component"
+        },
+        {
+          "name": "tempMugshotPhotos",
+          "type": "Any",
+          "attr": "temp-mugshot-photos"
+        },
+        {
+          "name": "tempPerson",
+          "type": "Any",
+          "attr": "temp-person"
+        }
+      ],
+      "states": [
+        {
+          "name": "anomaly"
+        },
+        {
+          "name": "anomalyOptions"
+        },
+        {
+          "name": "aperture"
+        },
+        {
+          "name": "autoCapture"
+        },
+        {
+          "name": "backendSession"
+        },
+        {
+          "name": "brand"
+        },
+        {
+          "name": "cameraSettingsOptions"
+        },
+        {
+          "name": "capturedData"
+        },
+        {
+          "name": "centerLineLocationRatio"
+        },
+        {
+          "name": "crop"
+        },
+        {
+          "name": "croppedImage"
+        },
+        {
+          "name": "deviceReady"
+        },
+        {
+          "name": "eyeAxisLocationRatio"
+        },
+        {
+          "name": "eyeAxysAngle"
+        },
+        {
+          "name": "eyeSeparation"
+        },
+        {
+          "name": "flashCharge"
+        },
+        {
+          "name": "flashProperty"
+        },
+        {
+          "name": "flashWidth"
+        },
+        {
+          "name": "imageFormat"
+        },
+        {
+          "name": "isCapturing"
+        },
+        {
+          "name": "isoValue"
+        },
+        {
+          "name": "model"
+        },
+        {
+          "name": "mugshotDescription"
+        },
+        {
+          "name": "mugshotIndex"
+        },
+        {
+          "name": "mugshotPhotos"
+        },
+        {
+          "name": "originalImage"
+        },
+        {
+          "name": "poseAnglePitch"
+        },
+        {
+          "name": "poseAngleYaw"
+        },
+        {
+          "name": "rightOrLeftEyeClosed"
+        },
+        {
+          "name": "segmentation"
+        },
+        {
+          "name": "segmentedImage"
+        },
+        {
+          "name": "serial"
+        },
+        {
+          "name": "showLoader"
+        },
+        {
+          "name": "shutterSpeed"
+        },
+        {
+          "name": "tab"
+        },
+        {
+          "name": "track"
+        },
+        {
+          "name": "video"
+        },
+        {
+          "name": "whiteBalance"
+        }
+      ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
+      "shadow": true
+    },
+    {
+      "tag": "openbio-signature",
+      "dependencies": [
+        "loader-component"
+      ],
+      "componentClass": "OpenbioSignatureComponent",
+      "componentPath": "components/openbio-signature-component/openbio-signature-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/openbio-signature-component/openbio-signature-component.scss"
+          ]
+        }
+      },
+      "props": [
+        {
+          "name": "detached",
+          "type": "Boolean",
+          "attr": "detached"
+        },
+        {
+          "name": "isTagComponent",
+          "type": "Boolean",
+          "attr": "is-tag-component"
+        },
+        {
+          "name": "tempPerson",
+          "type": "Any",
+          "attr": "temp-person"
+        },
+        {
+          "name": "tempSignature",
+          "type": "Any",
+          "attr": "temp-signature"
+        }
+      ],
+      "states": [
+        {
+          "name": "anomaly"
+        },
+        {
+          "name": "anomalyOptions"
+        },
+        {
+          "name": "backendSession"
+        },
+        {
+          "name": "brand"
+        },
+        {
+          "name": "deviceReady"
+        },
+        {
+          "name": "deviceStatus"
+        },
+        {
+          "name": "dpiValue"
+        },
+        {
+          "name": "isCapturing"
+        },
+        {
+          "name": "model"
+        },
+        {
+          "name": "originalImage"
+        },
+        {
+          "name": "points"
+        },
+        {
+          "name": "serial"
+        },
+        {
+          "name": "showLoader"
+        },
+        {
+          "name": "signature"
+        },
+        {
+          "name": "tab"
+        }
+      ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
+      "shadow": true
+    }
+  ],
+  "collections": [],
+  "compiler": {
+    "name": "@stencil/core",
+    "version": "0.18.1",
+    "typescriptVersion": "3.3.3"
+  },
+  "bundles": []
+}

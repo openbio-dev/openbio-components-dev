@@ -1,0 +1,109 @@
+.canvas {
+  border: 1px solid #cccccc;
+}
+
+.action-buttons-container {
+  padding-top: 14px;
+  max-width: 486px !important;
+}
+
+.checkbox {
+  margin-right: 16px;
+  font-size: 12px;
+
+  input {
+    margin-right: 8px;
+  }
+}
+
+.device-status-container {
+  margin: 0 0 20px 0;
+
+  .title {
+    margin-bottom: 10px;
+  }
+
+  .progress {
+    width: 164px;
+  }
+}
+
+.settings-container {
+  width: 630px;
+}
+
+.select {
+  margin-right: 16px;
+
+  select {
+    min-width: 160px;
+  }
+}
+
+.preview-result {
+  height: 408px;
+
+  img {
+    max-height: 408px;
+    width: auto;
+    border: 1px solid #cccccc;
+    object-fit: contain;
+  }
+}
+
+.tab-content {
+  min-height: 700px;
+}
+
+.label {
+  font-size: 0.8rem;
+}
+
+.mugshot-photos-container {
+  margin-top: 30px;
+
+  .mugshot-photo {
+    margin: 20px;
+    width: 200px;
+
+    img {
+      width: 200px;
+    }
+  }
+}
+
+.mugshot-form {
+  margin-top: 30px;
+}
+
+.mugshot-preview-result {
+  .mugshot-photo {
+    width: 200px;
+    margin: 20px;
+  }
+}
+
+.mugshot-photo-label {
+  font-size: 10px;
+  margin-left: 20px;
+}
+
+.button-hover {
+  opacity: 0;
+  position: absolute;
+  width: 200px;
+  height: 265px;
+  background-color: rgba(0, 0, 0, 0.15);
+  margin: 20px;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.mugshot-remove-photo-button {
+  width: 152px;
+  height: 25px;
+  font-size: 11px;
+  margin: 100px 23px;
+}
