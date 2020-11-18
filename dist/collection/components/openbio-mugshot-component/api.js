@@ -3,7 +3,7 @@ import { getAppConfig } from "../../utils/api";
 let config, url;
 getAppConfig().then((response) => {
     config = response;
-    url = `http://${config.urls.apiService}:${config.ports.apiService}`;
+    url = `${config.serviceServerType}://${config.urls.apiService}:${config.ports.apiService}`;
 });
 export function getAnomalies(type, detached) {
     return fetch(`${url}/db/api/settings/anomalies/${type}?detached=${detached}`).then(res => res.json());

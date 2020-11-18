@@ -85,11 +85,35 @@
     {
       "tag": "openbio-face",
       "dependencies": [
-        "loader-component",
-        "openbio-face-validation-box-component"
+        "openbio-face-details"
       ],
       "componentClass": "OpenbioFaceComponent",
       "componentPath": "components/openbio-face-component/openbio-face-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/openbio-face-component/openbio-face-component.scss"
+          ]
+        }
+      },
+      "states": [
+        {
+          "name": "deviceReady"
+        }
+      ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
+      "shadow": true
+    },
+    {
+      "tag": "openbio-face-details",
+      "dependencies": [
+        "loader-component",
+        "openbio-face-validation-box-component"
+      ],
+      "componentClass": "OpenbioFaceComponentDetails",
+      "componentPath": "components/openbio-face-component/openbio-face-component-details.js",
       "styles": {
         "$": {
           "stylePaths": [
@@ -247,6 +271,9 @@
           "name": "serial"
         },
         {
+          "name": "serviceConfigs"
+        },
+        {
           "name": "shallCapture"
         },
         {
@@ -328,8 +355,7 @@
     {
       "tag": "openbio-finger",
       "dependencies": [
-        "loader-component",
-        "openbio-finger-image-component"
+        "openbio-finger-details"
       ],
       "componentClass": "OpenbioFingerComponent",
       "componentPath": "components/openbio-finger-component/openbio-finger-component.js",
@@ -340,16 +366,74 @@
           ]
         }
       },
+      "states": [
+        {
+          "name": "deviceReady"
+        }
+      ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
+      "shadow": true
+    },
+    {
+      "tag": "openbio-finger-details",
+      "dependencies": [
+        "loader-component",
+        "openbio-finger-image-component"
+      ],
+      "componentClass": "OpenbioFingerComponentDetails",
+      "componentPath": "components/openbio-finger-component/openbio-finger-component-details.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/openbio-finger-component/openbio-finger-component.scss"
+          ]
+        }
+      },
       "props": [
+        {
+          "name": "cpf",
+          "type": "String",
+          "attr": "cpf"
+        },
         {
           "name": "detached",
           "type": "Boolean",
           "attr": "detached"
         },
         {
+          "name": "fingerCaptureType",
+          "type": "Number",
+          "attr": "finger-capture-type"
+        },
+        {
           "name": "isTagComponent",
           "type": "Boolean",
           "attr": "is-tag-component"
+        },
+        {
+          "name": "onCaptureFingerprint",
+          "attr": "on-capture-fingerprint"
+        },
+        {
+          "name": "onOpenbioMatcher",
+          "attr": "on-openbio-matcher"
+        },
+        {
+          "name": "personImage",
+          "type": "String",
+          "attr": "person-image"
+        },
+        {
+          "name": "personName",
+          "type": "String",
+          "attr": "person-name"
+        },
+        {
+          "name": "singleCapture",
+          "type": "Boolean",
+          "attr": "single-capture"
         },
         {
           "name": "tempFingers",
@@ -360,6 +444,11 @@
           "name": "tempPerson",
           "type": "Any",
           "attr": "temp-person"
+        },
+        {
+          "name": "useOpenbioMatcher",
+          "type": "Boolean",
+          "attr": "use-openbio-matcher"
         }
       ],
       "states": [
@@ -368,6 +457,9 @@
         },
         {
           "name": "anomalyOptions"
+        },
+        {
+          "name": "authenticationSimilarity"
         },
         {
           "name": "backendSession"
@@ -386,6 +478,9 @@
         },
         {
           "name": "captureTypeName"
+        },
+        {
+          "name": "cpfSt"
         },
         {
           "name": "currentFingerImage"
@@ -413,6 +508,9 @@
         },
         {
           "name": "failControl"
+        },
+        {
+          "name": "fingerCaptureTypeSt"
         },
         {
           "name": "fingers"
@@ -448,10 +546,16 @@
           "name": "originalImage"
         },
         {
+          "name": "personInfo"
+        },
+        {
           "name": "repeatedCount"
         },
         {
           "name": "repetitionControl"
+        },
+        {
+          "name": "selectedFinger"
         },
         {
           "name": "serial"
@@ -461,6 +565,12 @@
         },
         {
           "name": "showLoader"
+        },
+        {
+          "name": "singleCaptureLoading"
+        },
+        {
+          "name": "singleCaptureSt"
         },
         {
           "name": "smearCount"
@@ -476,6 +586,9 @@
         },
         {
           "name": "unmatchCount"
+        },
+        {
+          "name": "useOpenbioMatcherSt"
         }
       ],
       "hostElement": {
@@ -527,10 +640,34 @@
     {
       "tag": "openbio-mugshot",
       "dependencies": [
-        "loader-component"
+        "openbio-mugshot-details"
       ],
       "componentClass": "OpenbioMugshotComponent",
       "componentPath": "components/openbio-mugshot-component/openbio-mugshot-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/openbio-mugshot-component/openbio-mugshot-component.scss"
+          ]
+        }
+      },
+      "states": [
+        {
+          "name": "deviceReady"
+        }
+      ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
+      "shadow": true
+    },
+    {
+      "tag": "openbio-mugshot-details",
+      "dependencies": [
+        "loader-component"
+      ],
+      "componentClass": "OpenbioMugshotComponentDetails",
+      "componentPath": "components/openbio-mugshot-component/openbio-mugshot-component-details.js",
       "styles": {
         "$": {
           "stylePaths": [
@@ -689,10 +826,34 @@
     {
       "tag": "openbio-signature",
       "dependencies": [
-        "loader-component"
+        "openbio-signature-details"
       ],
       "componentClass": "OpenbioSignatureComponent",
       "componentPath": "components/openbio-signature-component/openbio-signature-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/openbio-signature-component/openbio-signature-component.scss"
+          ]
+        }
+      },
+      "states": [
+        {
+          "name": "deviceReady"
+        }
+      ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
+      "shadow": true
+    },
+    {
+      "tag": "openbio-signature-details",
+      "dependencies": [
+        "loader-component"
+      ],
+      "componentClass": "OpenbioSignatureComponentDetails",
+      "componentPath": "components/openbio-signature-component/openbio-signature-component-details.js",
       "styles": {
         "$": {
           "stylePaths": [

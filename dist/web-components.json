@@ -49,7 +49,7 @@
       ]
     },
     {
-      "label": "openbio-face",
+      "label": "openbio-face-details",
       "description": "",
       "attributes": [
         {
@@ -106,16 +106,41 @@
       ]
     },
     {
-      "label": "openbio-finger",
+      "label": "openbio-finger-details",
       "description": "",
       "attributes": [
+        {
+          "label": "cpf",
+          "description": "",
+          "required": false
+        },
         {
           "label": "detached",
           "description": "",
           "required": false
         },
         {
+          "label": "finger-capture-type",
+          "description": "",
+          "required": false
+        },
+        {
           "label": "is-tag-component",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "person-image",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "person-name",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "single-capture",
           "description": "",
           "required": false
         },
@@ -126,6 +151,11 @@
         },
         {
           "label": "temp-person",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "use-openbio-matcher",
           "description": "",
           "required": false
         }
@@ -158,7 +188,7 @@
       ]
     },
     {
-      "label": "openbio-mugshot",
+      "label": "openbio-mugshot-details",
       "description": "",
       "attributes": [
         {
@@ -189,7 +219,7 @@
       ]
     },
     {
-      "label": "openbio-signature",
+      "label": "openbio-signature-details",
       "description": "",
       "attributes": [
         {
