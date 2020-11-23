@@ -11,6 +11,8 @@ class OpenbioFingerComponent {
     componentDidLoad() {
         this.ws.deviceSocket.addEventListener("message", (event) => {
             const data = JSON.parse(event.data);
+            console.log("data");
+            console.log(data);
             this.deviceReady = data.deviceStatuses && data.deviceStatuses.modal.initialized;
         });
     }
