@@ -51,12 +51,14 @@ export declare class OpenbioFaceComponentDetails {
     previewSize: number;
     previewType: number;
     isCapturing: boolean;
+    isPreviewing: boolean;
     model: string;
     brand: string;
     serial: string;
     video: any;
     track: any;
     allowConfiguration: boolean;
+    showCameraConfiguration: boolean;
     showPreviewTemplate: boolean;
     manualEyeSelection: any;
     faceDetected: boolean;

@@ -6,3 +6,9 @@ export function getAppConfig() {
         headers: { 'Content-Type': 'application/json' }
     }).then((res) => res.json());
 }
+export function getCameraPresets() {
+    return fetch(`${url}/db/api/camera-presets`, {
+        method: 'get',
+        headers: { 'Content-Type': 'application/json' }
+    }).then((res) => res.json());
+}

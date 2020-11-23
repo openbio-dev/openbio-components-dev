@@ -235,6 +235,9 @@
           "name": "isoValue"
         },
         {
+          "name": "isPreviewing"
+        },
+        {
           "name": "manualEyeSelection"
         },
         {
@@ -275,6 +278,9 @@
         },
         {
           "name": "shallCapture"
+        },
+        {
+          "name": "showCameraConfiguration"
         },
         {
           "name": "showLoader"
@@ -382,7 +388,7 @@
         "loader-component",
         "openbio-finger-image-component"
       ],
-      "componentClass": "OpenbioFingerComponentDetails",
+      "componentClass": "OpenbioFingerComponent",
       "componentPath": "components/openbio-finger-component/openbio-finger-component-details.js",
       "styles": {
         "$": {
@@ -508,9 +514,6 @@
         },
         {
           "name": "failControl"
-        },
-        {
-          "name": "fingerCaptureTypeSt"
         },
         {
           "name": "fingers"

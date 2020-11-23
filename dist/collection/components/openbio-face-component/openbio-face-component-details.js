@@ -5,7 +5,7 @@ import { showImage } from '../../utils/canvas';
 import { notify } from '../../utils/notifier';
 import constants from "../../utils/constants";
 import changeDPI from "changedpi";
-import { getAppConfig } from '../../utils/api';
+import { getAppConfig, getCameraPresets } from '../../utils/api';
 import { getLocalization } from '../../utils/utils';
 const EYE_AXIS_LOCATION_RATIO = "Eye Axis Location Ratio";
 const CENTER_LINE_LOCATION_RATIO = "Centerline Location Ratio";
@@ -123,12 +123,14 @@ export class OpenbioFaceComponentDetails {
         this.previewSize = 2;
         this.previewType = 2;
         this.isCapturing = false;
+        this.isPreviewing = false;
         this.model = '';
         this.brand = '';
         this.serial = '';
         this.video = undefined;
         this.track = undefined;
         this.allowConfiguration = false;
+        this.showCameraConfiguration = true;
         this.showPreviewTemplate = true;
         this.manualEyeSelection = {
             enabled: false,
@@ -268,9 +270,9 @@ export class OpenbioFaceComponentDetails {
             return;
         }
         this.autoCapturing = true;
-        if (!this.autoCaptureInterval) {
+        if (!this.autoCaptureInterval && !this.isCapturing) {
             this.autoCaptureInterval = setInterval(() => {
-                if (this.checkInvalidEvaluations() || this.originalImage || !this.shallCapture) {
+                if (this.checkInvalidEvaluations() || this.originalImage || this.isCapturing) {
                     this.resetAutoCapturing();
                     return;
                 }
@@ -285,6 +287,9 @@ export class OpenbioFaceComponentDetails {
                     }
                 }
             }, 10);
+        }
+        else {
+            this.resetAutoCapturing();
         }
     }
     open() {
@@ -374,11 +379,12 @@ export class OpenbioFaceComponentDetails {
             this.segmentation = faceSettings.segmentation;
             this.autoCapture = faceSettings.autoCapture;
             this.dpiValue = constants.dpiValue[faceSettings.dpiOption] || 0;
-            this.cameraPresetOptions = faceSettings.cameraPresetOptions;
+            this.cameraPresetOptions = await getCameraPresets();
             this.payload.deviceName = faceSettings.device ? constants.device[faceSettings.device] : constants.device.AKYSCAM;
             this.serviceConfigs = await getAppConfig();
             if (this.serviceConfigs) {
-                this.allowConfiguration = this.serviceConfigs.tools.allowDeviceConfiguration;
+                this.allowConfiguration = this.serviceConfigs.ui.allowDeviceConfiguration;
+                this.showCameraConfiguration = this.serviceConfigs.ui.showCameraConfiguration;
                 this.showPreviewTemplate = this.serviceConfigs.face.showPreviewTemplate;
                 this.componentContainer.forceUpdate();
             }
@@ -455,24 +461,12 @@ export class OpenbioFaceComponentDetails {
                 if (data.flashCharge) {
                     this.flashCharge = data.flashCharge;
                 }
-                const deviceStatuses = data.deviceStatuses;
-                if (deviceStatuses) {
-                    const previousStatus = JSON.parse(JSON.stringify(this.deviceStatus));
-                    this.deviceStatus = deviceStatuses.face && deviceStatuses.face.initialized;
-                    if (!this.deviceStatus) {
-                        notify(this.componentContainer, "error", "Dispositivo desconectado!");
-                        this.resetAutoCapturing();
-                        return;
-                    }
-                    else if (!previousStatus && this.deviceStatus) {
-                    }
-                }
                 const evaluation = data.evaluation;
                 if (evaluation && evaluation !== UNPLUGGED_ERROR) {
                     this.shallCapture = true;
                     const evaluateEntries = Object.entries(evaluation);
                     this.evaluations = evaluateEntries.filter((result) => evaluationList.includes(result[0]));
-                    if (this.autoCapture && !this.autoCapturing) {
+                    if (this.autoCapture && !this.autoCapturing && !this.isCapturing) {
                         this.tryAutoCapture();
                     }
                     this.evaluations.forEach((evaluate) => {
@@ -481,8 +475,6 @@ export class OpenbioFaceComponentDetails {
                 }
                 else if (data.status === NO_FACE_DETECTED_ERROR) {
                     this.resetAutoCapturing();
-                    clearInterval(this.autoCaptureInterval);
-                    this.autoCaptureInterval = null;
                 }
                 if (data.previewImage) {
                     showImage(this.canvas, data.previewImage, null, null, this.manualEyeSelection);
@@ -564,10 +556,10 @@ export class OpenbioFaceComponentDetails {
         });
     }
     startPreview(backToPreview = false) {
-        if (this.isCapturing)
+        if (this.isPreviewing)
             return;
         this.clearImages();
-        this.isCapturing = true;
+        this.isPreviewing = true;
         this.faceDetected = true;
         this.clearManualEyeSelection();
         this.manualEyeSelection.enabled = false;
@@ -591,7 +583,7 @@ export class OpenbioFaceComponentDetails {
         this.startPreview();
     }
     stopPreview() {
-        this.isCapturing = false;
+        this.isPreviewing = false;
         if (this.isWebcam()) {
             this.track.stop();
             return this.buildWebcam();
@@ -600,6 +592,7 @@ export class OpenbioFaceComponentDetails {
         this.ws.respondToDeviceWS(this.payload);
     }
     capture(manual = false) {
+        this.isPreviewing = false;
         this.isCapturing = true;
         if (manual && this.autoCapture) {
             this.resetAutoCapturing();
@@ -866,9 +859,10 @@ export class OpenbioFaceComponentDetails {
                     h("li", { class: this.activeTabClass(2) },
                         h("a", { onClick: () => this.setActiveTab(2) },
                             h("span", { class: "tab-title" }, "Resultado final"))),
-                    h("li", { class: this.activeTabClass(3) },
-                        h("a", { onClick: () => this.setActiveTab(3) },
-                            h("span", { class: "tab-title" }, "Configura\u00E7\u00F5es"))))),
+                    this.showCameraConfiguration ?
+                        h("li", { class: this.activeTabClass(3) },
+                            h("a", { onClick: () => this.setActiveTab(3) },
+                                h("span", { class: "tab-title" }, "Configura\u00E7\u00F5es"))) : null)),
             this.tab === tabs.PREVIEW ? h("div", { class: "columns is-mobile" },
                 h("div", { class: "column is-one-quarter" },
                     h("div", { class: "device-status-container" },
@@ -931,11 +925,11 @@ export class OpenbioFaceComponentDetails {
                                 " ",
                                 3 - Math.floor(this.autoCaptureCount),
                                 " ")) : null,
-                    this.isCapturing && this.showPreviewTemplate && !this.autoCapturing ? h("div", { class: this.isWebcam() ? "face-template" : "face-template-akyscam" },
+                    this.isPreviewing && this.showPreviewTemplate && !this.autoCapturing ? h("div", { class: this.isWebcam() ? "face-template" : "face-template-akyscam" },
                         h("img", { src: `${FACE_TEMPLATE}` })) : null,
                     h("canvas", { width: "460", height: "300", class: `canvas`, ref: el => {
                             this.canvas = el;
-                            if (!this.isCapturing && this.originalImage) {
+                            if (!this.isPreviewing && this.originalImage) {
                                 showImage(this.canvas, undefined, null, null, this.manualEyeSelection);
                                 showImage(this.canvas, this.segmentedImage || this.croppedImage || this.originalImage, null, null, this.manualEyeSelection);
                             }
@@ -955,7 +949,7 @@ export class OpenbioFaceComponentDetails {
                         " "),
                     h("div", { class: "column has-text-left" },
                         h("div", { class: "is-full" },
-                            h("img", { src: "./assets/general/image-search-outline.png", class: `fab-icon  is-pulled-left ${this.isCapturing ? "disabled" : ""} `, onClick: () => this.restartPreview() }),
+                            h("img", { src: "./assets/general/image-search-outline.png", class: `fab-icon  is-pulled-left ${this.isPreviewing ? "disabled" : ""} `, onClick: () => this.restartPreview() }),
                             h("span", { class: "icon-text" }, " Pr\u00E9-visualiza\u00E7\u00E3o ")),
                         h("div", { class: "is-full" },
                             h("img", { src: "./assets/general/camera.png", class: "fab-icon is-pulled-left", onClick: () => this.capture(true) }),
@@ -991,7 +985,7 @@ export class OpenbioFaceComponentDetails {
                         h("div", { class: "columns is-mobile", style: { marginTop: "-25px" } },
                             h("div", { class: "column is-narrow", style: { transform: "translate(24px, 0)" } },
                                 h("div", { class: "is-pulled-left" },
-                                    h("img", { src: "./assets/general/camera-retake-outline.png", title: "Clique aqui para tirar uma nova foto.", class: `fab-icon is-pulled-left ${this.isCapturing ? "disabled" : ""} `, style: { transform: "translate(24px, 0)" }, onClick: () => this.startPreview(true) }),
+                                    h("img", { src: "./assets/general/camera-retake-outline.png", title: "Clique aqui para tirar uma nova foto.", class: `fab-icon is-pulled-left ${this.isPreviewing ? "disabled" : ""} `, style: { transform: "translate(24px, 0)" }, onClick: () => this.startPreview(true) }),
                                     h("br", null),
                                     h("span", { style: { padding: '6px', display: 'inline-block' } }, " Nova foto "))),
                             this.detached && !this.isTagComponent ?
@@ -1194,6 +1188,9 @@ export class OpenbioFaceComponentDetails {
         "isoValue": {
             "state": true
         },
+        "isPreviewing": {
+            "state": true
+        },
         "isTagComponent": {
             "type": Boolean,
             "attr": "is-tag-component"
@@ -1238,6 +1235,9 @@ export class OpenbioFaceComponentDetails {
             "state": true
         },
         "shallCapture": {
+            "state": true
+        },
+        "showCameraConfiguration": {
             "state": true
         },
         "showLoader": {

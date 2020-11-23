@@ -1,0 +1,111 @@
+$blue: #239ed7;
+$primary: $blue;
+$steps-active-color: #239ed7;
+$steps-completed-color: #239ed7;
+
+@import "../../node_modules/bulma/bulma.sass";
+@import "../../node_modules/bulma-switch/dist/css/bulma-switch.sass";
+
+.input,
+.textarea,
+.file-cta,
+.file-name,
+.pagination-previous,
+.pagination-next,
+.pagination-link,
+.pagination-ellipsis {
+  border-color: #b1b1b1 !important;
+}
+
+input {
+  padding-left: 1em !important;
+  padding-right: 1em !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+  box-shadow: none !important;
+  font-weight: 300;
+}
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active  {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+}
+
+.color-primary {
+  color: #239ed7 !important;
+}
+
+.button.is-danger:hover {
+  background-color: #bf1434;
+}
+.button.is-danger {
+  background-color: #e80631;
+}
+
+.window-size {
+  max-width: 1398px;
+  max-height: 812px;
+  padding: 14px 0;
+}
+
+.action-button {
+  background-color: #239ed7;
+  color: #FFFFFF;
+  border: 1px solid #239ed7 !important;
+
+  &:hover {
+    color: #FFFFFF;
+  }
+}
+
+.label {
+  font-weight: bold;
+  margin-bottom: 0px !important;
+  font-size: 0.6em;
+}
+
+.value {
+  min-height: 24px;
+  margin-bottom: 10px;
+  font-size: 0.6em;
+}
+
+.help {
+  min-height: 24px;
+  margin-bottom: 10px;
+  font-size: 0.5em;
+}
+
+.tab-title {
+  font-size: 0.8em;
+  text-transform: uppercase;
+}
+
+.disabled {
+  opacity: .5;
+  cursor: not-allowed !important;
+}
+
+#notification-container {
+  display: block;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.center-container {
+  text-align: center;
+  margin-top: 20%;
+}
+
+.center-container span{
+  display: block;      
+  line-height: 0;
+  margin-top: 20px;
+}
+
+.center-container img{
+  display: inline-block;
+  opacity: 0.5;
+}

@@ -41,7 +41,7 @@ const REPEAT_MESSAGE = 'Este dedo já foi capturado, por favor tente novamente';
 const SMEAR_MESSAGE = 'Captura borrada, por favor tente novamente';
 const NFIQ_QUALITY_MESSAGE = 'Qualidade da captura inferior ao permitido. Por favor tente novamente';
 const ERROR_MESSAGE = 'Ocorreu um erro, por favor tente novamente';
-export class OpenbioFingerComponentDetails {
+export class OpenbioFingerComponent {
     constructor() {
         this.ws = new WS();
         this.fingerNames = [
@@ -106,9 +106,6 @@ export class OpenbioFingerComponentDetails {
     }
     startPreview() {
         this.clearImages();
-        if (this.singleCaptureSt) {
-            this.captureType = captureType.ONE_FINGER_FLAT;
-        }
         this.payload.action = "start";
         this.payload.captureType = this.captureType;
         if (this.isEditing)
@@ -326,9 +323,9 @@ export class OpenbioFingerComponentDetails {
         }
     }
     async getPersonInfo() {
-        this.personInfo = await getPeople(this.cpfSt, this.fingerCaptureTypeSt);
+        this.personInfo = await getPeople(this.cpfSt, this.captureType === 0 ? 1 : this.captureType);
         try {
-            const fingerprintBiometries = (this.personInfo.Biometries.find(item => item.biometry_type === this.fingerCaptureTypeSt)).FingerprintBiometries.map(item => item.finger_index).sort((a, b) => a - b);
+            const fingerprintBiometries = (this.personInfo.Biometries.find(item => item.biometry_type === 2)).FingerprintBiometries.map(item => item.finger_index).sort((a, b) => a - b);
             this.selectedFinger = { id: fingerprintBiometries[0], name: this.fingerNames[fingerprintBiometries[0]] };
             this.currentFingerSequence = [fingerprintBiometries[0]];
             this.stepPhase = fingerprintBiometries[0];
@@ -346,7 +343,6 @@ export class OpenbioFingerComponentDetails {
         this.showLoader = true;
         this.useOpenbioMatcherSt = this.useOpenbioMatcher;
         this.cpfSt = this.cpf;
-        this.fingerCaptureTypeSt = this.fingerCaptureType;
         this.singleCaptureSt = this.singleCapture;
         setTimeout(async () => {
             try {
@@ -412,7 +408,6 @@ export class OpenbioFingerComponentDetails {
                         this.backendSession = data.session;
                         this.singleCaptureSt = this.backendSession.singleCapture;
                         this.cpfSt = this.backendSession.cpf;
-                        this.fingerCaptureTypeSt = this.backendSession.captureType;
                         this.useOpenbioMatcherSt = this.backendSession.useOpenbioMatcher;
                         if (this.useOpenbioMatcherSt && this.singleCaptureSt) {
                             this.getPersonInfo();
@@ -593,6 +588,7 @@ export class OpenbioFingerComponentDetails {
     componentDidUnload() {
         this.stopPreview();
         this.stopPreviewprocessor();
+        this.clearImages();
     }
     setFingersFromBackendSession() {
         const checkSessionInterval = setInterval(() => {
@@ -965,6 +961,18 @@ export class OpenbioFingerComponentDetails {
         const value = event.target.value;
         this[name] = this.anomalyOptions.find((a) => a.id === parseInt(value));
     }
+    setSelectionCaptureType(event) {
+        const name = event.target.name;
+        const value = event.target.value;
+        this[name] = parseInt(value, 10);
+        this.setSelectionFingerList({ target: { name: "fingerList", value: this.stepPhase } });
+        this.captureTypeName = this.captureType === captureType.ROLLED_FINGER ? "Role" : "Posicione";
+        this.getPersonInfo();
+        this.stopPreview();
+        setTimeout(() => {
+            this.startPreview();
+        }, 100);
+    }
     setSelectionFingerList(event) {
         const { name, value } = event.target;
         this[name] = { id: value, name: this.fingerNames[parseInt(value, 10)] };
@@ -1029,7 +1037,7 @@ export class OpenbioFingerComponentDetails {
                 h("img", { alt: "", src: this.currentFingerImage }))));
         let personFingerList = undefined;
         if (this.singleCaptureSt && this.personInfo) {
-            const personBiometries = this.personInfo.Biometries.find(item => item.biometry_type === this.fingerCaptureTypeSt) || {};
+            const personBiometries = this.personInfo.Biometries.find(item => item.biometry_type === 2) || {};
             personFingerList = personBiometries.FingerprintBiometries.map(item => {
                 return (h("option", { value: item.finger_index, selected: this.selectedFinger && this.selectedFinger.id === item.finger_index }, this.fingerNames[item.finger_index]));
             });
@@ -1046,14 +1054,15 @@ export class OpenbioFingerComponentDetails {
                 this.singleCaptureSt ? (h("div", { class: "card", style: { "box-shadow": "none", "padding-bottom": "10px" } },
                     h("div", { class: "card-content" },
                         h("div", { class: "media" },
-                            (this.personInfo && personFaceBiometry && personFaceBiometry.FaceBiometries[0] && personFaceBiometry.FaceBiometries[0].data) || (this.personImage) ? (h("div", { class: "media-left" },
+                            (personFaceBiometry && personFaceBiometry.FaceBiometries[0] && personFaceBiometry.FaceBiometries[0].data) || (this.personImage) ? (h("div", { class: "media-left" },
                                 h("figure", { class: "image is-128x128" },
                                     h("img", { style: { "max-width": "128px", "max-height": "128px" }, src: `data:image/png;base64, ${this.personImage || (personFaceBiometry && personFaceBiometry.FaceBiometries[0].data)}` })))) : undefined,
                             h("div", { class: "media-content" },
                                 h("p", { class: "title is-4" }, this.personName || this.personInfo && this.personInfo.full_name),
-                                h("p", { class: "subtitle is-6" },
-                                    "CPF: ",
-                                    this.cpfSt || this.personInfo && this.personInfo.cpf)))))) : (h("div", { class: "tabs is-left is-boxed" },
+                                this.cpfSt || this.personInfo && this.personInfo.cpf ?
+                                    h("p", { class: "subtitle is-6" },
+                                        "CPF: ",
+                                        this.cpfSt || this.personInfo && this.personInfo.cpf) : undefined))))) : (h("div", { class: "tabs is-left is-boxed" },
                     h("ul", null,
                         h("li", { class: this.activeTabClass(0) },
                             h("a", { onClick: () => this.setActiveTab(0) },
@@ -1071,8 +1080,17 @@ export class OpenbioFingerComponentDetails {
                                 "ESTADO DO DISPOSITIVO: ",
                                 this.deviceReady ? 'PRONTO' : 'NÃO CARREGADO')),
                         this.singleCaptureSt ?
-                            h("div", { class: "select is-small inline" },
-                                h("select", { onChange: this.setSelectionFingerList.bind(this), name: "fingerList" }, personFingerList)) : null,
+                            h("div", null,
+                                h("p", { style: { marginBottom: "10px" } },
+                                    h("span", { style: { fontSize: "14px" } }, "Tipo de captura: "),
+                                    h("div", { class: "select is-small inline" },
+                                        h("select", { onChange: this.setSelectionCaptureType.bind(this), name: "captureType" },
+                                            h("option", { value: "0" }, "Pousada"),
+                                            h("option", { value: "2" }, "Rolada")))),
+                                h("p", null,
+                                    h("span", { style: { fontSize: "14px" } }, "Dedo: "),
+                                    h("div", { class: "select is-small inline", style: { marginLeft: "5px", minWidth: "142px" } },
+                                        h("select", { onChange: this.setSelectionFingerList.bind(this), name: "fingerList" }, personFingerList)))) : null,
                         h("div", { class: "evaluation" },
                             fingerCaptureGuide,
                             !this.singleCaptureSt ?
@@ -1222,9 +1240,6 @@ export class OpenbioFingerComponentDetails {
         "fingerCaptureType": {
             "type": Number,
             "attr": "finger-capture-type"
-        },
-        "fingerCaptureTypeSt": {
-            "state": true
         },
         "fingers": {
             "state": true

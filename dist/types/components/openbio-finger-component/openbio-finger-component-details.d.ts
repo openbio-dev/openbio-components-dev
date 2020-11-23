@@ -1,6 +1,6 @@
 import '../../stencil.core';
 import WS from '../../utils/websocket';
-export declare class OpenbioFingerComponentDetails {
+export declare class OpenbioFingerComponent {
     ws: WS;
     private wsStatusInterval;
     private canvas?;
@@ -66,7 +66,6 @@ export declare class OpenbioFingerComponentDetails {
     useOpenbioMatcherSt: boolean;
     cpfSt: string;
     singleCaptureSt: boolean;
-    fingerCaptureTypeSt: number;
     singleCaptureLoading: boolean;
     clearImages(): void;
     startPreview(): void;
@@ -111,6 +110,7 @@ export declare class OpenbioFingerComponentDetails {
     activeTabClass(num: number): "" | "is-active";
     setActiveTab(num: number): void;
     setSelection(event: any): void;
+    setSelectionCaptureType(event: any): void;
     setSelectionFingerList(event: any): void;
     updateDisabledControls(): void;
     capturedNfiq(index: number): any;
