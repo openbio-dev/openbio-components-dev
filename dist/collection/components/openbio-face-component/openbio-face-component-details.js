@@ -1,6 +1,6 @@
 import WS from '../../utils/websocket';
 import { setFace } from '../../store/main.store';
-import { getAnomalies, getCameraSettingsOptions, getCameraSettings, saveCameraSettings, saveFace, getFaceSettings } from "./api";
+import { getAnomalies, getCameraSettingsOptions, getCameraSettings, saveCameraSettings, saveFace, getFaceSettings, } from "./api";
 import { showImage } from '../../utils/canvas';
 import { notify } from '../../utils/notifier';
 import constants from "../../utils/constants";
@@ -59,6 +59,8 @@ export class OpenbioFaceComponentDetails {
             action: undefined,
             data: undefined,
             doEvaluate: true,
+            file: undefined,
+            fileOptions: undefined,
         };
         this.keysForEvaluate = new Map();
         this.deviceReady = false;
@@ -72,6 +74,7 @@ export class OpenbioFaceComponentDetails {
         this.originalImage = EMPTY_IMAGE;
         this.croppedImage = EMPTY_IMAGE;
         this.segmentedImage = EMPTY_IMAGE;
+        this.rawImage = EMPTY_IMAGE;
         this.autoCaptureCount = 0;
         this.autoCapturing = false;
         this.autoCaptureInterval = null;
@@ -141,6 +144,12 @@ export class OpenbioFaceComponentDetails {
         this.shallCapture = false;
         this.evaluations = [];
         this.serviceConfigs = undefined;
+        this.fileToBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
         this.keysForEvaluate.set(EYE_AXIS_LOCATION_RATIO, { message: this.eyeAxisLocationRatioMessage.bind(this) });
         this.keysForEvaluate.set(CENTER_LINE_LOCATION_RATIO, { message: this.centerLineLocationRatioMessage.bind(this) });
         this.keysForEvaluate.set(EYE_SEPARATION_SCORE, { message: this.eyeSeparationMessage.bind(this) });
@@ -422,10 +431,12 @@ export class OpenbioFaceComponentDetails {
                     }
                     else {
                         this.open();
-                        this.configureSegmentation();
-                        this.applyCameraSettings();
-                        this.stopPreview();
-                        this.startPreview();
+                        if (this.deviceReady) {
+                            this.configureSegmentation();
+                            this.applyCameraSettings();
+                            this.stopPreview();
+                            this.startPreview();
+                        }
                     }
                 }
             }, 1000);
@@ -460,6 +471,21 @@ export class OpenbioFaceComponentDetails {
                 }
                 if (data.flashCharge) {
                     this.flashCharge = data.flashCharge;
+                }
+                const deviceStatuses = data.deviceStatuses;
+                if (deviceStatuses) {
+                    const previousStatus = JSON.parse(JSON.stringify(this.deviceStatus));
+                    this.deviceStatus = deviceStatuses.face && deviceStatuses.face.initialized;
+                    if (!this.deviceStatus) {
+                        return;
+                    }
+                    else if (!previousStatus && this.deviceStatus) {
+                        this.configureSegmentation();
+                        this.applyCameraSettings();
+                        this.stopPreview();
+                        this.startPreview();
+                        return;
+                    }
                 }
                 const evaluation = data.evaluation;
                 if (evaluation && evaluation !== UNPLUGGED_ERROR) {
@@ -499,6 +525,7 @@ export class OpenbioFaceComponentDetails {
                         this.originalImage = data.originalImage;
                         this.croppedImage = data.croppedImage;
                         this.segmentedImage = data.segmentedImage;
+                        this.rawImage = data.rawImage;
                         this.model = data.deviceInfo.modelName;
                         this.brand = data.deviceInfo.manufacturName;
                         this.serial = data.deviceInfo.serialNumber;
@@ -519,6 +546,42 @@ export class OpenbioFaceComponentDetails {
                     }
                 }
             });
+            this.captureInput.onchange = () => {
+                if (this.captureInput.files.length > 0) {
+                    if (this.captureInput.files[0].type !== 'image/png') {
+                        notify(this.componentContainer, "error", "Formato do arquivo inválido. Apenas imagens no formato png são aceitas");
+                        this.captureInput.files = undefined;
+                        this.captureInput.value = '';
+                        return;
+                    }
+                    const image = new Image();
+                    const url = window.URL.createObjectURL(this.captureInput.files[0]);
+                    image.onload = async () => {
+                        this.stopPreview();
+                        this.payload.action = "load-capture-data";
+                        const reader = new FileReader();
+                        let rawData = new ArrayBuffer(this.captureInput.files[0].size);
+                        reader.onload = () => {
+                            rawData = reader.result;
+                            this.ws.respondToDeviceWS(rawData);
+                            this.payload.fileOptions = {
+                                width: image.width,
+                                height: image.height,
+                            };
+                            this.payload.data = {
+                                crop: this.crop,
+                                segmentation: this.segmentation
+                            };
+                            this.ws.respondToDeviceWS(this.payload);
+                            this.captureInput.files = undefined;
+                            this.captureInput.value = '';
+                        };
+                        reader.readAsArrayBuffer(this.captureInput.files[0]);
+                        window.URL.revokeObjectURL(url);
+                    };
+                    image.src = url;
+                }
+            };
             this.showLoader = false;
         }, 1000);
     }
@@ -733,6 +796,7 @@ export class OpenbioFaceComponentDetails {
         let croppedImage = "";
         let originalImage = "";
         let segmentedImage = "";
+        let rawImage = "";
         if (this.croppedImage) {
             if (this.dpiValue) {
                 croppedImage = changeDPI.changeDpiDataUrl(`data:image/png;base64,${this.croppedImage}`, this.dpiValue).split(",")[1];
@@ -757,11 +821,20 @@ export class OpenbioFaceComponentDetails {
                 segmentedImage = this.segmentedImage;
             }
         }
+        if (this.rawImage) {
+            if (this.dpiValue) {
+                rawImage = changeDPI.changeDpiDataUrl(`data:image/png;base64,${this.rawImage}`, this.dpiValue).split(",")[1];
+            }
+            else {
+                rawImage = this.rawImage;
+            }
+        }
         const face = {
             id: this.face.id ? this.face.id : null,
             data: croppedImage,
             originalImage,
             segmentedImage,
+            rawImage,
             anomalyId: this.anomaly ? this.anomaly : null,
             model: this.model,
             serial: this.serial,
@@ -781,6 +854,7 @@ export class OpenbioFaceComponentDetails {
                 data: saveFaceResult.cropped_data,
                 originalImage: saveFaceResult.original_data,
                 segmentedImage: saveFaceResult.segmented_data,
+                rawImage: saveFaceResult.rawImage,
                 anomalyId: saveFaceResult.original_data.anomaly_id,
                 model: saveFaceResult.model,
                 serial: saveFaceResult.serial,
@@ -807,6 +881,7 @@ export class OpenbioFaceComponentDetails {
         this.face.serial = saveFaceResult.serial;
         this.face.brand = saveFaceResult.brand;
         this.face.localization = saveFaceResult.localization;
+        this.face.rawImage = saveFaceResult.rawImage;
         setFace(this.face);
     }
     render() {
@@ -870,6 +945,8 @@ export class OpenbioFaceComponentDetails {
                             "ESTADO DO DISPOSITIVO: ",
                             this.deviceReady ? 'PRONTO' : 'NÃO CARREGADO'),
                         h("progress", { class: "progress is-small", value: this.flashCharge, max: "100" })),
+                    this.serviceConfigs && (this.serviceConfigs.face.help.guideImage || this.serviceConfigs.face.help.content) ?
+                        h("help-component", { src: this.serviceConfigs.face.help.guideImage, "help-text": this.serviceConfigs.face.help.content }) : null,
                     this.autoCapture && !this.originalImage ?
                         h("div", { class: "evaluation" },
                             h("hr", { style: { margin: "10px 0 10px 0" } }),
@@ -941,7 +1018,12 @@ export class OpenbioFaceComponentDetails {
                                     h("option", { value: undefined }, "ESCOLHA EM CASO DE ANOMALIA"),
                                     anomalyOptions))),
                         h("div", { class: "column" },
-                            h("a", { class: "button is-small is-pulled-right", onClick: () => this.saveAnomaly() }, "SALVAR ANOMALIA")))),
+                            h("a", { class: "button is-small is-pulled-right", onClick: () => this.saveAnomaly() }, "SALVAR ANOMALIA"))),
+                    h("div", { id: "capture-file", class: "file is-small is-info" },
+                        h("label", { class: "file-label" },
+                            h("input", { ref: (el) => this.captureInput = el, class: "file-input", type: "file", name: "resume", accept: ".png" }),
+                            h("span", { class: "file-cta" },
+                                h("span", { class: "file-label" }, "Carregar arquivo"))))),
                 h("div", { class: "columns is-mobile action-buttons-container" },
                     h("span", null,
                         " ",
@@ -1127,6 +1209,9 @@ export class OpenbioFaceComponentDetails {
         "cameraSettingsOptions": {
             "state": true
         },
+        "captureInput": {
+            "state": true
+        },
         "centerLineLocationRatio": {
             "state": true
         },
@@ -1217,6 +1302,9 @@ export class OpenbioFaceComponentDetails {
             "state": true
         },
         "previewType": {
+            "state": true
+        },
+        "rawImage": {
             "state": true
         },
         "rightOrLeftEyeClosed": {

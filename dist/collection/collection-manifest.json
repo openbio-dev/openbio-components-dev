@@ -1,6 +1,38 @@
 {
   "components": [
     {
+      "tag": "help-component",
+      "dependencies": [],
+      "componentClass": "GuideImageComponent",
+      "componentPath": "components/help-component/help-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/help-component/help-component.scss"
+          ]
+        }
+      },
+      "props": [
+        {
+          "name": "helpText",
+          "type": "String",
+          "mutable": true,
+          "attr": "help-text"
+        },
+        {
+          "name": "src",
+          "type": "String",
+          "attr": "src"
+        }
+      ],
+      "states": [
+        {
+          "name": "isHelpModalActive"
+        }
+      ],
+      "shadow": true
+    },
+    {
       "tag": "loader-component",
       "dependencies": [],
       "componentClass": "LoaderComponent",
@@ -99,6 +131,9 @@
       "states": [
         {
           "name": "deviceReady"
+        },
+        {
+          "name": "forceLoadComponent"
         }
       ],
       "hostElement": {
@@ -109,6 +144,7 @@
     {
       "tag": "openbio-face-details",
       "dependencies": [
+        "help-component",
         "loader-component",
         "openbio-face-validation-box-component"
       ],
@@ -179,6 +215,9 @@
         },
         {
           "name": "cameraSettingsOptions"
+        },
+        {
+          "name": "captureInput"
         },
         {
           "name": "centerLineLocationRatio"
@@ -260,6 +299,9 @@
         },
         {
           "name": "previewType"
+        },
+        {
+          "name": "rawImage"
         },
         {
           "name": "rightOrLeftEyeClosed"
@@ -375,6 +417,9 @@
       "states": [
         {
           "name": "deviceReady"
+        },
+        {
+          "name": "forceLoadComponent"
         }
       ],
       "hostElement": {
@@ -385,6 +430,7 @@
     {
       "tag": "openbio-finger-details",
       "dependencies": [
+        "help-component",
         "loader-component",
         "openbio-finger-image-component"
       ],
@@ -564,6 +610,9 @@
           "name": "serial"
         },
         {
+          "name": "serviceConfigs"
+        },
+        {
           "name": "showControlDisable"
         },
         {
@@ -623,6 +672,11 @@
           "attr": "finger"
         },
         {
+          "name": "fingerIndex",
+          "type": "Number",
+          "attr": "finger-index"
+        },
+        {
           "name": "fingerName",
           "type": "String",
           "attr": "finger-name"
@@ -631,9 +685,17 @@
           "name": "parentComponentContext",
           "type": "Any",
           "attr": "parent-component-context"
+        },
+        {
+          "name": "uploadFingerImageCallback",
+          "type": "Any",
+          "attr": "upload-finger-image-callback"
         }
       ],
       "states": [
+        {
+          "name": "captureInput"
+        },
         {
           "name": "isModalShown"
         }
@@ -657,6 +719,9 @@
       "states": [
         {
           "name": "deviceReady"
+        },
+        {
+          "name": "forceLoadComponent"
         }
       ],
       "hostElement": {
@@ -667,6 +732,7 @@
     {
       "tag": "openbio-mugshot-details",
       "dependencies": [
+        "help-component",
         "loader-component"
       ],
       "componentClass": "OpenbioMugshotComponentDetails",
@@ -791,6 +857,9 @@
           "name": "poseAngleYaw"
         },
         {
+          "name": "rawImage"
+        },
+        {
           "name": "rightOrLeftEyeClosed"
         },
         {
@@ -801,6 +870,9 @@
         },
         {
           "name": "serial"
+        },
+        {
+          "name": "serviceConfigs"
         },
         {
           "name": "showLoader"
@@ -842,7 +914,13 @@
       },
       "states": [
         {
+          "name": "captureInput"
+        },
+        {
           "name": "deviceReady"
+        },
+        {
+          "name": "forceLoadComponent"
         }
       ],
       "hostElement": {
@@ -853,6 +931,7 @@
     {
       "tag": "openbio-signature-details",
       "dependencies": [
+        "help-component",
         "loader-component"
       ],
       "componentClass": "OpenbioSignatureComponentDetails",
@@ -900,6 +979,12 @@
           "name": "brand"
         },
         {
+          "name": "captureInput"
+        },
+        {
+          "name": "deviceOpened"
+        },
+        {
           "name": "deviceReady"
         },
         {
@@ -921,7 +1006,13 @@
           "name": "points"
         },
         {
+          "name": "rawImage"
+        },
+        {
           "name": "serial"
+        },
+        {
+          "name": "serviceConfigs"
         },
         {
           "name": "showLoader"

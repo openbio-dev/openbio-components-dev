@@ -12,6 +12,15 @@ import './stencil.core';
 
 export namespace Components {
 
+  interface HelpComponent {
+    'helpText': string;
+    'src': string;
+  }
+  interface HelpComponentAttributes extends StencilHTMLAttributes {
+    'helpText'?: string;
+    'src'?: string;
+  }
+
   interface LoaderComponent {
     'enabled': boolean;
   }
@@ -123,14 +132,18 @@ export namespace Components {
   interface OpenbioFingerImageComponent {
     'editFingerCallback': any;
     'finger': any;
+    'fingerIndex': number;
     'fingerName': string;
     'parentComponentContext': any;
+    'uploadFingerImageCallback': any;
   }
   interface OpenbioFingerImageComponentAttributes extends StencilHTMLAttributes {
     'editFingerCallback'?: any;
     'finger'?: any;
+    'fingerIndex'?: number;
     'fingerName'?: string;
     'parentComponentContext'?: any;
+    'uploadFingerImageCallback'?: any;
   }
 
   interface OpenbioMugshotDetails {
@@ -170,6 +183,7 @@ export namespace Components {
 
 declare global {
   interface StencilElementInterfaces {
+    'HelpComponent': Components.HelpComponent;
     'LoaderComponent': Components.LoaderComponent;
     'MyComponent': Components.MyComponent;
     'NotificationComponent': Components.NotificationComponent;
@@ -186,6 +200,7 @@ declare global {
   }
 
   interface StencilIntrinsicElements {
+    'help-component': Components.HelpComponentAttributes;
     'loader-component': Components.LoaderComponentAttributes;
     'my-component': Components.MyComponentAttributes;
     'notification-component': Components.NotificationComponentAttributes;
@@ -201,6 +216,12 @@ declare global {
     'openbio-signature': Components.OpenbioSignatureAttributes;
   }
 
+
+  interface HTMLHelpComponentElement extends Components.HelpComponent, HTMLStencilElement {}
+  var HTMLHelpComponentElement: {
+    prototype: HTMLHelpComponentElement;
+    new (): HTMLHelpComponentElement;
+  };
 
   interface HTMLLoaderComponentElement extends Components.LoaderComponent, HTMLStencilElement {}
   var HTMLLoaderComponentElement: {
@@ -281,6 +302,7 @@ declare global {
   };
 
   interface HTMLElementTagNameMap {
+    'help-component': HTMLHelpComponentElement
     'loader-component': HTMLLoaderComponentElement
     'my-component': HTMLMyComponentElement
     'notification-component': HTMLNotificationComponentElement
@@ -297,6 +319,7 @@ declare global {
   }
 
   interface ElementTagNameMap {
+    'help-component': HTMLHelpComponentElement;
     'loader-component': HTMLLoaderComponentElement;
     'my-component': HTMLMyComponentElement;
     'notification-component': HTMLNotificationComponentElement;

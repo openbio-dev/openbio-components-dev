@@ -7518,6 +7518,12 @@ input:-webkit-autofill:active {
   display: inline-block;
   opacity: 0.5; }
 
+.mt-10 {
+  margin-top: 10px; }
+
+.mb-10 {
+  margin-bottom: 10px; }
+
 :root {
   --primary-color: #239ed7; }
 
@@ -7614,7 +7620,8 @@ input:-webkit-autofill:active {
   background-color: rgba(0, 0, 0, 0.8); }
 
 .show-modal {
-  display: block; }
+  display: block;
+  visibility: visible !important; }
 
 .modal-content {
   margin: auto;

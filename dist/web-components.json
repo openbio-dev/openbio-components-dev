@@ -1,6 +1,22 @@
 {
   "tags": [
     {
+      "label": "help-component",
+      "description": "",
+      "attributes": [
+        {
+          "label": "help-text",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "src",
+          "description": "",
+          "required": false
+        }
+      ]
+    },
+    {
       "label": "loader-component",
       "description": "",
       "attributes": [
@@ -176,12 +192,22 @@
           "required": false
         },
         {
+          "label": "finger-index",
+          "description": "",
+          "required": false
+        },
+        {
           "label": "finger-name",
           "description": "",
           "required": false
         },
         {
           "label": "parent-component-context",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "upload-finger-image-callback",
           "description": "",
           "required": false
         }
