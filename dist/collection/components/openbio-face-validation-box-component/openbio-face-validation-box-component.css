@@ -284,6 +284,7 @@ html {
   text-rendering: optimizeLegibility;
   -webkit-text-size-adjust: 100%;
      -moz-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
           text-size-adjust: 100%; }
 
 article,
@@ -7523,6 +7524,29 @@ input:-webkit-autofill:active {
 
 .mb-10 {
   margin-bottom: 10px; }
+
+.ml-10 {
+  margin-left: 10px; }
+
+.mr-10 {
+  margin-right: 10px; }
+
+.fab-icon {
+  background-color: #239ed7;
+  border-radius: 100% !important;
+  padding: 8px;
+  width: 36px !important;
+  height: auto !important;
+  transition: 0.5s; }
+
+.fab-icon-active {
+  background-color: #2980B9 !important;
+  border: 3px groove red;
+  padding: 5px !important; }
+
+.fab-icon:hover {
+  background-color: #2980B9;
+  cursor: pointer; }
 
 :root {
   --primary-color: #239ed7; }

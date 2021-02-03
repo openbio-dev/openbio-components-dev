@@ -12,9 +12,7 @@ export declare class OpenbioSignatureComponentDetails {
     tempPerson: any;
     tempSignature: any;
     deviceReady: boolean;
-    deviceOpened: boolean;
     originalImage: string;
-    rawImage: string;
     points: any[];
     dpiValue: number;
     tab: number;
@@ -28,10 +26,8 @@ export declare class OpenbioSignatureComponentDetails {
     brand: string;
     serial: string;
     deviceStatus: boolean;
-    serviceConfigs: any;
-    captureInput: HTMLInputElement;
     clearImages(): void;
-    startPreview(): void;
+    startPreview(backToPreview?: boolean): void;
     close(): void;
     stopPreview(): void;
     getFinishTitle(): string;

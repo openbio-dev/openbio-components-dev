@@ -53,12 +53,7 @@ export default class WS {
         });
     }
     respondToDeviceWS(message) {
-        if (message instanceof ArrayBuffer && message.byteLength !== undefined) {
-            this.deviceSocket.send(message);
-        }
-        else {
-            this.deviceSocket.send(JSON.stringify(message));
-        }
+        this.deviceSocket.send(JSON.stringify(message));
     }
     respondToComponentWS(message) {
         this.componentSocket.send(JSON.stringify(message));

@@ -3,7 +3,6 @@ export class OpenbioFaceComponent {
     constructor() {
         this.ws = new WS();
         this.deviceReady = false;
-        this.forceLoadComponent = false;
     }
     componentDidLoad() {
         this.ws.deviceSocket.addEventListener("message", (event) => {
@@ -16,12 +15,11 @@ export class OpenbioFaceComponent {
         Object.keys(this.componentContainer.attributes).forEach((index) => {
             params[this.componentContainer.attributes[index].name] = this.componentContainer.attributes[index].value;
         });
-        return (h("div", null, this.deviceReady || this.forceLoadComponent ?
+        return (h("div", null, this.deviceReady ?
             h("openbio-face-details", Object.assign({}, params)) :
             h("div", { class: "center-container" },
                 h("img", { src: "../assets/general/connection.png" }),
-                h("span", null, "Dispositivo desconectado"),
-                h("a", { class: "button is-small action-button", style: { 'margin-top': '20px' }, onClick: () => this.forceLoadComponent = true }, "Continuar sem dispositivo"))));
+                h("span", null, "Dispositivo desconectado"))));
     }
     static get is() { return "openbio-face"; }
     static get encapsulation() { return "shadow"; }
@@ -30,9 +28,6 @@ export class OpenbioFaceComponent {
             "elementRef": true
         },
         "deviceReady": {
-            "state": true
-        },
-        "forceLoadComponent": {
             "state": true
         }
     }; }

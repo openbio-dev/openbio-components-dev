@@ -36,5 +36,6 @@ declare const constants: {
     dpiValue: {
         1: number;
     };
+    fingerNames: Map<any, any>;
 };
 export default constants;

@@ -1,22 +1,6 @@
 {
   "tags": [
     {
-      "label": "help-component",
-      "description": "",
-      "attributes": [
-        {
-          "label": "help-text",
-          "description": "",
-          "required": false
-        },
-        {
-          "label": "src",
-          "description": "",
-          "required": false
-        }
-      ]
-    },
-    {
       "label": "loader-component",
       "description": "",
       "attributes": [
@@ -122,6 +106,32 @@
       ]
     },
     {
+      "label": "openbio-finger-auth",
+      "description": "",
+      "attributes": [
+        {
+          "label": "cpf",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "person-image",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "person-name",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "use-openbio-matcher",
+          "description": "",
+          "required": false
+        }
+      ]
+    },
+    {
       "label": "openbio-finger-details",
       "description": "",
       "attributes": [
@@ -192,22 +202,12 @@
           "required": false
         },
         {
-          "label": "finger-index",
-          "description": "",
-          "required": false
-        },
-        {
           "label": "finger-name",
           "description": "",
           "required": false
         },
         {
           "label": "parent-component-context",
-          "description": "",
-          "required": false
-        },
-        {
-          "label": "upload-finger-image-callback",
           "description": "",
           "required": false
         }

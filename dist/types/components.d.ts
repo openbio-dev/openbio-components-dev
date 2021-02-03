@@ -12,15 +12,6 @@ import './stencil.core';
 
 export namespace Components {
 
-  interface HelpComponent {
-    'helpText': string;
-    'src': string;
-  }
-  interface HelpComponentAttributes extends StencilHTMLAttributes {
-    'helpText'?: string;
-    'src'?: string;
-  }
-
   interface LoaderComponent {
     'enabled': boolean;
   }
@@ -97,6 +88,23 @@ export namespace Components {
     'typeTitle'?: string;
   }
 
+  interface OpenbioFingerAuth {
+    'cpf': string;
+    'onCaptureFingerprintResult': Function;
+    'onMatcherResult': Function;
+    'personImage': string;
+    'personName': string;
+    'useOpenbioMatcher': boolean;
+  }
+  interface OpenbioFingerAuthAttributes extends StencilHTMLAttributes {
+    'cpf'?: string;
+    'onCaptureFingerprintResult'?: Function;
+    'onMatcherResult'?: Function;
+    'personImage'?: string;
+    'personName'?: string;
+    'useOpenbioMatcher'?: boolean;
+  }
+
   interface OpenbioFingerDetails {
     'cpf': string;
     'detached': boolean;
@@ -132,18 +140,14 @@ export namespace Components {
   interface OpenbioFingerImageComponent {
     'editFingerCallback': any;
     'finger': any;
-    'fingerIndex': number;
     'fingerName': string;
     'parentComponentContext': any;
-    'uploadFingerImageCallback': any;
   }
   interface OpenbioFingerImageComponentAttributes extends StencilHTMLAttributes {
     'editFingerCallback'?: any;
     'finger'?: any;
-    'fingerIndex'?: number;
     'fingerName'?: string;
     'parentComponentContext'?: any;
-    'uploadFingerImageCallback'?: any;
   }
 
   interface OpenbioMugshotDetails {
@@ -183,13 +187,13 @@ export namespace Components {
 
 declare global {
   interface StencilElementInterfaces {
-    'HelpComponent': Components.HelpComponent;
     'LoaderComponent': Components.LoaderComponent;
     'MyComponent': Components.MyComponent;
     'NotificationComponent': Components.NotificationComponent;
     'OpenbioFaceDetails': Components.OpenbioFaceDetails;
     'OpenbioFace': Components.OpenbioFace;
     'OpenbioFaceValidationBoxComponent': Components.OpenbioFaceValidationBoxComponent;
+    'OpenbioFingerAuth': Components.OpenbioFingerAuth;
     'OpenbioFingerDetails': Components.OpenbioFingerDetails;
     'OpenbioFinger': Components.OpenbioFinger;
     'OpenbioFingerImageComponent': Components.OpenbioFingerImageComponent;
@@ -200,13 +204,13 @@ declare global {
   }
 
   interface StencilIntrinsicElements {
-    'help-component': Components.HelpComponentAttributes;
     'loader-component': Components.LoaderComponentAttributes;
     'my-component': Components.MyComponentAttributes;
     'notification-component': Components.NotificationComponentAttributes;
     'openbio-face-details': Components.OpenbioFaceDetailsAttributes;
     'openbio-face': Components.OpenbioFaceAttributes;
     'openbio-face-validation-box-component': Components.OpenbioFaceValidationBoxComponentAttributes;
+    'openbio-finger-auth': Components.OpenbioFingerAuthAttributes;
     'openbio-finger-details': Components.OpenbioFingerDetailsAttributes;
     'openbio-finger': Components.OpenbioFingerAttributes;
     'openbio-finger-image-component': Components.OpenbioFingerImageComponentAttributes;
@@ -216,12 +220,6 @@ declare global {
     'openbio-signature': Components.OpenbioSignatureAttributes;
   }
 
-
-  interface HTMLHelpComponentElement extends Components.HelpComponent, HTMLStencilElement {}
-  var HTMLHelpComponentElement: {
-    prototype: HTMLHelpComponentElement;
-    new (): HTMLHelpComponentElement;
-  };
 
   interface HTMLLoaderComponentElement extends Components.LoaderComponent, HTMLStencilElement {}
   var HTMLLoaderComponentElement: {
@@ -257,6 +255,12 @@ declare global {
   var HTMLOpenbioFaceValidationBoxComponentElement: {
     prototype: HTMLOpenbioFaceValidationBoxComponentElement;
     new (): HTMLOpenbioFaceValidationBoxComponentElement;
+  };
+
+  interface HTMLOpenbioFingerAuthElement extends Components.OpenbioFingerAuth, HTMLStencilElement {}
+  var HTMLOpenbioFingerAuthElement: {
+    prototype: HTMLOpenbioFingerAuthElement;
+    new (): HTMLOpenbioFingerAuthElement;
   };
 
   interface HTMLOpenbioFingerDetailsElement extends Components.OpenbioFingerDetails, HTMLStencilElement {}
@@ -302,13 +306,13 @@ declare global {
   };
 
   interface HTMLElementTagNameMap {
-    'help-component': HTMLHelpComponentElement
     'loader-component': HTMLLoaderComponentElement
     'my-component': HTMLMyComponentElement
     'notification-component': HTMLNotificationComponentElement
     'openbio-face-details': HTMLOpenbioFaceDetailsElement
     'openbio-face': HTMLOpenbioFaceElement
     'openbio-face-validation-box-component': HTMLOpenbioFaceValidationBoxComponentElement
+    'openbio-finger-auth': HTMLOpenbioFingerAuthElement
     'openbio-finger-details': HTMLOpenbioFingerDetailsElement
     'openbio-finger': HTMLOpenbioFingerElement
     'openbio-finger-image-component': HTMLOpenbioFingerImageComponentElement
@@ -319,13 +323,13 @@ declare global {
   }
 
   interface ElementTagNameMap {
-    'help-component': HTMLHelpComponentElement;
     'loader-component': HTMLLoaderComponentElement;
     'my-component': HTMLMyComponentElement;
     'notification-component': HTMLNotificationComponentElement;
     'openbio-face-details': HTMLOpenbioFaceDetailsElement;
     'openbio-face': HTMLOpenbioFaceElement;
     'openbio-face-validation-box-component': HTMLOpenbioFaceValidationBoxComponentElement;
+    'openbio-finger-auth': HTMLOpenbioFingerAuthElement;
     'openbio-finger-details': HTMLOpenbioFingerDetailsElement;
     'openbio-finger': HTMLOpenbioFingerElement;
     'openbio-finger-image-component': HTMLOpenbioFingerImageComponentElement;

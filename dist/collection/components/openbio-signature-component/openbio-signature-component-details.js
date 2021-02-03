@@ -2,9 +2,8 @@ import WS from '../../utils/websocket';
 import { showImage } from '../../utils/canvas';
 import { notify } from '../../utils/notifier';
 import { setSignature } from '../../store/main.store';
-import { getAnomalies, saveSignature, getSignatureSettings, saveSignatureFile } from "./api";
+import { getAnomalies, saveSignature, getSignatureSettings } from "./api";
 import { getLocalization } from '../../utils/utils';
-import { getAppConfig } from '../../utils/api';
 import constants from "../../utils/constants";
 import changeDPI from "changedpi";
 const BASE64_IMAGE = 'data:image/charset=UTF-8;png;base64,';
@@ -29,9 +28,7 @@ export class OpenbioSignatureComponentDetails {
             data: undefined
         };
         this.deviceReady = false;
-        this.deviceOpened = false;
         this.originalImage = EMPTY_IMAGE;
-        this.rawImage = EMPTY_IMAGE;
         this.points = [];
         this.dpiValue = 0;
         this.tab = 0;
@@ -47,18 +44,21 @@ export class OpenbioSignatureComponentDetails {
         this.brand = '';
         this.serial = '';
         this.deviceStatus = false;
-        this.serviceConfigs = undefined;
     }
     clearImages() {
         showImage(this.canvas, "");
+        this.signature.originalImage = undefined;
     }
-    startPreview() {
+    startPreview(backToPreview = false) {
         if (this.isCapturing)
             return;
         this.clearImages();
         this.isCapturing = true;
         this.payload.action = "start";
         this.ws.respondToDeviceWS(this.payload);
+        if (backToPreview) {
+            this.setActiveTab(TABS.CAPTURE);
+        }
     }
     close() {
         this.payload.action = "close";
@@ -80,7 +80,6 @@ export class OpenbioSignatureComponentDetails {
     open() {
         this.payload.action = "open";
         this.ws.respondToDeviceWS(this.payload);
-        this.deviceOpened = true;
     }
     componentDidLoad() {
         this.showLoader = true;
@@ -88,7 +87,6 @@ export class OpenbioSignatureComponentDetails {
             try {
                 const faceSettings = await getSignatureSettings();
                 this.dpiValue = constants.dpiValue[faceSettings.dpiOption] || 0;
-                this.serviceConfigs = await getAppConfig();
                 if (this.detached && this.isTagComponent) {
                     const _this = this;
                     window["getBiometryData"] = function () {
@@ -115,9 +113,7 @@ export class OpenbioSignatureComponentDetails {
                 this.wsStatusInterval = setInterval(() => {
                     if (this.ws.status() === 1) {
                         clearInterval(this.wsStatusInterval);
-                        if (this.deviceReady) {
-                            this.open();
-                        }
+                        this.open();
                     }
                 }, 1000);
                 this.ws.componentSocket.addEventListener("message", (event) => {
@@ -133,17 +129,26 @@ export class OpenbioSignatureComponentDetails {
                         this.stopPreview();
                         this.startPreview();
                     }
+                    if (data.status === "session-data-stored") {
+                        this.backendSession = undefined;
+                        this.emitLoadInformation();
+                        const checkSessionInterval = setInterval(() => {
+                            if (this.backendSession && this.backendSession.signature) {
+                                clearInterval(checkSessionInterval);
+                                this.showLoader = false;
+                                this.setActiveTab(TABS.RESULT);
+                            }
+                        }, 200);
+                    }
                     const deviceStatuses = data.deviceStatuses;
                     if (deviceStatuses) {
                         const previousStatus = JSON.parse(JSON.stringify(this.deviceStatus));
                         this.deviceStatus = deviceStatuses.signature && deviceStatuses.signature.initialized;
                         if (!this.deviceStatus) {
+                            notify(this.componentContainer, "error", "Dispositivo desconectado!");
                             return;
                         }
                         else if (!previousStatus && this.deviceStatus) {
-                            if (!this.deviceOpened) {
-                                this.open();
-                            }
                             this.stopPreview();
                             this.startPreview();
                             return;
@@ -160,50 +165,10 @@ export class OpenbioSignatureComponentDetails {
                         this.model = data.deviceInfo.modelName;
                         this.brand = data.deviceInfo.manufacturName;
                         this.serial = data.deviceInfo.serialNumber;
-                        this.rawImage = data.rawImage;
                         this.saveSignature();
                     }
                 });
                 this.showLoader = false;
-                this.captureInput.onchange = () => {
-                    if (this.captureInput.files.length > 0) {
-                        if (this.captureInput.files[0].type !== 'image/png') {
-                            notify(this.componentContainer, "error", "Formato do arquivo inválido. Apenas imagens no formato png são aceitas");
-                            this.captureInput.files = undefined;
-                            this.captureInput.value = '';
-                            return;
-                        }
-                        if (this.captureInput.files[0].type !== 'image/png') {
-                            notify(this.componentContainer, "error", "Formato do arquivo inválido. Apenas imagens no formato png são aceitas");
-                            this.captureInput.files = undefined;
-                            this.captureInput.value = '';
-                            return;
-                        }
-                        const image = new Image();
-                        const url = window.URL.createObjectURL(this.captureInput.files[0]);
-                        image.onload = async () => {
-                            const localization = await getLocalization();
-                            await saveSignatureFile({
-                                personId: this.person.id,
-                                signature: {
-                                    id: this.signature.id ? this.signature.id : null,
-                                    localization,
-                                },
-                            }, this.captureInput.files[0]);
-                            const reader = new FileReader();
-                            reader.readAsDataURL(this.captureInput.files[0]);
-                            reader.onload = () => {
-                                this.signature.originalImage = reader.result.toString().split(",")[1];
-                                notify(this.componentContainer, "success", "Assinatura carregada com sucesso");
-                                this.tab = TABS.RESULT;
-                            };
-                            window.URL.revokeObjectURL(url);
-                            this.captureInput.files = undefined;
-                            this.captureInput.value = '';
-                        };
-                        image.src = url;
-                    }
-                };
             }
             catch (e) {
                 this.showLoader = false;
@@ -250,6 +215,12 @@ export class OpenbioSignatureComponentDetails {
     }
     setActiveTab(num) {
         this.tab = num;
+        if (num === TABS.CAPTURE && this.signature.originalImage !== undefined) {
+            setTimeout(() => {
+                showImage(this.canvas, this.signature.originalImage);
+            }, 200);
+        }
+        this.componentContainer.forceUpdate();
     }
     setSelection(event) {
         const name = event.target.name;
@@ -267,7 +238,6 @@ export class OpenbioSignatureComponentDetails {
         const signature = {
             id: this.signature.id ? this.signature.id : null,
             data: this.originalImage ? (this.dpiValue ? changeDPI.changeDpiDataUrl(`data:image/png;base64,${this.originalImage}`, this.dpiValue).split(",")[1] : this.originalImage) : "",
-            rawData: this.rawImage ? (this.dpiValue ? changeDPI.changeDpiDataUrl(`data:image/png;base64,${this.rawImage}`, this.dpiValue).split(",")[1] : this.rawImage) : "",
             anomalyId: saveAnomaly && this.anomaly ? this.anomaly : null,
             points: JSON.stringify(this.points),
             model: this.model,
@@ -283,7 +253,6 @@ export class OpenbioSignatureComponentDetails {
             await this.storeCapturedSignature({
                 id: saveSignatureResult.id,
                 data: saveSignatureResult.data,
-                rawData: saveSignatureResult.rawData,
                 anomalyId: saveSignatureResult.anomaly_id,
                 model: saveSignatureResult.model,
                 brand: saveSignatureResult.brand,
@@ -293,8 +262,9 @@ export class OpenbioSignatureComponentDetails {
             });
         }
         else {
-            if (!this.isTagComponent)
-                this.sendBiometryInformation(signature);
+            if (!this.isTagComponent) {
+                await this.sendBiometryInformation(signature);
+            }
             await this.storeCapturedSignature(signature);
         }
         this.showLoader = false;
@@ -322,34 +292,27 @@ export class OpenbioSignatureComponentDetails {
             h("div", { id: "notification-container" }),
             h("div", { class: "tabs is-left is-boxed" },
                 h("ul", null,
-                    h("li", { class: this.activeTabClass(0) },
-                        h("a", { onClick: () => this.setActiveTab(0) },
+                    h("li", { class: this.activeTabClass(TABS.CAPTURE) },
+                        h("a", { onClick: () => this.setActiveTab(TABS.CAPTURE) },
                             h("span", { class: "tab-title" }, "Captura"))),
-                    h("li", { class: this.activeTabClass(1) },
-                        h("a", { onClick: () => this.setActiveTab(1) },
+                    h("li", { class: this.activeTabClass(TABS.RESULT) },
+                        h("a", { onClick: () => this.setActiveTab(TABS.RESULT) },
                             h("span", { class: "tab-title" }, "Resultado"))))),
             this.tab === TABS.CAPTURE ? h("div", { class: "columns is-mobile" },
                 h("div", { class: "column is-one-third" },
                     h("div", { class: "device-status-container" },
                         h("h6", { class: "title is-7" },
                             "ESTADO DO DISPOSITIVO: ",
-                            this.deviceReady ? 'PRONTO' : 'NÃO CARREGADO')),
-                    this.serviceConfigs && (this.serviceConfigs.signature.help.guideImage || this.serviceConfigs.signature.help.content) ?
-                        h("help-component", { src: this.serviceConfigs.signature.help.guideImage, "help-text": this.serviceConfigs.signature.help.content }) : null),
+                            this.deviceReady ? 'PRONTO' : 'NÃO CARREGADO'))),
                 h("div", { class: "column text-align-left" },
                     h("canvas", { width: "460", height: "300", class: "canvas", ref: el => this.canvas = el }),
                     h("div", { class: "columns is-mobile action-buttons-container" },
                         h("div", { class: "column" },
                             h("a", { class: `button is-small is-pulled-left action-button ${this.deviceReady && this.isCapturing ? "disabled" : ""}`, onClick: () => this.startPreview() }, "INICIAR PREVIEW")),
                         h("div", { class: "column has-text-centered" },
-                            h("a", { class: `button is-small action-button is-pulled-right ${this.deviceReady ? "" : "disabled"}`, title: `${this.deviceReady ? "Clique aqui para capturar" : "O dispositivo não está carregado"}`, onClick: () => this.capture() }, "CAPTURAR")),
+                            h("a", { class: `button is-small action-button is-pulled-right ${this.deviceReady && !this.signature.originalImage ? "" : "disabled"}`, title: `${this.deviceReady ? "Clique aqui para capturar" : "O dispositivo não está carregado"}`, onClick: () => this.capture() }, "CAPTURAR")),
                         this.detached && !this.isTagComponent ? h("div", { class: "column has-text-centered" },
                             h("a", { class: `button is-small is-pulled-left action-button ${!this.deviceReady || this.isCapturing || !this.originalImage || !this.signature.originalImage ? "disabled" : ""}`, title: this.getFinishTitle(), onClick: () => this.acceptData() }, "FINALIZAR")) : null),
-                    h("div", { id: "capture-file", class: "file is-small is-info" },
-                        h("label", { class: "file-label" },
-                            h("input", { ref: (el) => this.captureInput = el, class: "file-input", type: "file", name: "resume", accept: ".png" }),
-                            h("span", { class: "file-cta" },
-                                h("span", { class: "file-label" }, "Carregar arquivo")))),
                     h("div", { class: "columns is-mobile anomaly-buttons-container" },
                         h("div", { class: "column" },
                             h("div", { class: "select is-small inline is-pulled-left" },
@@ -361,7 +324,19 @@ export class OpenbioSignatureComponentDetails {
             this.tab === TABS.RESULT ? h("div", { class: "tab-content" },
                 h("div", { class: "columns" },
                     h("div", { class: "column has-text-centered preview-result" },
-                        h("img", { src: `${BASE64_IMAGE}${this.detached ? (this.signature.originalImage || this.signature.formatedData) : this.signature.formatedData || this.signature.originalImage}` }))),
+                        h("img", { src: `${BASE64_IMAGE}${this.detached ? (this.signature.originalImage || this.signature.formatedData) : this.signature.formatedData || this.signature.originalImage}` }),
+                        h("div", { class: "columns is-mobile", style: { transform: "translate(30%, 0)", marginTop: "10px" } },
+                            h("div", { class: "column is-narrow", style: { transform: "translate(24px, 0)" } },
+                                h("div", null,
+                                    h("img", { src: "./assets/general/signature-freehand.png", title: "Clique aqui para assinar novamente.", class: `fab-icon`, onClick: () => this.startPreview(true) }),
+                                    h("br", null),
+                                    h("span", { style: { padding: '6px', display: 'inline-block' } }, " Nova assinatura "))),
+                            this.detached && !this.isTagComponent ?
+                                h("div", { class: "column is-narrow", style: { transform: "translate(70px, 0)" } },
+                                    h("div", null,
+                                        h("img", { src: "./assets/general/check.png", class: "fab-icon", style: { float: 'right !important' }, onClick: () => this.acceptData() }),
+                                        h("br", null),
+                                        h("span", { style: { paddingLeft: '7px', display: 'inline-block' } }, " Finalizar "))) : null))),
                 h("p", null, this.signature.anomalyId ? this.anomalyOptions.find((anomaly) => { return anomaly.id === this.signature.anomalyId; }).name : "")) : null));
     }
     static get is() { return "openbio-signature-details"; }
@@ -379,18 +354,12 @@ export class OpenbioSignatureComponentDetails {
         "brand": {
             "state": true
         },
-        "captureInput": {
-            "state": true
-        },
         "componentContainer": {
             "elementRef": true
         },
         "detached": {
             "type": Boolean,
             "attr": "detached"
-        },
-        "deviceOpened": {
-            "state": true
         },
         "deviceReady": {
             "state": true
@@ -417,13 +386,7 @@ export class OpenbioSignatureComponentDetails {
         "points": {
             "state": true
         },
-        "rawImage": {
-            "state": true
-        },
         "serial": {
-            "state": true
-        },
-        "serviceConfigs": {
             "state": true
         },
         "showLoader": {

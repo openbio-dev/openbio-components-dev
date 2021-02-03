@@ -11,25 +11,6 @@
   max-width: 486px !important;
 }
 
-.fab-icon {
-  background-color: #239ed7;
-  border-radius: 100%!important;
-  padding: 8px;
-  width: 36px;
-  transition: 0.5s;
-}
-
-.fab-icon-active {
-  background-color: #2980B9 !important;
-  border: 3px groove red;
-  padding: 5px !important;
-}
-
-.fab-icon:hover {
-  background-color: #2980B9;
-  cursor: pointer;
-}
-
 .icon-text {
   display: grid;
   font-size: 14px;

@@ -1,3 +1,14 @@
+const fingerNames = new Map();
+fingerNames.set(4, "RIGHT-LITTLE");
+fingerNames.set(3, "RIGHT-RING");
+fingerNames.set(2, "RIGHT-MIDDLE");
+fingerNames.set(1, "RIGHT-INDEX");
+fingerNames.set(0, "RIGHT-THUMB");
+fingerNames.set(5, "LEFT-THUMB");
+fingerNames.set(6, "LEFT-INDEX");
+fingerNames.set(7, "LEFT-MIDDLE");
+fingerNames.set(8, "LEFT-RING");
+fingerNames.set(9, "LEFT-LITTLE");
 const constants = {
     SERVER_HOST: "localhost:4000",
     WS_HOST: "localhost:5000",
@@ -35,6 +46,7 @@ const constants = {
     },
     dpiValue: {
         1: 300
-    }
+    },
+    fingerNames: fingerNames
 };
 export default constants;

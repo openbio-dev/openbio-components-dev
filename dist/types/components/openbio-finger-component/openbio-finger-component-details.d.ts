@@ -47,6 +47,7 @@ export declare class OpenbioFingerComponent {
     disabledControls: boolean;
     generateBMP: boolean;
     storeOriginalImage: boolean;
+    modalSettings: any;
     failControl: any;
     unmatchCount: number;
     repeatedCount: number;
@@ -60,7 +61,6 @@ export declare class OpenbioFingerComponent {
     isEditing: boolean;
     showLoader: boolean;
     showControlDisable: boolean;
-    serviceConfigs: any;
     personInfo: any;
     selectedFinger: any;
     authenticationSimilarity: number;
@@ -76,7 +76,6 @@ export declare class OpenbioFingerComponent {
     executeRepetitionControl(): void;
     executeMatch(): void;
     generateMinutiateData(): void;
-    uploadFingerImage(_this: any, fingerIndex: any, image: any, fileOptions: any): Promise<void>;
     setProcessorFingers(): void;
     foundFlowType(sequence: Array<any>): any;
     prepareToPreview(): void;
@@ -98,6 +97,7 @@ export declare class OpenbioFingerComponent {
     isRolledSequence(): boolean;
     checkCaptureNeed(): any;
     saveAnomaly(): void;
+    clearSession(): void;
     clearCapture(): void;
     beginMatch(): boolean;
     saveFingers(fingersData?: any): Promise<any>;

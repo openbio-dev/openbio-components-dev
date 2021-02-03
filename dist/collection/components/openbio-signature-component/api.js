@@ -24,13 +24,3 @@ export function getSignatureSettings() {
             .then(data => resolve(data));
     });
 }
-export function saveSignatureFile(data, file) {
-    const bodyData = new FormData();
-    bodyData.append("file", file);
-    bodyData.set("data", JSON.stringify(data));
-    return fetch(`${url}/db/api/biometries/signature-file`, {
-        method: 'post',
-        body: bodyData,
-    })
-        .then(res => res.json());
-}
