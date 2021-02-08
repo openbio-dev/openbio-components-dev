@@ -560,6 +560,8 @@ export class OpenbioFingerComponent {
                                     else {
                                         notify(this.componentContainer, "error", "Falha na autenticação");
                                     }
+                                    console.log(document);
+                                    console.log(document.getElementById("auth-component"));
                                     const element = document.getElementById("auth-component");
                                     element.dispatchEvent(new CustomEvent("onOpenbioMatcher", {
                                         detail: {
