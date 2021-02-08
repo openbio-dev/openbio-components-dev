@@ -1,1 +1,0 @@
-import{a as e}from"./chunk-d17f9802.js";function t(e,t,n){return(e||"")+(t?` ${t}`:"")+(n?` ${n}`:"")}async function n(){return new Promise(async(t,n)=>{await fetch(e.IPINFO_ADDRESS).then(e=>e.json()).then(e=>{delete e.hostname,delete e.org,delete e.postal,t(JSON.stringify(e))})})}export{t as a,n as b};
