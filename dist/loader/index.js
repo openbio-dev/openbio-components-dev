@@ -1,0 +1,1 @@
+export * from '../esm/es5/openbio-components.define.js';
