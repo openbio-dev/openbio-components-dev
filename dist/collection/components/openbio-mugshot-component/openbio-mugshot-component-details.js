@@ -4,6 +4,7 @@ import { showImage } from '../../utils/canvas';
 import { notify } from '../../utils/notifier';
 import constants from "../../utils/constants";
 import { getLocalization } from '../../utils/utils';
+import { getAppConfig } from '../../utils/api';
 const BASE64_IMAGE = 'data:image/charset=UTF-8;png;base64,';
 const EMPTY_IMAGE = '';
 var tabs;
@@ -38,6 +39,7 @@ export class OpenbioMugshotComponentDetails {
         this.originalImage = EMPTY_IMAGE;
         this.croppedImage = EMPTY_IMAGE;
         this.segmentedImage = EMPTY_IMAGE;
+        this.rawImage = EMPTY_IMAGE;
         this.flashCharge = 0;
         this.mugshotIndex = 0;
         this.mugshotDescription = '';
@@ -68,6 +70,7 @@ export class OpenbioMugshotComponentDetails {
         this.serial = '';
         this.video = undefined;
         this.track = undefined;
+        this.serviceConfigs = undefined;
     }
     open() {
         this.payload.action = "open";
@@ -134,6 +137,7 @@ export class OpenbioMugshotComponentDetails {
         this.showLoader = true;
         setTimeout(async () => {
             this.fetchCurrentCameraSettings();
+            this.serviceConfigs = await getAppConfig();
             const faceSettings = await getFaceSettings();
             this.payload.deviceName = faceSettings.device ? constants.device[faceSettings.device] : constants.device.AKYSCAM;
             this.crop = false;
@@ -205,6 +209,7 @@ export class OpenbioMugshotComponentDetails {
                     this.model = data.deviceInfo.modelName;
                     this.brand = data.deviceInfo.manufacturName;
                     this.serial = data.deviceInfo.serialNumber;
+                    this.rawImage = data.rawImage;
                     this.anomaly = 0;
                     this.saveMugshotPhoto();
                 }
@@ -368,6 +373,7 @@ export class OpenbioMugshotComponentDetails {
         this.showLoader = true;
         const mugshotStructure = {
             photo: this.originalImage,
+            rawImage: this.rawImage,
             index: this.mugshotIndex,
             description: this.mugshotDescription,
             model: this.model,
@@ -407,7 +413,6 @@ export class OpenbioMugshotComponentDetails {
         });
     }
     acceptData() {
-        this.stopPreview();
         this.payload.action = "close-component";
         this.payload.data = {
             type: "mugshot",
@@ -516,6 +521,8 @@ export class OpenbioMugshotComponentDetails {
                             "ESTADO DO DISPOSITIVO: ",
                             this.deviceReady ? 'PRONTO' : 'NÃO CARREGADO'),
                         h("progress", { class: "progress is-small", value: this.flashCharge, max: "100" }),
+                        this.serviceConfigs && (this.serviceConfigs.mugshot.help.guideImage || this.serviceConfigs.mugshot.help.content) ?
+                            h("help-component", { src: this.serviceConfigs.mugshot.help.guideImage, "help-text": this.serviceConfigs.mugshot.help.content }) : null,
                         h("div", { class: "mugshot-form" },
                             h("form", null,
                                 h("label", null,
@@ -708,6 +715,9 @@ export class OpenbioMugshotComponentDetails {
         "poseAngleYaw": {
             "state": true
         },
+        "rawImage": {
+            "state": true
+        },
         "rightOrLeftEyeClosed": {
             "state": true
         },
@@ -718,6 +728,9 @@ export class OpenbioMugshotComponentDetails {
             "state": true
         },
         "serial": {
+            "state": true
+        },
+        "serviceConfigs": {
             "state": true
         },
         "showLoader": {
