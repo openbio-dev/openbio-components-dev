@@ -560,9 +560,8 @@ export class OpenbioFingerComponent {
                                     else {
                                         notify(this.componentContainer, "error", "Falha na autenticação");
                                     }
-                                    console.log(document);
-                                    console.log(document.getElementById("auth-component"));
-                                    const element = document.getElementById("auth-component");
+                                    console.log(document.getElementsByTagName('openbio-finger')[0].shadowRoot.lastElementChild.getElementsByTagName('openbio-finger-details')[0].shadowRoot.getElementById('auth-component'));
+                                    const element = document.getElementsByTagName('openbio-finger')[0].shadowRoot.lastElementChild.getElementsByTagName('openbio-finger-details')[0].shadowRoot.getElementById('auth-component');
                                     element.dispatchEvent(new CustomEvent("onOpenbioMatcher", {
                                         detail: {
                                             finger_index: this.currentFingerSequence[0],
@@ -578,7 +577,8 @@ export class OpenbioFingerComponent {
                                     console.log(error);
                                 });
                             }
-                            const element = document.getElementById("auth-component");
+                            console.log(document.getElementsByTagName('openbio-finger')[0].shadowRoot.lastElementChild.getElementsByTagName('openbio-finger-details')[0].shadowRoot.getElementById('auth-component'));
+                            const element = document.getElementsByTagName('openbio-finger')[0].shadowRoot.lastElementChild.getElementsByTagName('openbio-finger-details')[0].shadowRoot.getElementById('auth-component');
                             element.dispatchEvent(new CustomEvent("onCaptureFingerprint", {
                                 detail: {
                                     finger_index: this.currentFingerSequence[0],
