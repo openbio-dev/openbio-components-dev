@@ -12,6 +12,15 @@ import './stencil.core';
 
 export namespace Components {
 
+  interface HelpComponent {
+    'helpText': string;
+    'src': string;
+  }
+  interface HelpComponentAttributes extends StencilHTMLAttributes {
+    'helpText'?: string;
+    'src'?: string;
+  }
+
   interface LoaderComponent {
     'enabled': boolean;
   }
@@ -90,6 +99,7 @@ export namespace Components {
 
   interface OpenbioFingerAuth {
     'cpf': string;
+    'isDebug': boolean;
     'onCaptureFingerprintResult': Function;
     'onMatcherResult': Function;
     'personImage': string;
@@ -98,6 +108,7 @@ export namespace Components {
   }
   interface OpenbioFingerAuthAttributes extends StencilHTMLAttributes {
     'cpf'?: string;
+    'isDebug'?: boolean;
     'onCaptureFingerprintResult'?: Function;
     'onMatcherResult'?: Function;
     'personImage'?: string;
@@ -140,14 +151,18 @@ export namespace Components {
   interface OpenbioFingerImageComponent {
     'editFingerCallback': any;
     'finger': any;
+    'fingerIndex': number;
     'fingerName': string;
     'parentComponentContext': any;
+    'uploadFingerImageCallback': any;
   }
   interface OpenbioFingerImageComponentAttributes extends StencilHTMLAttributes {
     'editFingerCallback'?: any;
     'finger'?: any;
+    'fingerIndex'?: number;
     'fingerName'?: string;
     'parentComponentContext'?: any;
+    'uploadFingerImageCallback'?: any;
   }
 
   interface OpenbioMugshotDetails {
@@ -168,6 +183,20 @@ export namespace Components {
   interface OpenbioMugshot {}
   interface OpenbioMugshotAttributes extends StencilHTMLAttributes {}
 
+  interface OpenbioScannerDetails {
+    'detached': boolean;
+    'isTagComponent': boolean;
+    'tempPerson': any;
+  }
+  interface OpenbioScannerDetailsAttributes extends StencilHTMLAttributes {
+    'detached'?: boolean;
+    'isTagComponent'?: boolean;
+    'tempPerson'?: any;
+  }
+
+  interface OpenbioScanner {}
+  interface OpenbioScannerAttributes extends StencilHTMLAttributes {}
+
   interface OpenbioSignatureDetails {
     'detached': boolean;
     'isTagComponent': boolean;
@@ -187,6 +216,7 @@ export namespace Components {
 
 declare global {
   interface StencilElementInterfaces {
+    'HelpComponent': Components.HelpComponent;
     'LoaderComponent': Components.LoaderComponent;
     'MyComponent': Components.MyComponent;
     'NotificationComponent': Components.NotificationComponent;
@@ -199,11 +229,14 @@ declare global {
     'OpenbioFingerImageComponent': Components.OpenbioFingerImageComponent;
     'OpenbioMugshotDetails': Components.OpenbioMugshotDetails;
     'OpenbioMugshot': Components.OpenbioMugshot;
+    'OpenbioScannerDetails': Components.OpenbioScannerDetails;
+    'OpenbioScanner': Components.OpenbioScanner;
     'OpenbioSignatureDetails': Components.OpenbioSignatureDetails;
     'OpenbioSignature': Components.OpenbioSignature;
   }
 
   interface StencilIntrinsicElements {
+    'help-component': Components.HelpComponentAttributes;
     'loader-component': Components.LoaderComponentAttributes;
     'my-component': Components.MyComponentAttributes;
     'notification-component': Components.NotificationComponentAttributes;
@@ -216,10 +249,18 @@ declare global {
     'openbio-finger-image-component': Components.OpenbioFingerImageComponentAttributes;
     'openbio-mugshot-details': Components.OpenbioMugshotDetailsAttributes;
     'openbio-mugshot': Components.OpenbioMugshotAttributes;
+    'openbio-scanner-details': Components.OpenbioScannerDetailsAttributes;
+    'openbio-scanner': Components.OpenbioScannerAttributes;
     'openbio-signature-details': Components.OpenbioSignatureDetailsAttributes;
     'openbio-signature': Components.OpenbioSignatureAttributes;
   }
 
+
+  interface HTMLHelpComponentElement extends Components.HelpComponent, HTMLStencilElement {}
+  var HTMLHelpComponentElement: {
+    prototype: HTMLHelpComponentElement;
+    new (): HTMLHelpComponentElement;
+  };
 
   interface HTMLLoaderComponentElement extends Components.LoaderComponent, HTMLStencilElement {}
   var HTMLLoaderComponentElement: {
@@ -293,6 +334,18 @@ declare global {
     new (): HTMLOpenbioMugshotElement;
   };
 
+  interface HTMLOpenbioScannerDetailsElement extends Components.OpenbioScannerDetails, HTMLStencilElement {}
+  var HTMLOpenbioScannerDetailsElement: {
+    prototype: HTMLOpenbioScannerDetailsElement;
+    new (): HTMLOpenbioScannerDetailsElement;
+  };
+
+  interface HTMLOpenbioScannerElement extends Components.OpenbioScanner, HTMLStencilElement {}
+  var HTMLOpenbioScannerElement: {
+    prototype: HTMLOpenbioScannerElement;
+    new (): HTMLOpenbioScannerElement;
+  };
+
   interface HTMLOpenbioSignatureDetailsElement extends Components.OpenbioSignatureDetails, HTMLStencilElement {}
   var HTMLOpenbioSignatureDetailsElement: {
     prototype: HTMLOpenbioSignatureDetailsElement;
@@ -306,6 +359,7 @@ declare global {
   };
 
   interface HTMLElementTagNameMap {
+    'help-component': HTMLHelpComponentElement
     'loader-component': HTMLLoaderComponentElement
     'my-component': HTMLMyComponentElement
     'notification-component': HTMLNotificationComponentElement
@@ -318,11 +372,14 @@ declare global {
     'openbio-finger-image-component': HTMLOpenbioFingerImageComponentElement
     'openbio-mugshot-details': HTMLOpenbioMugshotDetailsElement
     'openbio-mugshot': HTMLOpenbioMugshotElement
+    'openbio-scanner-details': HTMLOpenbioScannerDetailsElement
+    'openbio-scanner': HTMLOpenbioScannerElement
     'openbio-signature-details': HTMLOpenbioSignatureDetailsElement
     'openbio-signature': HTMLOpenbioSignatureElement
   }
 
   interface ElementTagNameMap {
+    'help-component': HTMLHelpComponentElement;
     'loader-component': HTMLLoaderComponentElement;
     'my-component': HTMLMyComponentElement;
     'notification-component': HTMLNotificationComponentElement;
@@ -335,6 +392,8 @@ declare global {
     'openbio-finger-image-component': HTMLOpenbioFingerImageComponentElement;
     'openbio-mugshot-details': HTMLOpenbioMugshotDetailsElement;
     'openbio-mugshot': HTMLOpenbioMugshotElement;
+    'openbio-scanner-details': HTMLOpenbioScannerDetailsElement;
+    'openbio-scanner': HTMLOpenbioScannerElement;
     'openbio-signature-details': HTMLOpenbioSignatureDetailsElement;
     'openbio-signature': HTMLOpenbioSignatureElement;
   }

@@ -2,6 +2,12 @@ declare const constants: {
     SERVER_HOST: string;
     WS_HOST: string;
     IPINFO_ADDRESS: string;
+    captureTypes: {
+        ONE_FINGER_FLAT: number;
+        TWO_FINGER_FLAT: number;
+        ROLLED_FINGER: number;
+        FOUR_FINGER_FLAT: number;
+    };
     anomalyTypes: {
         SIGNATURE_ANOMALY: number;
         FACE_ANOMALY: number;
@@ -36,6 +42,6 @@ declare const constants: {
     dpiValue: {
         1: number;
     };
-    fingerNames: Map<any, any>;
+    fingerNames: string[];
 };
 export default constants;

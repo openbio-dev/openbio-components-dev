@@ -7455,6 +7455,24 @@ input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 30px white inset !important; }
 
+.success {
+  background-color: #48c774 !important; }
+
+.success:hover {
+  background-color: #39bb67 !important; }
+
+.warning {
+  background-color: #ffdd57 !important; }
+
+.warning:hover {
+  background-color: #dbb314 !important; }
+
+.danger {
+  background-color: #e80631 !important; }
+
+.danger:hover {
+  background-color: #bf1434 !important; }
+
 .color-primary {
   color: #239ed7 !important; }
 
@@ -7521,8 +7539,14 @@ input:-webkit-autofill:active {
 .mt-10 {
   margin-top: 10px; }
 
+.mt-20 {
+  margin-top: 20px; }
+
 .mb-10 {
   margin-bottom: 10px; }
+
+.mb-20 {
+  margin-bottom: 20px; }
 
 .ml-10 {
   margin-left: 10px; }
@@ -7536,6 +7560,39 @@ input:-webkit-autofill:active {
   padding: 8px;
   width: 36px !important;
   height: auto !important;
+  transition: 0.5s; }
+
+.fab-icon-active {
+  background-color: #2980B9 !important;
+  border: 3px groove red;
+  padding: 5px !important; }
+
+.fab-icon:hover {
+  background-color: #2980B9;
+  cursor: pointer; }
+
+.my-10 {
+  margin-top: 10px;
+  margin-bottom: 10px; }
+
+.mx-10 {
+  margin-left: 10;
+  margin-right: 10px; }
+
+.w-100 {
+  width: 100% !important; }
+
+.h-100 {
+  height: 100% !important; }
+
+.no-border-radius {
+  border-radius: 0 !important; }
+
+.fab-icon {
+  background-color: #239ed7;
+  border-radius: 100% !important;
+  padding: 8px;
+  width: 36px;
   transition: 0.5s; }
 
 .fab-icon-active {
@@ -7643,7 +7700,8 @@ input:-webkit-autofill:active {
   background-color: rgba(0, 0, 0, 0.8); }
 
 .show-modal {
-  display: block; }
+  display: block;
+  visibility: visible !important; }
 
 .modal-content {
   margin: auto;

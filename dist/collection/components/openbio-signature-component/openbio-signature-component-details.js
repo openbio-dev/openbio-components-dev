@@ -2,8 +2,9 @@ import WS from '../../utils/websocket';
 import { showImage } from '../../utils/canvas';
 import { notify } from '../../utils/notifier';
 import { setSignature } from '../../store/main.store';
-import { getAnomalies, saveSignature, getSignatureSettings } from "./api";
+import { getAnomalies, saveSignature, getSignatureSettings, saveSignatureFile } from "./api";
 import { getLocalization } from '../../utils/utils';
+import { getAppConfig } from '../../utils/api';
 import constants from "../../utils/constants";
 import changeDPI from "changedpi";
 const BASE64_IMAGE = 'data:image/charset=UTF-8;png;base64,';
@@ -28,7 +29,9 @@ export class OpenbioSignatureComponentDetails {
             data: undefined
         };
         this.deviceReady = false;
+        this.deviceOpened = false;
         this.originalImage = EMPTY_IMAGE;
+        this.rawImage = EMPTY_IMAGE;
         this.points = [];
         this.dpiValue = 0;
         this.tab = 0;
@@ -44,10 +47,15 @@ export class OpenbioSignatureComponentDetails {
         this.brand = '';
         this.serial = '';
         this.deviceStatus = false;
+        this.serviceConfigs = undefined;
     }
     clearImages() {
         showImage(this.canvas, "");
         this.signature.originalImage = undefined;
+    }
+    clear() {
+        this.stopPreview();
+        this.startPreview();
     }
     startPreview(backToPreview = false) {
         if (this.isCapturing)
@@ -80,6 +88,7 @@ export class OpenbioSignatureComponentDetails {
     open() {
         this.payload.action = "open";
         this.ws.respondToDeviceWS(this.payload);
+        this.deviceOpened = true;
     }
     componentDidLoad() {
         this.showLoader = true;
@@ -87,6 +96,7 @@ export class OpenbioSignatureComponentDetails {
             try {
                 const faceSettings = await getSignatureSettings();
                 this.dpiValue = constants.dpiValue[faceSettings.dpiOption] || 0;
+                this.serviceConfigs = await getAppConfig();
                 if (this.detached && this.isTagComponent) {
                     const _this = this;
                     window["getBiometryData"] = function () {
@@ -113,7 +123,9 @@ export class OpenbioSignatureComponentDetails {
                 this.wsStatusInterval = setInterval(() => {
                     if (this.ws.status() === 1) {
                         clearInterval(this.wsStatusInterval);
-                        this.open();
+                        if (!this.deviceReady) {
+                            this.open();
+                        }
                     }
                 }, 1000);
                 this.ws.componentSocket.addEventListener("message", (event) => {
@@ -145,12 +157,14 @@ export class OpenbioSignatureComponentDetails {
                         const previousStatus = JSON.parse(JSON.stringify(this.deviceStatus));
                         this.deviceStatus = deviceStatuses.signature && deviceStatuses.signature.initialized;
                         if (!this.deviceStatus) {
-                            notify(this.componentContainer, "error", "Dispositivo desconectado!");
                             return;
                         }
-                        else if (!previousStatus && this.deviceStatus) {
-                            this.stopPreview();
-                            this.startPreview();
+                        else if (!previousStatus) {
+                            if (!this.deviceOpened) {
+                                this.open();
+                                this.stopPreview();
+                                this.startPreview();
+                            }
                             return;
                         }
                     }
@@ -165,6 +179,7 @@ export class OpenbioSignatureComponentDetails {
                         this.model = data.deviceInfo.modelName;
                         this.brand = data.deviceInfo.manufacturName;
                         this.serial = data.deviceInfo.serialNumber;
+                        this.rawImage = data.rawImage;
                         this.saveSignature();
                     }
                 });
@@ -234,10 +249,14 @@ export class OpenbioSignatureComponentDetails {
         this.saveSignature(true);
     }
     async saveSignature(saveAnomaly = false) {
-        const localization = await getLocalization();
+        let localization = undefined;
+        if (this.serviceConfigs && this.serviceConfigs.tools.geolocationService) {
+            localization = await getLocalization();
+        }
         const signature = {
             id: this.signature.id ? this.signature.id : null,
             data: this.originalImage ? (this.dpiValue ? changeDPI.changeDpiDataUrl(`data:image/png;base64,${this.originalImage}`, this.dpiValue).split(",")[1] : this.originalImage) : "",
+            rawData: this.rawImage ? (this.dpiValue ? changeDPI.changeDpiDataUrl(`data:image/png;base64,${this.rawImage}`, this.dpiValue).split(",")[1] : this.rawImage) : "",
             anomalyId: saveAnomaly && this.anomaly ? this.anomaly : null,
             points: JSON.stringify(this.points),
             model: this.model,
@@ -253,6 +272,7 @@ export class OpenbioSignatureComponentDetails {
             await this.storeCapturedSignature({
                 id: saveSignatureResult.id,
                 data: saveSignatureResult.data,
+                rawData: saveSignatureResult.rawData,
                 anomalyId: saveSignatureResult.anomaly_id,
                 model: saveSignatureResult.model,
                 brand: saveSignatureResult.brand,
@@ -283,6 +303,42 @@ export class OpenbioSignatureComponentDetails {
         setSignature(this.signature);
         this.componentContainer.forceUpdate();
     }
+    onInputChange(files) {
+        if (files.length > 0) {
+            if (files[0].type !== 'image/png') {
+                notify(this.componentContainer, "error", "Formato do arquivo inválido. Apenas imagens no formato png são aceitas");
+                return;
+            }
+            if (files[0].type !== 'image/png') {
+                notify(this.componentContainer, "error", "Formato do arquivo inválido. Apenas imagens no formato png são aceitas");
+                return;
+            }
+            const image = new Image();
+            const url = window.URL.createObjectURL(files[0]);
+            image.onload = async () => {
+                let localization = undefined;
+                if (this.serviceConfigs && this.serviceConfigs.tools.geolocationService) {
+                    localization = await getLocalization();
+                }
+                await saveSignatureFile({
+                    personId: this.person.id,
+                    signature: {
+                        id: this.signature.id ? this.signature.id : null,
+                        localization,
+                    },
+                }, files[0]);
+                const reader = new FileReader();
+                reader.readAsDataURL(files[0]);
+                reader.onload = () => {
+                    this.signature.originalImage = reader.result.toString().split(",")[1];
+                    notify(this.componentContainer, "success", "Assinatura carregada com sucesso");
+                    this.tab = TABS.RESULT;
+                };
+                window.URL.revokeObjectURL(url);
+            };
+            image.src = url;
+        }
+    }
     render() {
         const anomalyOptions = (this.anomalyOptions || []).map((option) => {
             return (h("option", { value: option.id, selected: this.anomaly === option.id }, option.name));
@@ -303,16 +359,25 @@ export class OpenbioSignatureComponentDetails {
                     h("div", { class: "device-status-container" },
                         h("h6", { class: "title is-7" },
                             "ESTADO DO DISPOSITIVO: ",
-                            this.deviceReady ? 'PRONTO' : 'NÃO CARREGADO'))),
+                            this.deviceReady ? 'PRONTO' : 'NÃO CARREGADO')),
+                    this.serviceConfigs && (this.serviceConfigs.signature.help.guideImage || this.serviceConfigs.signature.help.content) ?
+                        h("help-component", { src: this.serviceConfigs.signature.help.guideImage, "help-text": this.serviceConfigs.signature.help.content }) : null),
                 h("div", { class: "column text-align-left" },
                     h("canvas", { width: "460", height: "300", class: "canvas", ref: el => this.canvas = el }),
                     h("div", { class: "columns is-mobile action-buttons-container" },
                         h("div", { class: "column" },
                             h("a", { class: `button is-small is-pulled-left action-button ${this.deviceReady && this.isCapturing ? "disabled" : ""}`, onClick: () => this.startPreview() }, "INICIAR PREVIEW")),
                         h("div", { class: "column has-text-centered" },
+                            h("a", { class: `button is-small action-button is-pulled-right ${this.deviceReady ? "" : "disabled"}`, title: "Clique aqui para limpar", onClick: () => this.clear() }, "LIMPAR")),
+                        h("div", { class: "column has-text-centered" },
                             h("a", { class: `button is-small action-button is-pulled-right ${this.deviceReady && !this.signature.originalImage ? "" : "disabled"}`, title: `${this.deviceReady ? "Clique aqui para capturar" : "O dispositivo não está carregado"}`, onClick: () => this.capture() }, "CAPTURAR")),
                         this.detached && !this.isTagComponent ? h("div", { class: "column has-text-centered" },
                             h("a", { class: `button is-small is-pulled-left action-button ${!this.deviceReady || this.isCapturing || !this.originalImage || !this.signature.originalImage ? "disabled" : ""}`, title: this.getFinishTitle(), onClick: () => this.acceptData() }, "FINALIZAR")) : null),
+                    h("div", { id: "capture-file", class: "file is-small is-info" },
+                        h("label", { class: "file-label" },
+                            h("input", { onChange: ($event) => this.onInputChange($event.target.files), class: "file-input", type: "file", name: "resume", accept: ".png" }),
+                            h("span", { class: "file-cta" },
+                                h("span", { class: "file-label" }, "Carregar arquivo")))),
                     h("div", { class: "columns is-mobile anomaly-buttons-container" },
                         h("div", { class: "column" },
                             h("div", { class: "select is-small inline is-pulled-left" },
@@ -361,6 +426,9 @@ export class OpenbioSignatureComponentDetails {
             "type": Boolean,
             "attr": "detached"
         },
+        "deviceOpened": {
+            "state": true
+        },
         "deviceReady": {
             "state": true
         },
@@ -386,7 +454,13 @@ export class OpenbioSignatureComponentDetails {
         "points": {
             "state": true
         },
+        "rawImage": {
+            "state": true
+        },
         "serial": {
+            "state": true
+        },
+        "serviceConfigs": {
             "state": true
         },
         "showLoader": {

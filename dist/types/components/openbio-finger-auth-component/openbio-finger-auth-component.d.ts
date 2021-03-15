@@ -44,6 +44,7 @@ export declare class OpenbioFingerAuthComponent {
     cpf: string;
     onMatcherResult: Function;
     onCaptureFingerprintResult: Function;
+    isDebug: boolean;
     personName: string;
     personImage: string;
     componentContainer: HTMLStencilElement;
@@ -63,11 +64,18 @@ export declare class OpenbioFingerAuthComponent {
         name: string;
     };
     currentFingerImage: string;
+    captureStep: boolean;
     useOpenbioMatcherState: boolean;
     cpfState: string;
+    personNameState: string;
+    personImageState: string;
+    debug: boolean;
     person: any;
     private payload;
     clearCanvasFingerImage(): void;
+    session: {
+        store: (authentication: any) => void;
+    };
     device: {
         open: () => void;
         prepareToPreview: () => void;
@@ -82,6 +90,7 @@ export declare class OpenbioFingerAuthComponent {
     setCurrentFingerImage(): void;
     setSelectionCaptureType(event: any): void;
     setSelectionFingerList(event: any): void;
+    changeCaptureStep(): void;
     componentDidLoad(): void;
     componentDidUnload(): void;
     render(): JSX.Element;

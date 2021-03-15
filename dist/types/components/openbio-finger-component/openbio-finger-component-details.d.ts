@@ -61,6 +61,7 @@ export declare class OpenbioFingerComponent {
     isEditing: boolean;
     showLoader: boolean;
     showControlDisable: boolean;
+    serviceConfigs: any;
     personInfo: any;
     selectedFinger: any;
     authenticationSimilarity: number;
@@ -76,6 +77,7 @@ export declare class OpenbioFingerComponent {
     executeRepetitionControl(): void;
     executeMatch(): void;
     generateMinutiateData(): void;
+    uploadFingerImage(_this: any, fingerIndex: any, image: any, fileOptions: any): Promise<void>;
     setProcessorFingers(): void;
     foundFlowType(sequence: Array<any>): any;
     prepareToPreview(): void;

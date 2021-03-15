@@ -24,6 +24,7 @@ export declare class OpenbioMugshotComponentDetails {
     originalImage: string;
     croppedImage: string;
     segmentedImage: string;
+    rawImage: string;
     crop: boolean;
     segmentation: boolean;
     autoCapture: boolean;
@@ -50,6 +51,8 @@ export declare class OpenbioMugshotComponentDetails {
     serial: string;
     video: any;
     track: any;
+    serviceConfigs: any;
+    deviceStatus: boolean;
     open(): void;
     applyCameraSettings(): Promise<void>;
     fetchCurrentCameraSettings(): Promise<void>;

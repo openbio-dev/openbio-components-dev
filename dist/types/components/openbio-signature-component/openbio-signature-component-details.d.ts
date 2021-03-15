@@ -12,7 +12,9 @@ export declare class OpenbioSignatureComponentDetails {
     tempPerson: any;
     tempSignature: any;
     deviceReady: boolean;
+    deviceOpened: boolean;
     originalImage: string;
+    rawImage: string;
     points: any[];
     dpiValue: number;
     tab: number;
@@ -26,7 +28,9 @@ export declare class OpenbioSignatureComponentDetails {
     brand: string;
     serial: string;
     deviceStatus: boolean;
+    serviceConfigs: any;
     clearImages(): void;
+    clear(): void;
     startPreview(backToPreview?: boolean): void;
     close(): void;
     stopPreview(): void;
@@ -44,5 +48,6 @@ export declare class OpenbioSignatureComponentDetails {
     saveAnomaly(): void;
     saveSignature(saveAnomaly?: boolean): Promise<void>;
     storeCapturedSignature(parsedValue: any): void;
+    onInputChange(files: any): void;
     render(): JSX.Element;
 }

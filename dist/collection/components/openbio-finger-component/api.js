@@ -39,3 +39,13 @@ export function fingerAuthenticate(data) {
         headers: { 'Content-Type': 'application/json' },
     }).then(res => res.json());
 }
+export function saveFingerFile(data, file) {
+    const bodyData = new FormData();
+    bodyData.append("file", file);
+    bodyData.set("data", JSON.stringify(data));
+    return fetch(`${url}/db/api/biometries/finger-file`, {
+        method: 'post',
+        body: bodyData,
+    })
+        .then(res => res.json());
+}

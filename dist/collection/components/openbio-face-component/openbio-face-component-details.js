@@ -1,6 +1,6 @@
 import WS from '../../utils/websocket';
 import { setFace } from '../../store/main.store';
-import { getAnomalies, getCameraSettingsOptions, getCameraSettings, saveCameraSettings, saveFace, getFaceSettings } from "./api";
+import { getAnomalies, getCameraSettingsOptions, getCameraSettings, saveCameraSettings, saveFace, getFaceSettings, } from "./api";
 import { showImage } from '../../utils/canvas';
 import { notify } from '../../utils/notifier';
 import constants from "../../utils/constants";
@@ -59,6 +59,8 @@ export class OpenbioFaceComponentDetails {
             action: undefined,
             data: undefined,
             doEvaluate: true,
+            file: undefined,
+            fileOptions: undefined,
         };
         this.keysForEvaluate = new Map();
         this.deviceReady = false;
@@ -72,6 +74,7 @@ export class OpenbioFaceComponentDetails {
         this.originalImage = EMPTY_IMAGE;
         this.croppedImage = EMPTY_IMAGE;
         this.segmentedImage = EMPTY_IMAGE;
+        this.rawImage = EMPTY_IMAGE;
         this.autoCaptureCount = 0;
         this.autoCapturing = false;
         this.autoCaptureInterval = null;
@@ -141,6 +144,13 @@ export class OpenbioFaceComponentDetails {
         this.shallCapture = false;
         this.evaluations = [];
         this.serviceConfigs = undefined;
+        this.uploadedBase64 = undefined;
+        this.fileToBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
         this.keysForEvaluate.set(EYE_AXIS_LOCATION_RATIO, { message: this.eyeAxisLocationRatioMessage.bind(this) });
         this.keysForEvaluate.set(CENTER_LINE_LOCATION_RATIO, { message: this.centerLineLocationRatioMessage.bind(this) });
         this.keysForEvaluate.set(EYE_SEPARATION_SCORE, { message: this.eyeSeparationMessage.bind(this) });
@@ -422,10 +432,12 @@ export class OpenbioFaceComponentDetails {
                     }
                     else {
                         this.open();
-                        this.configureSegmentation();
-                        this.applyCameraSettings();
-                        this.stopPreview();
-                        this.startPreview();
+                        if (this.deviceReady) {
+                            this.configureSegmentation();
+                            this.applyCameraSettings();
+                            this.stopPreview();
+                            this.startPreview();
+                        }
                     }
                 }
             }, 1000);
@@ -461,6 +473,21 @@ export class OpenbioFaceComponentDetails {
                 if (data.flashCharge) {
                     this.flashCharge = data.flashCharge;
                 }
+                const deviceStatuses = data.deviceStatuses;
+                if (deviceStatuses) {
+                    const previousStatus = JSON.parse(JSON.stringify(this.deviceStatus));
+                    this.deviceStatus = deviceStatuses.face && deviceStatuses.face.initialized;
+                    if (!this.deviceStatus) {
+                        return;
+                    }
+                    else if (!previousStatus && this.deviceStatus) {
+                        this.configureSegmentation();
+                        this.applyCameraSettings();
+                        this.stopPreview();
+                        this.startPreview();
+                        return;
+                    }
+                }
                 const evaluation = data.evaluation;
                 if (evaluation && evaluation !== UNPLUGGED_ERROR) {
                     this.shallCapture = true;
@@ -484,36 +511,40 @@ export class OpenbioFaceComponentDetails {
                     this.resetAutoCapturing();
                     if (this.crop && data.cropResultCode !== 0) {
                         showImage(this.canvas, undefined, null, null, this.manualEyeSelection);
-                        showImage(this.canvas, data.originalImage, null, null, this.manualEyeSelection);
-                        this.originalImage = data.originalImage;
-                        this.croppedImage = data.originalImage;
-                        this.segmentedImage = data.originalImage;
+                        showImage(this.canvas, this.uploadedBase64 ? this.uploadedBase64 : data.originalImage, null, null, this.manualEyeSelection);
+                        this.originalImage = this.uploadedBase64 ? this.uploadedBase64 : data.originalImage;
+                        this.croppedImage = this.uploadedBase64 ? this.uploadedBase64 : data.croppedImage;
+                        this.segmentedImage = this.uploadedBase64 ? this.uploadedBase64 : data.segmentedImage;
                         this.showLoader = false;
                         this.faceDetected = false;
                         notify(this.componentContainer, "error", "Face não detectada. Refaça a foto ou tente marcar os olhos manualmente!", 6000);
                     }
                     else {
+                        this.uploadedBase64 = undefined;
                         const dataImage = data.segmentedImage || data.croppedImage || data.originalImage;
                         showImage(this.canvas, undefined, null, null, this.manualEyeSelection);
                         showImage(this.canvas, dataImage, null, null, this.manualEyeSelection);
                         this.originalImage = data.originalImage;
                         this.croppedImage = data.croppedImage;
                         this.segmentedImage = data.segmentedImage;
+                        this.rawImage = data.rawImage;
                         this.model = data.deviceInfo.modelName;
                         this.brand = data.deviceInfo.manufacturName;
                         this.serial = data.deviceInfo.serialNumber;
-                        const { segmentedImageEvaluation } = data;
-                        this.validation.background = segmentedImageEvaluation["Background Type Score"];
-                        this.validation.brightness = segmentedImageEvaluation["Brightness Score"];
-                        this.validation.centerlineLocationRatio = segmentedImageEvaluation["Centerline Location Ratio"];
-                        this.validation.eyeAxisAngle = segmentedImageEvaluation["Eye Axis Angle"];
-                        this.validation.eyeAxisLocationRatio = segmentedImageEvaluation["Eye Axis Location Ratio"];
-                        this.validation.eyeSeparation = segmentedImageEvaluation["Eye Separation"];
-                        this.validation.glasses = segmentedImageEvaluation["Glasses"];
-                        this.validation.poseAngleYaw = segmentedImageEvaluation["Pose-Angle Yaw"];
-                        this.validation.saturation = segmentedImageEvaluation["Facial Saturation"];
-                        this.validation.sharpness = segmentedImageEvaluation["Sharpness"];
-                        this.validation.smile = segmentedImageEvaluation["Smile"];
+                        const { imageEvaluation } = data;
+                        if (imageEvaluation) {
+                            this.validation.background = imageEvaluation["Background Type Score"];
+                            this.validation.brightness = imageEvaluation["Brightness Score"];
+                            this.validation.centerlineLocationRatio = imageEvaluation["Centerline Location Ratio"];
+                            this.validation.eyeAxisAngle = imageEvaluation["Eye Axis Angle"];
+                            this.validation.eyeAxisLocationRatio = imageEvaluation["Eye Axis Location Ratio"];
+                            this.validation.eyeSeparation = imageEvaluation["Eye Separation"];
+                            this.validation.glasses = imageEvaluation["Glasses"];
+                            this.validation.poseAngleYaw = imageEvaluation["Pose-Angle Yaw"];
+                            this.validation.saturation = imageEvaluation["Facial Saturation"];
+                            this.validation.sharpness = imageEvaluation["Sharpness"];
+                            this.validation.smile = imageEvaluation["Smile"];
+                        }
                         this.saveFace();
                         this.setActiveTab(1);
                     }
@@ -730,10 +761,14 @@ export class OpenbioFaceComponentDetails {
         this.saveFace();
     }
     async saveFace() {
-        const localization = await getLocalization();
+        let localization = undefined;
+        if (this.serviceConfigs && this.serviceConfigs.tools.geolocationService) {
+            localization = await getLocalization();
+        }
         let croppedImage = "";
         let originalImage = "";
         let segmentedImage = "";
+        let rawImage = "";
         if (this.croppedImage) {
             if (this.dpiValue) {
                 croppedImage = changeDPI.changeDpiDataUrl(`data:image/png;base64,${this.croppedImage}`, this.dpiValue).split(",")[1];
@@ -758,11 +793,20 @@ export class OpenbioFaceComponentDetails {
                 segmentedImage = this.segmentedImage;
             }
         }
+        if (this.rawImage) {
+            if (this.dpiValue) {
+                rawImage = changeDPI.changeDpiDataUrl(`data:image/png;base64,${this.rawImage}`, this.dpiValue).split(",")[1];
+            }
+            else {
+                rawImage = this.rawImage;
+            }
+        }
         const face = {
             id: this.face.id ? this.face.id : null,
             data: croppedImage,
             originalImage,
             segmentedImage,
+            rawImage,
             anomalyId: this.anomaly ? this.anomaly : null,
             model: this.model,
             serial: this.serial,
@@ -782,6 +826,7 @@ export class OpenbioFaceComponentDetails {
                 data: saveFaceResult.cropped_data,
                 originalImage: saveFaceResult.original_data,
                 segmentedImage: saveFaceResult.segmented_data,
+                rawImage: saveFaceResult.rawImage,
                 anomalyId: saveFaceResult.original_data.anomaly_id,
                 model: saveFaceResult.model,
                 serial: saveFaceResult.serial,
@@ -808,7 +853,62 @@ export class OpenbioFaceComponentDetails {
         this.face.serial = saveFaceResult.serial;
         this.face.brand = saveFaceResult.brand;
         this.face.localization = saveFaceResult.localization;
+        this.face.rawImage = saveFaceResult.rawImage;
         setFace(this.face);
+    }
+    async onInputChange(files) {
+        if (files.length > 0) {
+            this.showLoader = true;
+            if (files[0].type !== 'image/png') {
+                this.showLoader = false;
+                notify(this.componentContainer, "error", "Formato do arquivo inválido. Apenas imagens no formato png são aceitas");
+                files = undefined;
+                return;
+            }
+            this.originalImage = undefined;
+            this.croppedImage = undefined;
+            this.segmentedImage = undefined;
+            this.validation = {
+                background: "",
+                brightness: "",
+                eyeAxisAngle: "",
+                eyeAxisLocationRatio: "",
+                eyeSeparation: "",
+                glasses: "",
+                heightWidthRatio: "",
+                poseAngleYaw: "",
+                saturation: "",
+                sharpness: "",
+                smile: "",
+            };
+            const image = new Image();
+            const url = window.URL.createObjectURL(files[0]);
+            this.uploadedBase64 = await this.fileToBase64(files[0]);
+            this.uploadedBase64 = this.uploadedBase64.split(",")[1];
+            image.onload = async () => {
+                this.stopPreview();
+                this.payload.action = "load-capture-data";
+                const reader = new FileReader();
+                let rawData = new ArrayBuffer(files[0].size);
+                reader.onload = () => {
+                    rawData = reader.result;
+                    this.ws.respondToDeviceWS(rawData);
+                    this.payload.fileOptions = {
+                        width: image.width,
+                        height: image.height,
+                    };
+                    this.payload.data = {
+                        crop: this.crop,
+                        segmentation: this.segmentation
+                    };
+                    this.ws.respondToDeviceWS(this.payload);
+                    files = undefined;
+                };
+                reader.readAsArrayBuffer(files[0]);
+                window.URL.revokeObjectURL(url);
+            };
+            image.src = url;
+        }
     }
     render() {
         const shutterSpeedOptions = (this.cameraSettingsOptions.shutterSpeedOptions || []).map((option) => {
@@ -851,18 +951,18 @@ export class OpenbioFaceComponentDetails {
             h("div", { id: "notification-container" }),
             h("div", { class: "tabs is-left is-boxed" },
                 h("ul", null,
-                    h("li", { class: this.activeTabClass(0) },
-                        h("a", { onClick: () => this.setActiveTab(0) },
+                    h("li", { class: this.activeTabClass(tabs.PREVIEW) },
+                        h("a", { onClick: () => this.setActiveTab(tabs.PREVIEW) },
                             h("span", { class: "tab-title" }, "Captura"))),
-                    h("li", { class: this.activeTabClass(1) },
-                        h("a", { onClick: () => this.setActiveTab(1) },
+                    h("li", { class: this.activeTabClass(tabs.VALIDATION) },
+                        h("a", { onClick: () => this.setActiveTab(tabs.VALIDATION) },
                             h("span", { class: "tab-title" }, "Valida\u00E7\u00E3o"))),
-                    h("li", { class: this.activeTabClass(2) },
-                        h("a", { onClick: () => this.setActiveTab(2) },
+                    h("li", { class: this.activeTabClass(tabs.RESULT) },
+                        h("a", { onClick: () => this.setActiveTab(tabs.RESULT) },
                             h("span", { class: "tab-title" }, "Resultado final"))),
                     this.showCameraConfiguration ?
-                        h("li", { class: this.activeTabClass(3) },
-                            h("a", { onClick: () => this.setActiveTab(3) },
+                        h("li", { class: this.activeTabClass(tabs.CONFIG) },
+                            h("a", { onClick: () => this.setActiveTab(tabs.CONFIG) },
                                 h("span", { class: "tab-title" }, "Configura\u00E7\u00F5es"))) : null)),
             this.tab === tabs.PREVIEW ? h("div", { class: "columns is-mobile" },
                 h("div", { class: "column is-one-quarter" },
@@ -871,6 +971,8 @@ export class OpenbioFaceComponentDetails {
                             "ESTADO DO DISPOSITIVO: ",
                             this.deviceReady ? 'PRONTO' : 'NÃO CARREGADO'),
                         h("progress", { class: "progress is-small", value: this.flashCharge, max: "100" })),
+                    this.serviceConfigs && (this.serviceConfigs.face.help.guideImage || this.serviceConfigs.face.help.content) ?
+                        h("help-component", { src: this.serviceConfigs.face.help.guideImage, "help-text": this.serviceConfigs.face.help.content }) : null,
                     this.autoCapture && !this.originalImage ?
                         h("div", { class: "evaluation" },
                             h("hr", { style: { margin: "10px 0 10px 0" } }),
@@ -942,7 +1044,12 @@ export class OpenbioFaceComponentDetails {
                                     h("option", { value: undefined }, "ESCOLHA EM CASO DE ANOMALIA"),
                                     anomalyOptions))),
                         h("div", { class: "column" },
-                            h("a", { class: "button is-small is-pulled-right", onClick: () => this.saveAnomaly() }, "SALVAR ANOMALIA")))),
+                            h("a", { class: "button is-small is-pulled-right", onClick: () => this.saveAnomaly() }, "SALVAR ANOMALIA"))),
+                    h("div", { id: "capture-file", class: "file is-small is-info" },
+                        h("label", { class: "file-label" },
+                            h("input", { class: "file-input", onChange: ($event) => this.onInputChange($event.target.files), type: "file", name: "resume", accept: ".png" }),
+                            h("span", { class: "file-cta" },
+                                h("span", { class: "file-label" }, "Carregar arquivo"))))),
                 h("div", { class: "columns is-mobile action-buttons-container" },
                     h("span", null,
                         " ",
@@ -983,7 +1090,7 @@ export class OpenbioFaceComponentDetails {
                     h("div", { class: "column" },
                         h("div", { class: "has-text-centered preview-result", style: { paddingTop: '5px' } },
                             h("img", { src: `${BASE64_IMAGE}${this.segmentedImage || this.croppedImage || this.originalImage}` })),
-                        h("div", { class: "columns is-mobile", style: { marginTop: "-25px" } },
+                        h("div", { class: "columns is-mobile", style: { marginTop: "10px" } },
                             h("div", { class: "column is-narrow", style: { transform: "translate(24px, 0)" } },
                                 h("div", { class: "is-pulled-left" },
                                     h("img", { src: "./assets/general/camera-retake-outline.png", title: "Clique aqui para tirar uma nova foto.", class: `fab-icon is-pulled-left ${this.isPreviewing ? "disabled" : ""} `, style: { transform: "translate(24px, 0)" }, onClick: () => this.startPreview(true) }),
@@ -1009,8 +1116,9 @@ export class OpenbioFaceComponentDetails {
                         h("img", { src: `${BASE64_IMAGE}${this.detached ? this.originalImage : (this.face.originalImage || this.originalImage)}` })),
                     h("div", { class: "column has-text-centered preview-result" },
                         h("img", { src: `${BASE64_IMAGE}${this.detached ? this.croppedImage : (this.face.croppedImage || this.croppedImage)}` })),
-                    h("div", { class: "column has-text-centered preview-result" },
-                        h("img", { src: `${BASE64_IMAGE}${this.detached ? this.segmentedImage : (this.face.segmentedImage || this.segmentedImage)}` }))),
+                    this.face.segmentedImage || this.segmentedImage ?
+                        h("div", { class: "column has-text-centered preview-result" },
+                            h("img", { src: `${BASE64_IMAGE}${this.detached ? this.segmentedImage : (this.face.segmentedImage || this.segmentedImage)}` })) : null),
                 h("p", null, this.face.anomalyId ? this.anomalyOptions.find((anomaly) => { return anomaly.id === this.face.anomalyId; }).name : "")) : null,
             this.tab === tabs.CONFIG ? h("div", { class: "tab-content" },
                 h("div", { class: "columns is-mobile settings-container" },
@@ -1128,6 +1236,9 @@ export class OpenbioFaceComponentDetails {
         "cameraSettingsOptions": {
             "state": true
         },
+        "captureInput": {
+            "state": true
+        },
         "centerLineLocationRatio": {
             "state": true
         },
@@ -1220,6 +1331,9 @@ export class OpenbioFaceComponentDetails {
         "previewType": {
             "state": true
         },
+        "rawImage": {
+            "state": true
+        },
         "rightOrLeftEyeClosed": {
             "state": true
         },
@@ -1262,6 +1376,9 @@ export class OpenbioFaceComponentDetails {
             "attr": "temp-person"
         },
         "track": {
+            "state": true
+        },
+        "uploadedBase64": {
             "state": true
         },
         "validation": {

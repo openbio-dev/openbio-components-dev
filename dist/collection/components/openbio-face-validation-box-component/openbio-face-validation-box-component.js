@@ -44,7 +44,7 @@ export class OpenbioFaceValidationBoxComponent {
                 message = this.status === "OK" ? "OK" : this.status === "Fail Low" ? "Gire o rosto para esquerda" : "Gire o rosto para direita";
                 break;
             case "saturation":
-                message = this.status === "OK" ? "OK" : "A saturação da imagem não está adequada";
+                message = this.status === "OK" ? "OK" : "A saturação não está adequada";
                 break;
             case "sharpness":
                 message = this.status === "OK" ? "OK" : "A foto não está nítida";

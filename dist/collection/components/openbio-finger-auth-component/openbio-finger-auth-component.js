@@ -60,6 +60,8 @@ export class OpenbioFingerAuthComponent {
         this.showFullscreenLoader = false;
         this.captureType = CaptureType.FLAT;
         this.selectedFinger = { index: 0, name: this.fingerNames[0] };
+        this.captureStep = false;
+        this.debug = false;
         this.payload = {
             deviceName: constants.device.IB,
             deviceType: "modal",
@@ -69,6 +71,17 @@ export class OpenbioFingerAuthComponent {
             fingerIndex: undefined,
             action: undefined,
             data: undefined
+        };
+        this.session = {
+            store: (authentication) => {
+                this.payload.action = "store-session";
+                this.payload.data = {
+                    type: "AUTH",
+                    owner: "default-user",
+                    biometry: authentication
+                };
+                this.ws.respondToDeviceWS(this.payload);
+            }
         };
         this.device = {
             open: () => {
@@ -155,54 +168,50 @@ export class OpenbioFingerAuthComponent {
                     this.fingerPreviewCurrentStatusLineX = rollingLineX;
                 }, 1000);
                 if (this.useOpenbioMatcherState) {
-                    fingerAuthenticate({
-                        cpf: this.cpfState,
-                        finger: {
-                            finger_index: this.selectedFinger.index,
-                            data: originalImage
-                        }
-                    }).then((resolve) => {
-                        this.showFullscreenLoader = false;
-                        this.fingerAuthenticationSimilarity = resolve.similarity;
-                        if (resolve && resolve.similarity > 40) {
-                            notify(this.componentContainer, "success", "Autenticado com sucesso");
-                        }
-                        else {
-                            notify(this.componentContainer, "error", "Falha na autenticação");
-                            this.device.clearCapture();
-                        }
-                        const element = document.getElementById("auth-component");
-                        element.dispatchEvent(new CustomEvent("onMatcherResult", {
-                            detail: {
+                    if (this.selectedFinger && this.selectedFinger.index !== undefined && originalImage && originalImage.length > 0) {
+                        fingerAuthenticate({
+                            cpf: this.cpfState,
+                            finger: {
                                 finger_index: this.selectedFinger.index,
-                                data: originalImage,
-                                nfiqScore: nfiqScore,
-                                similarity: resolve.similarity
+                                data: originalImage
                             },
-                        }));
-                        if (this.onMatcherResult) {
-                            this.onMatcherResult({
-                                finger_index: this.selectedFinger.index,
-                                data: originalImage,
-                                nfiqScore: nfiqScore,
-                                similarity: resolve.similarity
-                            });
-                        }
-                    }, (reject) => {
-                        this.showFullscreenLoader = false;
+                            debug: this.debug,
+                        }).then((resolve) => {
+                            this.showFullscreenLoader = false;
+                            this.fingerAuthenticationSimilarity = resolve.similarity;
+                            if (resolve && resolve.similarity > 40) {
+                                notify(this.componentContainer, "success", "Autenticado com sucesso");
+                            }
+                            else {
+                                notify(this.componentContainer, "error", "Falha na autenticação");
+                                this.device.clearCapture();
+                            }
+                            const authResult = { result: resolve && resolve.similarity > 40 };
+                            this.session.store(authResult);
+                            if (this.onMatcherResult) {
+                                this.onMatcherResult(authResult);
+                            }
+                        }, (reject) => {
+                            this.showFullscreenLoader = false;
+                            this.clearCanvasFingerImage();
+                            this.device.clearCapture();
+                            console.log(reject);
+                        });
+                    }
+                    else {
                         this.clearCanvasFingerImage();
                         this.device.clearCapture();
-                        console.log(reject);
-                    });
+                        this.showFullscreenLoader = false;
+                    }
                 }
-                const element = document.getElementById("auth-component");
-                element.dispatchEvent(new CustomEvent("onCaptureFingerprintResult", {
-                    detail: {
+                else {
+                    const authResult = {
                         finger_index: this.selectedFinger.index,
                         data: originalImage,
-                        nfiqScore: nfiqScore
-                    },
-                }));
+                        nfiqScore: nfiqScore,
+                    };
+                    this.session.store(authResult);
+                }
                 if (this.onCaptureFingerprintResult) {
                     this.onCaptureFingerprintResult({
                         finger_index: this.selectedFinger.index,
@@ -252,9 +261,42 @@ export class OpenbioFingerAuthComponent {
         this[name] = this.selectedFinger;
         this.setCurrentFingerImage();
     }
+    changeCaptureStep() {
+        if (this.captureStep) {
+            this.captureStep = false;
+        }
+        else {
+            if (this.selectedFinger && this.selectedFinger.index !== undefined) {
+                this.captureStep = true;
+            }
+            else {
+                notify(this.componentContainer, "warning", "Necessário informar um dedo para realizar a captura");
+            }
+        }
+    }
     componentDidLoad() {
-        this.useOpenbioMatcherState = this.useOpenbioMatcher;
-        this.cpfState = this.cpf;
+        let location = undefined;
+        let queryObj = undefined;
+        window.global = window;
+        const _global = window || global;
+        if (_global) {
+            console.log(_global);
+            location = _global.location;
+        }
+        if (location) {
+            const { search } = location;
+            if (search !== "") {
+                queryObj = JSON.parse('{"' + decodeURI(search.substring(1)).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}');
+            }
+        }
+        this.useOpenbioMatcherState = queryObj ? queryObj.useOpenbioMatcher === "true" : this.useOpenbioMatcher;
+        if (this.isDebug !== undefined) {
+            this.debug = this.isDebug;
+        }
+        this.cpfState = queryObj ? queryObj.cpf : this.cpf;
+        this.personNameState = queryObj ? queryObj.personName : this.personName;
+        this.personImageState = queryObj ? queryObj.personImage : this.personImage;
+        this.debug = queryObj ? queryObj.debug : false;
         this.getPerson();
         this.getModalSettings();
         this.setCurrentFingerImage();
@@ -286,56 +328,66 @@ export class OpenbioFingerAuthComponent {
                 return (h("option", { value: index, selected: this.selectedFinger && this.selectedFinger.index === index }, item));
             });
         }
-        return (h("div", { id: 'auth-component' },
+        return (h("div", null,
             h("div", { class: "window-size" },
                 h("loader-component", { enabled: this.showFullscreenLoader }),
                 h("div", { id: "notification-container" }),
-                h("div", { class: "card", style: { "box-shadow": "none", "padding-bottom": "10px" } },
-                    h("div", { class: "card-content" },
-                        h("div", { class: "media" },
-                            (personFaceBiometry && personFaceBiometry.FaceBiometries[0] && personFaceBiometry.FaceBiometries[0].data) || (this.personImage) ? (h("div", { class: "media-left" },
-                                h("figure", { class: "image is-128x128" },
-                                    h("img", { style: { "max-width": "128px", "max-height": "128px" }, src: `data:image/png;base64, ${this.personImage || (personFaceBiometry && personFaceBiometry.FaceBiometries[0].data)}` })))) : undefined,
-                            h("div", { class: "media-content" },
-                                h("p", { class: "title is-4" }, this.personName || this.person && this.person.full_name),
-                                this.cpfState || this.person && this.person.cpf ?
-                                    h("p", { class: "subtitle is-6" },
-                                        "CPF: ",
-                                        this.cpfState || this.person && this.person.cpf) : undefined)))),
-                h("div", { class: "columns is-mobile" },
-                    h("div", { class: "column is-one-third" },
-                        h("div", null,
-                            h("p", { style: { marginBottom: "10px" } },
-                                h("span", { style: { fontSize: "14px" } }, "Tipo de captura: "),
-                                h("div", { class: "select is-small inline" },
-                                    h("select", { onChange: this.setSelectionCaptureType.bind(this), name: "captureType" },
-                                        h("option", { value: "0" }, "Pousada"),
-                                        h("option", { value: "2" }, "Rolada")))),
-                            h("p", null,
-                                h("span", { style: { fontSize: "14px" } }, "Dedo: "),
-                                h("div", { class: "select is-small inline", style: { marginLeft: "5px", minWidth: "142px" } },
-                                    h("select", { onChange: this.setSelectionFingerList.bind(this), name: "fingerList" }, personFingerList)))),
-                        this.selectedFinger ?
-                            h("div", { class: "info" },
-                                h("span", null,
-                                    this.captureType === CaptureType.ROLLED ? "Role" : "Posicione",
-                                    " o dedo ",
-                                    h("b", null,
-                                        this.selectedFinger.name,
-                                        " "),
-                                    "sobre o leitor."),
-                                h("p", { class: "finger-image" },
-                                    h("img", { alt: "", src: this.currentFingerImage }))) : null),
-                    h("div", { class: "column text-align-left" },
-                        h("span", { class: `status-item-line-in-canvas status-item status${this.fingerNfiqScore}` }, this.fingerNfiqScore),
-                        h("canvas", { width: "460", height: "300", class: "canvas", ref: el => this.fingerPreviewCanvas = el }),
-                        h("div", { class: "columns is-mobile action-buttons-container" }, this.fingerAuthenticationSimilarity < 40 ?
-                            h("div", { class: "column has-text-centered" },
-                                h("a", { class: "button is-small is-pulled-right action-button", onClick: () => this.device.clearCapture() }, "TENTAR NOVAMENTE")) : null))))));
+                (personFaceBiometry && personFaceBiometry.FaceBiometries[0] && personFaceBiometry.FaceBiometries[0].data) || (this.personImage) ?
+                    h("section", { class: "section" },
+                        h("div", { class: "container" },
+                            h("div", { class: "columns is-centered" },
+                                h("figure", { class: "image" },
+                                    h("img", { class: "is-rounded", style: { "width": "100%", "max-width": "250px", "max-height": "250px", "object-fit": "cover" }, src: `data:image/png;base64, ${this.personImage || (personFaceBiometry && personFaceBiometry.FaceBiometries[0].data)}` })))))
+                    : undefined,
+                h("div", { class: "media-content" },
+                    h("p", { class: "title is-4 has-text-centered has-text-weight-semibold" }, this.personName || this.person && this.person.full_name),
+                    this.cpfState || this.person && this.person.cpf ?
+                        h("p", { class: "subtitle is-6 has-text-grey has-text-centered" }, this.cpfState || (this.person && this.person.cpf))
+                        : undefined),
+                !this.captureStep ?
+                    h("div", null,
+                        h("div", { class: "container", style: { "margin-top": "20px" } },
+                            h("div", { class: "columns is-centered" },
+                                h("div", { class: "select is-info" },
+                                    h("select", { style: { "width": "300px" }, onChange: this.setSelectionFingerList.bind(this), name: "fingerList" },
+                                        h("option", { value: "-1", disabled: true }, "Dedo"),
+                                        personFingerList)))),
+                        h("div", { class: "container", style: { "margin-top": "30px" } },
+                            h("div", { class: "columns is-centered" },
+                                h("div", { class: "buttons" },
+                                    h("button", { class: "button is-info", style: { "width": "300px" }, onClick: () => this.changeCaptureStep() }, "Avan\u00E7ar")))))
+                    : undefined,
+                h("div", { class: { "columns": true, "is-invisible": !this.captureStep } },
+                    h("div", { class: "column" },
+                        h("div", { class: "container" },
+                            h("div", { class: "columns is-centered", style: { "margin-top": "30px" } },
+                                h("div", { class: "column has-text-centered" },
+                                    h("p", { class: "finger-image" },
+                                        h("img", { alt: "", src: this.currentFingerImage })),
+                                    h("span", { class: "is-size-7" },
+                                        this.captureType === CaptureType.ROLLED ? "Role" : "Posicione",
+                                        " o dedo ",
+                                        h("b", null,
+                                            this.selectedFinger.name,
+                                            " "),
+                                        "sobre o leitor."))))),
+                    h("div", { class: "column" },
+                        h("div", { class: "column text-align-left" },
+                            h("span", { class: `status-item-line-in-canvas status-item status${this.fingerNfiqScore}` }, this.fingerNfiqScore),
+                            h("canvas", { width: "300", height: "300", style: { "box-shadow": "0px 0px 1px 1px #bfbfbf", "border": "none" }, class: "canvas", ref: el => this.fingerPreviewCanvas = el }),
+                            h("div", { class: "columns is-mobile action-buttons-container" }, this.fingerAuthenticationSimilarity < 40 ?
+                                h("div", { class: "column has-text-centered" },
+                                    h("a", { class: "button is-small is-pulled-right action-button", onClick: () => this.device.clearCapture() }, "Tentar novamente")) : null),
+                            h("div", { class: "container", style: { "margin-top": "30px" } },
+                                h("div", { class: "buttons" },
+                                    h("button", { class: "button is-info", style: { "width": "300px" }, onClick: () => this.changeCaptureStep() }, "Alterar dedo selecionado")))))))));
     }
     static get is() { return "openbio-finger-auth"; }
     static get encapsulation() { return "shadow"; }
     static get properties() { return {
+        "captureStep": {
+            "state": true
+        },
         "captureType": {
             "state": true
         },
@@ -350,6 +402,9 @@ export class OpenbioFingerAuthComponent {
             "state": true
         },
         "currentFingerImage": {
+            "state": true
+        },
+        "debug": {
             "state": true
         },
         "deviceBrand": {
@@ -376,6 +431,10 @@ export class OpenbioFingerAuthComponent {
         "fingerPreviewCurrentStatusLineX": {
             "state": true
         },
+        "isDebug": {
+            "type": Boolean,
+            "attr": "is-debug"
+        },
         "modalSettings": {
             "state": true
         },
@@ -394,9 +453,15 @@ export class OpenbioFingerAuthComponent {
             "type": String,
             "attr": "person-image"
         },
+        "personImageState": {
+            "state": true
+        },
         "personName": {
             "type": String,
             "attr": "person-name"
+        },
+        "personNameState": {
+            "state": true
         },
         "selectedFinger": {
             "state": true

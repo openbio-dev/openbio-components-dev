@@ -23,6 +23,7 @@ export declare class OpenbioFaceComponentDetails {
     originalImage: string;
     croppedImage: string;
     segmentedImage: string;
+    rawImage: string;
     crop: boolean;
     segmentation: boolean;
     autoCapture: boolean;
@@ -66,6 +67,8 @@ export declare class OpenbioFaceComponentDetails {
     shallCapture: boolean;
     evaluations: Array<Object>;
     serviceConfigs: any;
+    captureInput: HTMLInputElement;
+    uploadedBase64: any;
     clearManualEyeSelection(): void;
     toggleManualEyeSelection(): void;
     cropWithEyesCoords(): void;
@@ -86,6 +89,7 @@ export declare class OpenbioFaceComponentDetails {
     isWebcam(): boolean;
     buildWebcam(): any;
     resetAutoCapturing(): void;
+    fileToBase64: (file: any) => Promise<{}>;
     componentDidLoad(): Promise<void>;
     configureSegmentation(): void;
     componentDidUnload(): void;
@@ -112,5 +116,6 @@ export declare class OpenbioFaceComponentDetails {
     saveAnomaly(): void;
     saveFace(): Promise<void>;
     storeCapturedFace(saveFaceResult: any): void;
+    onInputChange(files: any): Promise<void>;
     render(): JSX.Element;
 }
