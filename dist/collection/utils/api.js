@@ -1,5 +1,4 @@
-import constants from './constants';
-const url = `http://${constants.WS_HOST}`;
+const url = `http://localhost:5000`;
 export function getAppConfig() {
     return fetch(`${url}/db/api/config`, {
         method: 'get',
