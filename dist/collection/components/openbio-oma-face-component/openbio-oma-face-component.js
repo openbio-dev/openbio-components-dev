@@ -75,7 +75,7 @@ export class OpenbioFaceOmaComponent {
     }
     startCamera() {
         this.captured = false;
-        const videoElement = document.getElementsByTagName("openbio-oma-face")[0].shadowRoot.lastElementChild.getElementsByClassName("webcam-video")[0];
+        const videoElement = document.getElementsByTagName("openbio-oma-face")[0].lastElementChild.getElementsByClassName("webcam-video")[0];
         videoElement.setAttribute('autoplay', '');
         videoElement.setAttribute('muted', '');
         videoElement.setAttribute('playsinline', '');
@@ -119,7 +119,7 @@ export class OpenbioFaceOmaComponent {
         });
     }
     setResultImage() {
-        const snapShotElement = document.getElementsByTagName("openbio-oma-face")[0].shadowRoot.lastElementChild.getElementsByClassName("webcam-snapshot")[0];
+        const snapShotElement = document.getElementsByTagName("openbio-oma-face")[0].lastElementChild.getElementsByClassName("webcam-snapshot")[0];
         snapShotElement.src = this.capturedImage.data;
         this.captured = true;
         this.screenUpdate();
@@ -339,7 +339,6 @@ export class OpenbioFaceOmaComponent {
                                 }, onClick: () => this.captured ? this.startCamera() : this.takeSnapShot() }, this.getCaptureText())))))));
     }
     static get is() { return "openbio-oma-face"; }
-    static get encapsulation() { return "shadow"; }
     static get properties() { return {
         "action": {
             "type": String,

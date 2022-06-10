@@ -1785,8 +1785,7 @@
       ],
       "hostElement": {
         "name": "componentContainer"
-      },
-      "shadow": true
+      }
     },
     {
       "tag": "openbio-scanner",
