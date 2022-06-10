@@ -1,0 +1,1 @@
+OpenbioComponents.loadBundle("chunk-a5d9316c.js",["exports"],function(o){o.notify=function(o,n,t,e){o.shadowRoot.querySelector("div#notification-container").insertAdjacentHTML("beforeend",'<notification-component notification-type="'+n+'" text="'+t+'"/>'),setTimeout(function(){var n=o.shadowRoot.querySelector("notification-component");n.parentNode.removeChild(n)},e||3e3)}});

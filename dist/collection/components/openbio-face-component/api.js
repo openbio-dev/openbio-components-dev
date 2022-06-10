@@ -1,29 +1,43 @@
 import constants from "../../utils/constants";
 import { getAppConfig } from "../../utils/api";
-let config, url;
+let config, url, localUrl, sendToRemote;
 getAppConfig().then((response) => {
     config = response;
     url = `${config.serviceServerType}://${config.urls.apiService}:${config.ports.apiService}`;
+    localUrl = `http://${config.urls.localService}:${config.ports.localService}`;
+    sendToRemote = !config.apiService && !config.asyncPersistency;
 });
-export function getAnomalies(type, detached) {
-    return fetch(`${url}/db/api/settings/anomalies/${type}?detached=${detached}`).then(res => res.json());
+export async function getAnomalies(type, detached) {
+    if (!url) {
+        config = await getAppConfig();
+        url = `${config.serviceServerType}://${config.urls.apiService}:${config.ports.apiService}`;
+        localUrl = `http://${config.urls.localService}:${config.ports.localService}`;
+        sendToRemote = !config.apiService && !config.asyncPersistency;
+    }
+    return fetch(`${sendToRemote ? url : localUrl}/db/api/settings/anomalies/${type}?detached=${detached}`).then(res => res.json());
 }
 export function getCameraSettingsOptions() {
-    return fetch(`${url}/device/camera-settings`).then(res => res.json());
+    return fetch(`${localUrl}/device/camera-settings`).then(res => res.json());
 }
 export function getCameraSettings() {
-    return fetch(`${url}/db/api/settings/camera`).then(res => res.json());
+    return fetch(`${localUrl}/db/api/settings/camera`).then(res => res.json());
 }
 export function saveCameraSettings(data) {
-    fetch(`${url}/db/api/settings/camera`, {
+    fetch(`${localUrl}/db/api/settings/camera`, {
         method: 'post',
         body: JSON.stringify(data),
         headers: { 'Content-Type': 'application/json' },
     })
         .then(res => res.json());
 }
-export function saveFace(data) {
-    return fetch(`${url}/db/api/biometries/face`, {
+export async function saveFace(data) {
+    if (!url) {
+        config = await getAppConfig();
+        url = `${config.serviceServerType}://${config.urls.apiService}:${config.ports.apiService}`;
+        localUrl = `http://${config.urls.localService}:${config.ports.localService}`;
+        sendToRemote = !config.apiService && !config.asyncPersistency;
+    }
+    return fetch(`${sendToRemote ? url : localUrl}/db/api/biometries/face`, {
         method: 'post',
         body: JSON.stringify(data),
         headers: { 'Content-Type': 'application/json' },
@@ -31,7 +45,7 @@ export function saveFace(data) {
         .then(res => res.json());
 }
 export function getFaceSettings() {
-    return fetch(`${url}/db/api/settings/${constants.settingTypes.FACE_SETTINGS}`, {
+    return fetch(`${localUrl}/db/api/settings/${constants.settingTypes.FACE_SETTINGS}`, {
         method: 'get',
         headers: { 'Content-Type': 'application/json' },
     })

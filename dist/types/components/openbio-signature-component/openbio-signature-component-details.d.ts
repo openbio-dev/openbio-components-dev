@@ -29,7 +29,17 @@ export declare class OpenbioSignatureComponentDetails {
     serial: string;
     deviceStatus: boolean;
     serviceConfigs: any;
+    captureDone: boolean;
+    serviceTime: any;
+    cropperModal: boolean;
+    uploadedBase64: any;
+    translations: any;
+    locale: string;
+    listenLocale(newValue: string): Promise<void>;
+    componentWillLoad(): Promise<void>;
+    setI18nParameters(locale: any): Promise<void>;
     clearImages(): void;
+    clearImagesObjects(): void;
     clear(): void;
     startPreview(backToPreview?: boolean): void;
     close(): void;
@@ -48,6 +58,10 @@ export declare class OpenbioSignatureComponentDetails {
     saveAnomaly(): void;
     saveSignature(saveAnomaly?: boolean): Promise<void>;
     storeCapturedSignature(parsedValue: any): void;
-    onInputChange(files: any): void;
+    onInputChange(files: any): Promise<void>;
+    fileToBase64: (file: any) => Promise<{}>;
+    _base64ToArrayBuffer(base64: any): ArrayBuffer | SharedArrayBuffer;
+    cropCallback(_this: any, croppedBase64Image: string): void;
+    normalizeImage(): Promise<void>;
     render(): JSX.Element;
 }

@@ -12,7 +12,7 @@ export async function getLocalization() {
   return new Promise(async (resolve, _) => {
     await fetch(constants.IPINFO_ADDRESS)
     .then(res => res.json())
-    .then(data => { 
+    .then(data => {
       delete data.hostname;
       delete data.org;
       delete data.postal;

@@ -47,6 +47,15 @@
   justify-content: center;
 }
 
+.header {
+  background-color: #239ed7;
+}
+
+.modal-card-title {
+  color: white;
+  font-family: "Poppins"
+}
+
 .tab-content {
   min-height: 700px;
 }
@@ -90,6 +99,7 @@
   margin: auto;
   display: block;
   object-fit: contain;
+  max-width: "50%";
   height: 95%;
   -webkit-animation-name: zoom;
   -webkit-animation-duration: 0.6s;
@@ -128,4 +138,21 @@
   .modal-content-view {
     width: 100%;
   }
+}
+
+.flex-center {
+  display: flex;
+  flex: 1;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+}
+
+span, h6, label, option, select, a, p {
+  font-family: "Poppins" !important;
+}
+
+.anomaly-label {
+  font-size: 1em;
+  margin-right: 10px;
 }

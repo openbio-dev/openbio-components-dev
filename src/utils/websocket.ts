@@ -5,27 +5,13 @@ export default class WS {
   public deviceSocket: any;
   public componentSocket: any;
   public interfaceSocket: any;
-  private connected: boolean;
-  private connectionInterval: any;
 
   constructor() {
     this.init();
   }
 
-  private connectionCheck(): void {
-    if(this.connected) return;
-
-    this.connectionInterval = setInterval(() => {
-      if (this.connected) {
-        return clearInterval(this.connectionInterval);
-      } else {
-        this.init();
-      }
-    }, 2000);
-  }
-
   private init(): void {
-    console.warn("websocket connection closed", moment().format());
+    console.info("websocket will try connection", moment().format());
 
     try {
       this.deviceSocket = new WebSocket(`ws://${constants.WS_HOST}/device`);
@@ -34,13 +20,15 @@ export default class WS {
     }
 
     this.deviceSocket.addEventListener("close", () => {
-      this.connected = false;
-      this.connectionCheck();
-      console.info("device websocket connection closed", moment().format());
+      this.deviceSocket.close();
+      console.warn("device websocket connection closed", moment().format());
+    });
+
+    this.deviceSocket.addEventListener("error", () => {
+      this.deviceSocket.close();
     });
 
     this.deviceSocket.addEventListener("open", () => {
-      this.connected = true;
       console.info("device websocket connection opened", moment().format());
     });
 
@@ -48,30 +36,38 @@ export default class WS {
     this.componentSocket = new WebSocket(`ws://${constants.WS_HOST}/component`);
 
     this.componentSocket.addEventListener("close", () => {
-      this.connected = false;
-      this.connectionCheck();
+      this.componentSocket.close();
+    });
+
+    this.componentSocket.addEventListener("error", () => {
+      this.componentSocket.close();
     });
 
     this.componentSocket.addEventListener("open", () => {
-      this.connected = true;
       console.info("component websocket connection opened", moment().format());
     });
 
     this.interfaceSocket = new WebSocket(`ws://${constants.WS_HOST}/interface`);
 
     this.interfaceSocket.addEventListener("close", () => {
-      this.connected = false;
-      this.connectionCheck();
+      this.interfaceSocket.close();
     });
 
     this.interfaceSocket.addEventListener("open", () => {
-      this.connected = true;
       console.info("interface websocket connection opened", moment().format());
+    });
+
+    this.interfaceSocket.addEventListener("error", () => {
+      this.interfaceSocket.close();
     });
   }
 
   respondToDeviceWS(message): void {
-    this.deviceSocket.send(JSON.stringify(message));
+    if (message instanceof ArrayBuffer && message.byteLength !== undefined) {
+      this.deviceSocket.send(message);
+    } else {
+      this.deviceSocket.send(JSON.stringify(message));
+    }
   }
 
   respondToComponentWS(message): void {

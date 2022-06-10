@@ -43,5 +43,6 @@ declare const constants: {
         1: number;
     };
     fingerNames: string[];
+    palmNames: string[];
 };
 export default constants;

@@ -1,10 +1,11 @@
 import WS from '../../utils/websocket';
+import { TranslationUtils } from '../../locales/translation';
 import { getCameraSettingsOptions, getCameraSettings, saveCameraSettings, saveMugshotPhoto, deleteMugshotPhoto, getFaceSettings, } from "./api";
 import { showImage } from '../../utils/canvas';
 import { notify } from '../../utils/notifier';
 import constants from "../../utils/constants";
 import { getLocalization } from '../../utils/utils';
-import { getAppConfig } from '../../utils/api';
+import { getAppConfig, getCameraPresets, saveServiceTime } from '../../utils/api';
 const BASE64_IMAGE = 'data:image/charset=UTF-8;png;base64,';
 const EMPTY_IMAGE = '';
 var tabs;
@@ -25,7 +26,11 @@ export class OpenbioMugshotComponentDetails {
             deviceType: "face",
             devicePosition: 0,
             action: undefined,
-            data: undefined
+            data: undefined,
+            doEvaluate: true,
+            file: undefined,
+            fileOptions: undefined,
+            module: "face",
         };
         this.capturedData = null;
         this.deviceReady = false;
@@ -72,6 +77,29 @@ export class OpenbioMugshotComponentDetails {
         this.track = undefined;
         this.serviceConfigs = undefined;
         this.deviceStatus = false;
+        this.showCameraConfiguration = true;
+        this.serviceTime = {
+            start: new Date().getTime(),
+            hasCapture: false,
+        };
+        this.cameraPresetOptions = {
+            presetNames: [],
+            presetValues: {}
+        };
+        this.preset = 0;
+        this.locale = 'pt';
+    }
+    async listenLocale(newValue) {
+        this.setI18nParameters(newValue);
+    }
+    ;
+    async componentWillLoad() {
+        this.setI18nParameters(this.locale);
+    }
+    async setI18nParameters(locale) {
+        TranslationUtils.setLocale(locale);
+        this.translations = await TranslationUtils.fetchTranslations();
+        this.componentContainer.forceUpdate();
     }
     open() {
         this.payload.action = "open";
@@ -85,6 +113,7 @@ export class OpenbioMugshotComponentDetails {
             'imageFormat',
             'isoValue',
             'whiteBalance',
+            'aperture',
         ];
         currentCameraSettings.forEach((setting) => {
             this.payload.action = "camera-properties";
@@ -104,6 +133,19 @@ export class OpenbioMugshotComponentDetails {
         this.imageFormat = cameraSettings.image_format;
         this.isoValue = cameraSettings.iso_value;
         this.whiteBalance = cameraSettings.white_balance;
+        this.aperture = cameraSettings.aperture;
+        this.preset = cameraSettings.preset;
+    }
+    setPresetValues(event) {
+        const value = parseInt(event.target.value);
+        if (value) {
+            this.preset = value;
+            const presetSettings = this.cameraPresetOptions.presetValues[this.preset];
+            for (const property in presetSettings) {
+                this[property] = parseInt(presetSettings[property]);
+            }
+        }
+        this.updateCameraSettings();
     }
     isWebcam() {
         return this.payload.deviceName === constants.device.WEBCAM;
@@ -139,8 +181,14 @@ export class OpenbioMugshotComponentDetails {
         setTimeout(async () => {
             this.fetchCurrentCameraSettings();
             this.serviceConfigs = await getAppConfig();
+            if (this.serviceConfigs) {
+                this.allowConfiguration = this.serviceConfigs.ui.allowDeviceConfiguration;
+                this.showCameraConfiguration = this.serviceConfigs.ui.showCameraConfiguration;
+                this.componentContainer.forceUpdate();
+            }
             const faceSettings = await getFaceSettings();
             this.payload.deviceName = faceSettings.device ? constants.device[faceSettings.device] : constants.device.AKYSCAM;
+            this.cameraPresetOptions = await getCameraPresets();
             this.crop = false;
             this.autoCapture = false;
             this.segmentation = false;
@@ -225,6 +273,7 @@ export class OpenbioMugshotComponentDetails {
                     this.serial = data.deviceInfo.serialNumber;
                     this.rawImage = data.rawImage;
                     this.anomaly = 0;
+                    this.serviceTime.hasCapture = true;
                     this.saveMugshotPhoto();
                 }
             });
@@ -233,6 +282,9 @@ export class OpenbioMugshotComponentDetails {
     }
     componentDidUnload() {
         this.stopPreview();
+        if (!this.detached && this.serviceTime.hasCapture) {
+            saveServiceTime("MUGSHOT", new Date().getTime() - this.serviceTime.start, this.person.id);
+        }
     }
     setMugshotsFromBackendSession() {
         const checkSessionInterval = setInterval(() => {
@@ -341,6 +393,8 @@ export class OpenbioMugshotComponentDetails {
             flashWidth: this.flashWidth,
             imageFormat: this.imageFormat,
             whiteBalance: this.whiteBalance,
+            aperture: this.aperture,
+            preset: this.preset,
         };
         saveCameraSettings(tempCameraSettings);
     }
@@ -422,14 +476,15 @@ export class OpenbioMugshotComponentDetails {
                 this.sendBiometryInformation(mugshotStructure);
             await this.storeCapturedMugshot(mugshotStructure);
         }
-        notify(this.componentContainer, "success", "Imagem salva com sucesso!");
+        notify(this.componentContainer, "success", this.translations.IMAGE_SAVE_SUCCESS);
         this.mugshotIndex = 0;
         this.mugshotDescription = "";
         this.showLoader = false;
     }
     storeCapturedMugshot(saveMugshotResult) {
         const { id, data, index, description, brand, model, serial, localization } = saveMugshotResult;
-        this.mugshotPhotos.push({
+        const existentIndex = this.mugshotPhotos.findIndex((mugshot) => mugshot.mugshotIndex === index);
+        const newMugshot = {
             id,
             data,
             index,
@@ -438,7 +493,13 @@ export class OpenbioMugshotComponentDetails {
             model,
             serial,
             localization
-        });
+        };
+        if (existentIndex >= 0) {
+            this.mugshotPhotos[existentIndex] = newMugshot;
+        }
+        else {
+            this.mugshotPhotos.push(newMugshot);
+        }
     }
     acceptData() {
         this.stopPreview();
@@ -512,21 +573,29 @@ export class OpenbioMugshotComponentDetails {
             const key = Object.keys(option)[0];
             return (h("option", { value: option[key], selected: this.aperture === option[key] }, key));
         });
+        const presetOptions = (this.cameraSettingsOptions.presetOptions || []).map((option) => {
+            const key = this.cameraPresetOptions.presetNames[option];
+            return (h("option", { value: option, selected: this.preset === option }, key));
+        });
         const mugshotPhotos = (this.mugshotPhotos || []).map((item, index) => {
             return (h("div", { class: "column" },
                 h("div", { class: "button-hover" },
-                    h("a", { class: "button is-small is-pulled-left action-button mugshot-remove-photo-button", onClick: () => this.deleteMugshotPhoto(item.id, index) }, "REMOVER")),
+                    h("a", { class: "button is-small is-pulled-left action-button mugshot-remove-photo-button", onClick: () => this.deleteMugshotPhoto(item.id, index) }, this.translations.REMOVE)),
                 h("div", { class: "mugshot-photo is-light" },
                     h("img", { src: `data:image/charset=UTF-8;png;base64,${item.data || item.output}` })),
                 h("div", { class: "has-text-left" },
                     h("div", { class: "mugshot-photo-label" },
-                        h("strong", null, "Index:"),
+                        h("strong", null,
+                            this.translations.INDEX,
+                            ":"),
                         " ",
-                        item.index || 'Desconhecido'),
+                        item.index || this.translations.UNKNOWN),
                     h("div", { class: "mugshot-photo-label" },
-                        h("strong", null, "Descri\u00E7\u00E3o:"),
+                        h("strong", null,
+                            this.translations.DESCRIPTION,
+                            ":"),
                         " ",
-                        item.description || 'Não informada'))));
+                        item.description || this.translations.NOT_INFORMED))));
         });
         return (h("div", { class: "window-size" },
             h("loader-component", { enabled: this.showLoader }),
@@ -535,34 +604,41 @@ export class OpenbioMugshotComponentDetails {
                 h("ul", null,
                     h("li", { class: this.activeTabClass(0) },
                         h("a", { onClick: () => this.setActiveTab(0) },
-                            h("span", { class: "tab-title" }, "Captura"))),
+                            h("span", { class: "tab-title" }, this.translations.CAPTURE))),
                     h("li", { class: this.activeTabClass(2) },
                         h("a", { onClick: () => this.setActiveTab(2) },
-                            h("span", { class: "tab-title" }, "Resultado final"))),
+                            h("span", { class: "tab-title" }, this.translations.FINAL_RESULT))),
                     this.allowConfiguration ?
                         h("li", { class: this.activeTabClass(3) },
                             h("a", { onClick: () => this.setActiveTab(3) },
-                                h("span", { class: "tab-title" }, "Configura\u00E7\u00F5es"))) : null)),
+                                h("span", { class: "tab-title" }, this.translations.SETTINGS))) : null,
+                    this.showCameraConfiguration ?
+                        h("li", { class: this.activeTabClass(tabs.CONFIG) },
+                            h("a", { onClick: () => this.setActiveTab(tabs.CONFIG) },
+                                h("span", { class: "tab-title" }, this.translations.SETTINGS))) : null)),
             h("div", { class: `columns is-mobile ${this.isActiveTab(0)}` },
                 h("div", { class: "column is-one-third" },
                     h("div", { class: "device-status-container" },
                         h("h6", { class: "title is-7" },
-                            "ESTADO DO DISPOSITIVO: ",
-                            this.deviceReady ? 'PRONTO' : 'NÃO CARREGADO'),
+                            this.translations.DEVICE_STATUS.toUpperCase(),
+                            ": ",
+                            this.deviceReady ? this.translations.READY.toUpperCase() : this.translations.NOT_LOADED.toUpperCase()),
                         h("progress", { class: "progress is-small", value: this.flashCharge, max: "100" }),
                         h("label", { class: "checkbox" },
                             h("input", { type: "checkbox", checked: this.flashProperty == 1, onChange: this.setFeature.bind(this), name: "flashProperty" }),
-                            "UTILIZAR FLASH"),
+                            this.translations.USE_FLASH.toUpperCase()),
                         this.serviceConfigs && (this.serviceConfigs.mugshot.help.guideImage || this.serviceConfigs.mugshot.help.content) ?
                             h("help-component", { src: this.serviceConfigs.mugshot.help.guideImage, "help-text": this.serviceConfigs.mugshot.help.content }) : null,
                         h("div", { class: "mugshot-form" },
                             h("form", null,
                                 h("label", null,
-                                    "Indice/Refer\u00EAncia:",
+                                    this.translations.INDEX_REFERENCE,
+                                    ":",
                                     h("br", null),
                                     h("input", { class: "input is-small", type: "number", value: this.mugshotIndex, name: "mugshotIndex", onInput: (event) => this.handleChange(event) })),
                                 h("label", null,
-                                    "Descri\u00E7\u00E3o:",
+                                    this.translations.DESCRIPTION,
+                                    ":",
                                     h("br", null),
                                     h("input", { class: "input is-small", type: "text", value: this.mugshotDescription, name: "mugshotDescription", onInput: (event) => this.handleChange(event) })))))),
                 h("div", { class: "column text-align-left" },
@@ -575,11 +651,11 @@ export class OpenbioMugshotComponentDetails {
                         } }),
                     h("div", { class: "columns is-mobile action-buttons-container" },
                         h("div", { class: "column" },
-                            h("a", { class: `button is-small is-pulled-left action-button ${this.isCapturing ? "disabled" : ""}`, onClick: () => this.startPreview() }, "INICIAR PREVIEW")),
+                            h("a", { class: `button is-small is-pulled-left action-button ${this.isCapturing ? "disabled" : ""}`, onClick: () => this.startPreview() }, this.translations.PREVIEW_INIT.toUpperCase())),
                         h("div", { class: "column has-text-centered" },
-                            h("a", { class: "button is-small is-pulled-right action-button", onClick: () => this.capture() }, "CAPTURAR")),
+                            h("a", { class: "button is-small is-pulled-right action-button", onClick: () => this.capture() }, this.translations.MAKE_CAPTURE.toUpperCase())),
                         this.detached && !this.isTagComponent ? h("div", { class: "column has-text-centered" },
-                            h("a", { class: "button is-small is-pulled-right action-button", onClick: () => this.acceptData() }, "FINALIZAR")) : null))),
+                            h("a", { class: "button is-small is-pulled-right action-button", onClick: () => this.acceptData() }, this.translations.FINISH.toUpperCase())) : null))),
             this.tab === tabs.RESULT ? h("div", { class: "tab-content" },
                 h("div", { class: "columns" },
                     h("div", { class: "column has-text-centered preview-result" },
@@ -592,58 +668,66 @@ export class OpenbioMugshotComponentDetails {
                 h("div", { class: "columns is-mobile settings-container" },
                     h("div", { class: "column" },
                         h("div", { class: "field" },
-                            h("label", { class: "label" }, "Velocidade do Obturador"),
+                            h("label", { class: "label" }, this.translations.SHUTTER_SPEED),
                             h("div", { class: "control" },
                                 h("div", { class: "select is-small inline" },
                                     h("select", { onChange: this.setCameraValue.bind(this), name: "shutterSpeed" },
-                                        h("option", { value: "0" }, "SELECIONE UMA OP\u00C7\u00C3O"),
+                                        h("option", { value: "0" }, this.translations.SELECT_OPTION.toUpperCase()),
                                         shutterSpeedOptions)))),
                         h("div", { class: "field" },
-                            h("label", { class: "label" }, "ISO"),
+                            h("label", { class: "label" }, this.translations.ISO.toUpperCase()),
                             h("div", { class: "control" },
                                 h("div", { class: "select is-small inline" },
                                     h("select", { onChange: this.setCameraValue.bind(this), name: "isoValue" },
-                                        h("option", { value: "0" }, "SELECIONE UMA OP\u00C7\u00C3O"),
+                                        h("option", { value: "0" }, this.translations.SELECT_OPTION.toUpperCase()),
                                         isoOptions)))),
                         h("div", { class: "field" },
-                            h("label", { class: "label" }, "Abertura"),
-                            h("div", { class: "select is-small inline" },
-                                h("select", { onChange: this.setCameraValue.bind(this), name: "aperture" },
-                                    h("option", { value: "0" }, "SELECIONE UMA OP\u00C7\u00C3O"),
-                                    apertureOptions)))),
+                            h("label", { class: "label" }, this.translations.APERTURE.toUpperCase()),
+                            h("div", { class: "control" },
+                                h("div", { class: "select is-small inline" },
+                                    h("select", { onChange: this.setCameraValue.bind(this), name: "aperture" },
+                                        h("option", { value: "0" }, this.translations.SELECT_OPTION.toUpperCase()),
+                                        apertureOptions))))),
                     h("div", { class: "column" },
                         h("div", { class: "field" },
-                            h("label", { class: "label" }, "Balan\u00E7o de Branco"),
+                            h("label", { class: "label" }, this.translations.WHITE_BALANCE.toUpperCase()),
                             h("div", { class: "select is-small inline" },
                                 h("select", { onChange: this.setCameraValue.bind(this), name: "whiteBalance" },
-                                    h("option", { value: "0" }, "SELECIONE UMA OP\u00C7\u00C3O"),
+                                    h("option", { value: "0" }, this.translations.SELECT_OPTION.toUpperCase()),
                                     whiteBalanceOptions))),
                         h("div", { class: "field" },
-                            h("label", { class: "label" }, "Formato"),
+                            h("label", { class: "label" }, this.translations.FORMAT.toUpperCase()),
                             h("div", { class: "select is-small inline" },
                                 h("select", { onChange: this.setCameraValue.bind(this), name: "imageFormat" },
-                                    h("option", { value: "0" }, "SELECIONE UMA OP\u00C7\u00C3O"),
+                                    h("option", { value: "0" }, this.translations.SELECT_OPTION.toUpperCase()),
                                     formatOptions)))),
                     h("div", { class: "column" },
                         h("div", { class: "field" },
-                            h("label", { class: "label" }, "Status do Flash"),
+                            h("label", { class: "label" }, this.translations.FLASH_STATUS.toUpperCase()),
                             h("div", { class: "select is-small inline" },
                                 h("select", { onChange: this.setCameraValue.bind(this), name: "flashProperty" },
-                                    h("option", { value: "0" }, "SELECIONE UMA OP\u00C7\u00C3O"),
+                                    h("option", { value: "0" }, this.translations.SELECT_OPTION.toUpperCase()),
                                     flashPropertyOptions))),
                         h("div", { class: "field" },
-                            h("label", { class: "label" }, "Abertura do Flash"),
+                            h("label", { class: "label" }, this.translations.FLASH_APERTURE.toUpperCase()),
                             h("div", { class: "select is-small inline" },
                                 h("select", { onChange: this.setCameraValue.bind(this), name: "flashWidth" },
-                                    h("option", { value: "0" }, "SELECIONE UMA OP\u00C7\u00C3O"),
-                                    flashWidthOptions))))),
+                                    h("option", { value: "0" }, this.translations.SELECT_OPTION.toUpperCase()),
+                                    flashWidthOptions)))),
+                    h("div", { class: "column" },
+                        h("div", { class: "field" },
+                            h("label", { class: "label" }, this.translations.PRESETS.toUpperCase()),
+                            h("div", { class: "select is-small inline" },
+                                h("select", { onChange: this.setPresetValues.bind(this), name: "preset" },
+                                    h("option", { value: "0" }, this.translations.SELECT_OPTION.toUpperCase()),
+                                    presetOptions))))),
                 h("hr", null),
                 h("div", { class: "columns" },
                     h("div", { class: "column has-text-left" },
                         h("div", null,
-                            h("label", { class: "label" }, "Controle de Zoom")),
-                        h("a", { class: "button is-small action-button", style: { 'margin-right': '10px' }, onClick: this.increaseZoom.bind(this) }, "Zoom +"),
-                        h("a", { class: "button is-small action-button", onClick: this.decreaseZoom.bind(this) }, "Zoom -")))) : null));
+                            h("label", { class: "label" }, this.translations.ZOOM_CONTROL)),
+                        h("a", { class: "button is-small action-button", style: { 'margin-right': '10px' }, onClick: this.increaseZoom.bind(this) }, this.translations.ZOOM_PLUS),
+                        h("a", { class: "button is-small action-button", onClick: this.decreaseZoom.bind(this) }, this.translations.ZOOM_MINUS)))) : null));
     }
     static get is() { return "openbio-mugshot-details"; }
     static get encapsulation() { return "shadow"; }
@@ -668,6 +752,9 @@ export class OpenbioMugshotComponentDetails {
             "state": true
         },
         "brand": {
+            "state": true
+        },
+        "cameraPresetOptions": {
             "state": true
         },
         "cameraSettingsOptions": {
@@ -729,6 +816,12 @@ export class OpenbioMugshotComponentDetails {
             "type": Boolean,
             "attr": "is-tag-component"
         },
+        "locale": {
+            "type": String,
+            "attr": "locale",
+            "mutable": true,
+            "watchCallbacks": ["listenLocale"]
+        },
         "model": {
             "state": true
         },
@@ -750,6 +843,9 @@ export class OpenbioMugshotComponentDetails {
         "poseAngleYaw": {
             "state": true
         },
+        "preset": {
+            "state": true
+        },
         "rawImage": {
             "state": true
         },
@@ -766,6 +862,12 @@ export class OpenbioMugshotComponentDetails {
             "state": true
         },
         "serviceConfigs": {
+            "state": true
+        },
+        "serviceTime": {
+            "state": true
+        },
+        "showCameraConfiguration": {
             "state": true
         },
         "showLoader": {
@@ -786,6 +888,9 @@ export class OpenbioMugshotComponentDetails {
             "attr": "temp-person"
         },
         "track": {
+            "state": true
+        },
+        "translations": {
             "state": true
         },
         "video": {

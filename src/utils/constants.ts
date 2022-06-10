@@ -3,6 +3,13 @@ const constants = {
   WS_HOST: "localhost:5000",
   IPINFO_ADDRESS: "http://ipinfo.io/json?token=61ed945b6baf67",
 
+captureTypes: {
+    ONE_FINGER_FLAT: 0,
+    TWO_FINGER_FLAT: 1,
+    ROLLED_FINGER: 2,
+    FOUR_FINGER_FLAT: 3
+  },
+
   anomalyTypes: {
     SIGNATURE_ANOMALY: 0,
     FACE_ANOMALY: 1,
@@ -41,7 +48,27 @@ const constants = {
 
   dpiValue: {
     1: 300
-  }
+  },
+
+  fingerNames: [
+    "Polegar direito",
+    "Indicador direito",
+    "Médio direito",
+    "Anelar direito",
+    "Mínimo direito",
+    "Polegar esquerdo",
+    "Indicador esquerdo",
+    "Médio esquerdo",
+    "Anelar esquerdo",
+    "Mínimo esquerdo"
+  ],
+
+  palmNames: [
+    "Hipotenar esquerda",
+    "Palma esquerda",
+    "Palma direita",
+    "Hipotenar direita",
+  ]
 }
 
 export default constants;

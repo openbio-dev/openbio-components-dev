@@ -53,6 +53,12 @@ const constants = {
         "Médio esquerdo",
         "Anelar esquerdo",
         "Mínimo esquerdo"
+    ],
+    palmNames: [
+        "Hipotenar esquerda",
+        "Palma esquerda",
+        "Palma direita",
+        "Hipotenar direita",
     ]
 };
 export default constants;

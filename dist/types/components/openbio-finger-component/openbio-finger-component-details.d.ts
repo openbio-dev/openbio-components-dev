@@ -35,6 +35,7 @@ export declare class OpenbioFingerComponent {
     flowOptions: Array<any>;
     anomalyOptions: Array<any>;
     anomaly: any;
+    anomalies: Array<any>;
     currentFingerNames: Array<string>;
     currentFingerImage: any;
     currentFingerSequence: Array<any>;
@@ -57,6 +58,8 @@ export declare class OpenbioFingerComponent {
     brand: string;
     serial: string;
     opened: boolean;
+    fingerNamesList: Array<String>;
+    fingersToCapture: Array<any>;
     editingId: number;
     isEditing: boolean;
     showLoader: boolean;
@@ -69,6 +72,13 @@ export declare class OpenbioFingerComponent {
     cpfSt: string;
     singleCaptureSt: boolean;
     singleCaptureLoading: boolean;
+    captureDone: boolean;
+    serviceTime: any;
+    translations: any;
+    locale: string;
+    listenLocale(newValue: string): Promise<void>;
+    setI18nParameters(locale: any): Promise<void>;
+    componentWillLoad(): Promise<void>;
     clearImages(): void;
     startPreview(): void;
     stopPreview(): void;
@@ -82,14 +92,16 @@ export declare class OpenbioFingerComponent {
     foundFlowType(sequence: Array<any>): any;
     prepareToPreview(): void;
     confirmSaveWithException(): Promise<any>;
+    confirmSaveManually(): Promise<any>;
     callProcessors(data: any): void;
     nfiqEvaluation(data: any): Promise<void>;
     smearEvaluation(data: any): Promise<void>;
     getPersonInfo(): Promise<void>;
     componentDidLoad(): Promise<void>;
     componentDidUnload(): void;
+    allFingersCollected(): boolean;
     setFingersFromBackendSession(): void;
-    setCurrentFinger(): void;
+    setCurrentFinger(): Promise<void>;
     setCurrentFingerImage(): void;
     currentFlowName(): string;
     parseFingerSequence(): void;
@@ -97,7 +109,8 @@ export declare class OpenbioFingerComponent {
     setCaptureType(): void;
     isFlatSequence(): boolean;
     isRolledSequence(): boolean;
-    checkCaptureNeed(): any;
+    checkCaptureNeed(anomalyId?: number): any;
+    getFingersPerStepByFlowType(): 1 | 2 | 4;
     saveAnomaly(): void;
     clearSession(): void;
     clearCapture(): void;
@@ -120,5 +133,8 @@ export declare class OpenbioFingerComponent {
     capturedNfiq(index: number): any;
     editFinger(_this: any, finger: any): void;
     loadStepPhaseOnEdit(fingerIndex: number): void;
+    forceUpdate(): void;
+    setAnomaly(fingerIndex: number, event: any): void;
+    anomaliesSelection(): JSX.Element[];
     render(): JSX.Element;
 }

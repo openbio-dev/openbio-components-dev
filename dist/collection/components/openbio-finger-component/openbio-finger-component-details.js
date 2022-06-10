@@ -1,12 +1,12 @@
-import { getFlowOptions, getAnomalies, saveFingers, getModalSettings, getPeople, fingerAuthenticate, saveFingerFile } from "./api";
+import { getFlowOptions, getAnomalies, saveFingers, getModalSettings, getPeople, saveFingerFile } from "./api";
 import { setFingers } from '../../store/main.store';
 import { showImage } from '../../utils/canvas';
-import { notify } from '../../utils/notifier';
-import { getAppConfig } from '../../utils/api';
+import { getAppConfig, saveServiceTime } from '../../utils/api';
 import constants from "../../utils/constants";
 import WS from '../../utils/websocket';
 import Swal from 'sweetalert2/dist/sweetalert2.all.min.js';
 import { getLocalization } from '../../utils/utils';
+import { TranslationUtils } from '../../locales/translation';
 var flowTypes;
 (function (flowTypes) {
     flowTypes[flowTypes["FLOW_TYPE_TEN_FLAT_CAPTURES"] = 0] = "FLOW_TYPE_TEN_FLAT_CAPTURES";
@@ -18,6 +18,12 @@ var flowTypes;
     flowTypes[flowTypes["FLOW_TYPE_FOUR_FLAT_SEQUENCE_CONTROL_CAPTURE"] = 6] = "FLOW_TYPE_FOUR_FLAT_SEQUENCE_CONTROL_CAPTURE";
     flowTypes[flowTypes["FLOW_TYPE_PINCH"] = 7] = "FLOW_TYPE_PINCH";
 })(flowTypes || (flowTypes = {}));
+var TABS;
+(function (TABS) {
+    TABS[TABS["CAPTURE"] = 0] = "CAPTURE";
+    TABS[TABS["ROLLEDS"] = 1] = "ROLLEDS";
+    TABS[TABS["FLATS"] = 2] = "FLATS";
+})(TABS || (TABS = {}));
 var captureType;
 (function (captureType) {
     captureType[captureType["ONE_FINGER_FLAT"] = 0] = "ONE_FINGER_FLAT";
@@ -36,11 +42,11 @@ const flatCaptureTypes = [
     captureType.TWO_FINGER_FLAT,
     captureType.FOUR_FINGER_FLAT
 ];
-const UNMATCH_MESSAGE = 'Captura não condiz com dedo capturado anteriormente, por favor tente novamente';
-const REPEAT_MESSAGE = 'Este dedo já foi capturado, por favor tente novamente';
-const SMEAR_MESSAGE = 'Captura borrada, por favor tente novamente';
-const NFIQ_QUALITY_MESSAGE = 'Qualidade da captura inferior ao permitido. Por favor tente novamente';
-const ERROR_MESSAGE = 'Ocorreu um erro, por favor tente novamente';
+let UNMATCH_MESSAGE = 'Captura não condiz com dedo capturado anteriormente, por favor tente novamente';
+let REPEAT_MESSAGE = 'Este dedo já foi capturado, por favor tente novamente';
+let SMEAR_MESSAGE = 'Captura borrada, por favor tente novamente';
+let NFIQ_QUALITY_MESSAGE = 'Qualidade da captura inferior ao permitido. Por favor tente novamente';
+let ERROR_MESSAGE = 'Ocorreu um erro, por favor tente novamente';
 export class OpenbioFingerComponent {
     constructor() {
         this.ws = new WS();
@@ -67,7 +73,8 @@ export class OpenbioFingerComponent {
             captureType: 0,
             fingerIndex: undefined,
             action: undefined,
-            data: undefined
+            data: undefined,
+            module: "finger"
         };
         this.capturedData = null;
         this.originalImage = EMPTY_IMAGE;
@@ -80,6 +87,7 @@ export class OpenbioFingerComponent {
         this.currentStatusLineX = 0;
         this.flowOptions = [];
         this.anomalyOptions = [];
+        this.anomalies = [];
         this.currentFingerNames = [];
         this.currentFingerSequence = [];
         this.fingerSequence = [];
@@ -96,17 +104,44 @@ export class OpenbioFingerComponent {
         this.brand = '';
         this.serial = '';
         this.opened = false;
+        this.fingerNamesList = constants.fingerNames;
+        this.fingersToCapture = [];
         this.editingId = 0;
         this.isEditing = false;
         this.showLoader = false;
         this.showControlDisable = false;
         this.serviceConfigs = undefined;
         this.singleCaptureLoading = false;
+        this.captureDone = false;
+        this.serviceTime = {
+            start: new Date().getTime(),
+            hasCapture: false,
+        };
+    }
+    async listenLocale(newValue) {
+        this.setI18nParameters(newValue);
+    }
+    ;
+    async setI18nParameters(locale) {
+        TranslationUtils.setLocale(locale);
+        this.translations = await TranslationUtils.fetchTranslations();
+        UNMATCH_MESSAGE = this.translations.UNMATCH_MESSAGE;
+        REPEAT_MESSAGE = this.translations.REPEAT_MESSAGE;
+        SMEAR_MESSAGE = this.translations.SMEAR_MESSAGE;
+        NFIQ_QUALITY_MESSAGE = this.translations.NFIQ_QUALITY_MESSAGE;
+        ERROR_MESSAGE = this.translations.ERROR_MESSAGE;
+        this.fingerNames = [this.translations.RIGHT_THUMB, this.translations.RIGHT_INDICATOR, this.translations.MIDDLE_RIGHT, this.translations.RIGHT_RING, this.translations.MINIMUM_RIGHT, this.translations.LEFT_THUMB, this.translations.LEFT_INDICATOR, this.translations.MIDDLE_LEFT, this.translations.LEFT_RING, this.translations.MINIMUM_LEFT];
+        this.componentContainer.forceUpdate();
+    }
+    async componentWillLoad() {
+        this.setI18nParameters(this.locale);
     }
     clearImages() {
         showImage(this.canvas, "");
     }
     startPreview() {
+        this.nfiqScore = 0;
+        this.captureDone = false;
         this.showLoader = false;
         this.clearImages();
         this.payload.action = "start";
@@ -116,6 +151,7 @@ export class OpenbioFingerComponent {
         else
             this.payload.fingerIndex = undefined;
         this.ws.respondToDeviceWS(this.payload);
+        this.componentContainer.forceUpdate();
     }
     stopPreview() {
         this.payload.action = "stop";
@@ -164,7 +200,6 @@ export class OpenbioFingerComponent {
         this.ws.respondToDeviceWS(this.payload);
     }
     generateMinutiateData() {
-        console.log("inside generateMinutiateData");
         const fingers = [];
         for (const index in this.currentFingerSequence) {
             fingers.push({
@@ -181,7 +216,14 @@ export class OpenbioFingerComponent {
     }
     async uploadFingerImage(_this, fingerIndex, image, fileOptions) {
         if (image.type !== 'image/png') {
-            notify(this.componentContainer, "error", "Formato do arquivo inválido. Apenas imagens no formato png são aceitas");
+            Swal.fire({
+                type: "error",
+                title: this.translations.FILE_FORMAT_NOT_ACCEPTED,
+                text: TranslationUtils.concatTranslate('FILE_FORMAT_NOT_ACCEPTED_DESC', ['png']),
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+            });
             return;
         }
         _this.isEditing = true;
@@ -195,7 +237,13 @@ export class OpenbioFingerComponent {
             _this.stopPreview();
             const result = await saveFingerFile(data, image);
             if (result.error) {
-                notify(_this.componentContainer, "warning", result.data.error);
+                Swal.fire({
+                    type: "warning",
+                    message: result.data.error,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    allowEnterKey: false,
+                });
                 return;
             }
             _this.showLoader = true;
@@ -239,12 +287,14 @@ export class OpenbioFingerComponent {
                     };
                 });
                 await _this.storeCapturedFinger(parsedValue);
-                _this.showLoader = false;
+                this.showLoader = false;
+                this.componentContainer.forceUpdate();
             };
             reader.readAsArrayBuffer(image);
         }
         catch (e) {
-            _this.showLoader = false;
+            this.showLoader = false;
+            this.componentContainer.forceUpdate();
             console.log(e);
         }
     }
@@ -290,10 +340,10 @@ export class OpenbioFingerComponent {
         }, 2000);
     }
     async confirmSaveWithException() {
-        let anomalySelect = `<p>Deseja confirmar manualmente o salvamento desta coleta?</p>` +
+        let anomalySelect = `<p>${this.translations.DO_YOU_WANT_MANUALLY_CONFIRM_COLLECTION}</p>` +
             `<div class="select is-small inline">` +
             `<select id="swalAnomaly" name='anomaly'>` +
-            `<option value="${undefined}">ESCOLHA EM CASO DE ANOMALIA</option>`;
+            `<option value="${undefined}">${this.translations.CHOOSE_IN_ANOMALY_CASE}</option>`;
         for (const anomaly of this.anomalyOptions) {
             anomalySelect += `<option value="${anomaly.id}">${anomaly.name}</option>`;
         }
@@ -311,25 +361,33 @@ export class OpenbioFingerComponent {
             showCloseButton: true,
             showCancelButton: true,
             focusConfirm: false,
-            confirmButtonText: 'Salvar',
-            cancelButtonText: 'Cancelar',
+            confirmButtonText: this.translations.SAVE,
+            cancelButtonText: this.translations.CANCEL,
+        });
+    }
+    async confirmSaveManually() {
+        return Swal.fire({
+            text: this.translations.IMPOSSIBLE_MATCH_SAVE_MANUALLY,
+            type: "warning",
+            showCloseButton: true,
+            showCancelButton: true,
+            focusConfirm: false,
+            confirmButtonText: this.translations.SAVE,
+            cancelButtonText: this.translations.CANCEL,
         });
     }
     callProcessors(data) {
         if (this.payload.processorName) {
             if (this.beginMatch() && this.match) {
-                console.log("callProcessors.executeMatch");
                 this.tempFingersData = data.fingersData;
                 this.executeMatch();
             }
             else {
-                console.log("callProcessors.executeMatch");
                 this.tempFingersData = data.fingersData;
                 this.executeRepetitionControl();
             }
         }
         else {
-            console.log("callProcessors.generateMinutiateData");
             this.tempFingersData = data.fingersData;
             this.generateMinutiateData();
         }
@@ -352,7 +410,13 @@ export class OpenbioFingerComponent {
                         this.smearEvaluation(data);
                     }
                     else {
-                        notify(this.componentContainer, "warning", NFIQ_QUALITY_MESSAGE);
+                        Swal.fire({
+                            type: "warning",
+                            text: NFIQ_QUALITY_MESSAGE,
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            allowEnterKey: false,
+                        });
                         this.startPreview();
                         this.badNfiqQualityCount = 0;
                     }
@@ -362,7 +426,13 @@ export class OpenbioFingerComponent {
                 this.smearEvaluation(data);
             }
             else {
-                notify(this.componentContainer, "warning", NFIQ_QUALITY_MESSAGE);
+                Swal.fire({
+                    type: "warning",
+                    text: NFIQ_QUALITY_MESSAGE,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    allowEnterKey: false,
+                });
                 this.startPreview();
             }
         }
@@ -382,7 +452,13 @@ export class OpenbioFingerComponent {
                         this.callProcessors(data);
                     }
                     else {
-                        notify(this.componentContainer, "warning", SMEAR_MESSAGE);
+                        Swal.fire({
+                            type: "warning",
+                            text: SMEAR_MESSAGE,
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            allowEnterKey: false,
+                        });
                         this.startPreview();
                         this.smearCount = 0;
                     }
@@ -392,7 +468,13 @@ export class OpenbioFingerComponent {
                 this.callProcessors(data);
             }
             else {
-                notify(this.componentContainer, "warning", SMEAR_MESSAGE);
+                Swal.fire({
+                    type: "warning",
+                    text: SMEAR_MESSAGE,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    allowEnterKey: false,
+                });
                 this.startPreview();
             }
         }
@@ -430,7 +512,6 @@ export class OpenbioFingerComponent {
                 this.anomalyOptions = await getAnomalies(constants.anomalyTypes.MODAL_ANOMALY, !!this.detached);
                 try {
                     this.flowOptions = await getFlowOptions();
-                    console.log("this.flowOptions", this.flowOptions);
                 }
                 catch (e) {
                     console.log('error on getFlowOptions');
@@ -498,6 +579,7 @@ export class OpenbioFingerComponent {
                 this.ws.deviceSocket.addEventListener("message", async (event) => {
                     const data = JSON.parse(event.data);
                     if (data.status === "initialized") {
+                        console.log("initialized");
                         if (this.payload.processorName) {
                             this.setProcessorFingers();
                         }
@@ -508,14 +590,15 @@ export class OpenbioFingerComponent {
                         this.deviceReady = true;
                     }
                     if (data.status === "session-data-stored") {
-                        this.backendSession = undefined;
-                        this.emitLoadInformation();
-                        const checkSessionInterval = setInterval(() => {
-                            if (this.backendSession && this.backendSession.data.length === this.fingers.length) {
-                                clearInterval(checkSessionInterval);
-                                this.showLoader = false;
-                            }
-                        }, 200);
+                        this.backendSession = data.session;
+                        console.log("Session fingers", this.backendSession.data.length);
+                        console.log("Component fingers", this.fingers.length);
+                        if (this.allFingersCollected() && this.backendSession && this.backendSession.data.length === this.fingers.length) {
+                            this.componentContainer.forceUpdate();
+                            this.showLoader = false;
+                            this.captureDone = !this.currentFingerNames.length;
+                            this.componentContainer.forceUpdate();
+                        }
                     }
                     if (data.status === "match-success") {
                         this.generateMinutiateData();
@@ -523,21 +606,33 @@ export class OpenbioFingerComponent {
                     }
                     if (data.status === "minutiate-data-generated") {
                         this.minutiateFingers = JSON.parse(data.minutiateFingers);
-                        this.saveFingers(this.tempFingersData);
+                        await this.saveFingers(this.tempFingersData);
                         this.tempFingersData = null;
+                        if (this.fingersToCapture && this.fingersToCapture.length > 0) {
+                            this.editFinger(this, this.fingersToCapture[0]);
+                            this.fingersToCapture.shift();
+                        }
                     }
                     if (data.status === "unmatched") {
                         this.showLoader = false;
                         this.unmatchCount = this.unmatchCount + 1;
                         const attemptLimit = this.failControl.attemptLimit[this.currentFingerSequence[0]].rolled.match;
                         if (this.unmatchCount === attemptLimit) {
-                            this.confirmSaveWithException()
-                                .then((result) => {
+                            this.confirmSaveManually()
+                                .then(async (result) => {
                                 if (result.value) {
                                     this.generateMinutiateData();
                                 }
                                 else {
-                                    notify(this.componentContainer, "warning", UNMATCH_MESSAGE);
+                                    Swal.fire({
+                                        type: "warning",
+                                        text: UNMATCH_MESSAGE,
+                                        allowOutsideClick: false,
+                                        allowEscapeKey: false,
+                                        allowEnterKey: false,
+                                        timer: this.serviceConfigs.finger.unmatch_message_timeout,
+                                        showConfirmButton: false,
+                                    });
                                     this.startPreview();
                                     this.unmatchCount = 0;
                                 }
@@ -547,7 +642,15 @@ export class OpenbioFingerComponent {
                             this.generateMinutiateData();
                         }
                         else {
-                            notify(this.componentContainer, "warning", UNMATCH_MESSAGE);
+                            Swal.fire({
+                                type: "warning",
+                                text: UNMATCH_MESSAGE,
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                                allowEnterKey: false,
+                                timer: this.serviceConfigs.finger.unmatch_message_timeout,
+                                showConfirmButton: false,
+                            });
                             this.startPreview();
                         }
                     }
@@ -557,41 +660,59 @@ export class OpenbioFingerComponent {
                         const attemptLimit = this.failControl.attemptLimit[this.currentFingerSequence[0]].flat.repetition;
                         if (this.repeatedCount === attemptLimit) {
                             this.confirmSaveWithException()
-                                .then((result) => {
+                                .then(async (result) => {
                                 if (result.value) {
-                                    this.generateMinutiateData();
+                                    await this.generateMinutiateData();
                                 }
                                 else {
-                                    notify(this.componentContainer, "warning", REPEAT_MESSAGE);
+                                    Swal.fire({
+                                        type: "warning",
+                                        text: REPEAT_MESSAGE,
+                                        allowOutsideClick: false,
+                                        allowEscapeKey: false,
+                                        allowEnterKey: false,
+                                    });
                                     this.startPreview();
                                     this.repeatedCount = 0;
                                 }
                             });
                         }
                         else if (this.repeatedCount > attemptLimit) {
-                            this.generateMinutiateData();
+                            await this.generateMinutiateData();
                         }
                         else {
-                            notify(this.componentContainer, "warning", REPEAT_MESSAGE);
+                            Swal.fire({
+                                type: "warning",
+                                text: REPEAT_MESSAGE,
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                                allowEnterKey: false,
+                            });
                             this.startPreview();
                         }
                     }
                     if (data.status === "match-not-possible") {
                         this.showLoader = false;
                         return Swal.fire({
-                            text: "Não é possível realizar o match nesta coleta, deseja salvar manualmente?",
+                            text: this.translations.IMPOSSIBLE_MATCH_SAVE_MANUALLY,
                             type: "warning",
                             showCloseButton: true,
                             showCancelButton: true,
                             focusConfirm: false,
-                            confirmButtonText: 'Salvar',
-                            cancelButtonText: 'Cancelar',
-                        }).then((result) => {
+                            confirmButtonText: this.translations.SAVE,
+                            cancelButtonText: this.translations.CANCEL,
+                        }).then(async (result) => {
                             if (result.value) {
-                                this.generateMinutiateData();
+                                await this.generateMinutiateData();
                             }
                             else {
-                                notify(this.componentContainer, "warning", ERROR_MESSAGE);
+                                Swal.fire({
+                                    type: "warning",
+                                    text: ERROR_MESSAGE,
+                                    allowOutsideClick: false,
+                                    allowEscapeKey: false,
+                                    allowEnterKey: false,
+                                });
                                 this.startPreview();
                             }
                         });
@@ -604,48 +725,39 @@ export class OpenbioFingerComponent {
                         this.currentRollingStatus = data.rollingStatus;
                         this.currentStatusLineX = data.rollingLineX;
                     }
-                    if (data.previewImage) {
-                        showImage(this.canvas, data.previewImage, this.currentRollingStatus, this.currentStatusLineX);
-                        this.nfiqScore = data.nfiqScore > 0 && data.nfiqScore <= 5 ? data.nfiqScore : 0;
-                    }
-                    else if (data.originalImage) {
-                        this.stopPreview();
-                        this.showLoader = true;
-                        if (data.fingersData.fingerCount > 1) {
-                            showImage(this.canvas, data.originalImage, 0);
+                    if (data.module === "finger") {
+                        if (data.error) {
+                            this.showLoader = false;
+                            Swal.fire({
+                                type: 'error',
+                                title: this.translations.ERROR_WHILE_CAPTURING,
+                                text: `${TranslationUtils.concatTranslate('CODE_DESC', [data.code])}\n${this.translations.concatTranslate('DESCRIPTION_DESC', [data.error])}`,
+                            });
+                            return;
                         }
-                        else {
-                            showImage(this.canvas, data.fingersData.images[0].image, 0);
+                        else if (data.previewImage) {
+                            if (data.deviceInfo && data.deviceInfo.manufacturName !== "DigitalPersona" && data.deviceInfo.modelName !== "M421") {
+                                showImage(this.canvas, data.previewImage, this.currentRollingStatus, this.currentStatusLineX);
+                            }
+                            this.nfiqScore = data.nfiqScore > 0 && data.nfiqScore <= 5 ? data.nfiqScore : 0;
                         }
-                        this.originalImage = data.originalImage;
-                        this.model = data.deviceInfo.modelName;
-                        this.brand = data.deviceInfo.manufacturName;
-                        this.serial = data.deviceInfo.serialNumber;
-                        this.currentRollingStatus = 0;
-                        this.currentStatusLineX = data.rollingLineX;
-                        this.nfiqEvaluation(data);
-                        if (this.singleCaptureSt) {
-                            if (this.useOpenbioMatcherSt) {
-                                this.showLoader = true;
-                                fingerAuthenticate({ cpf: this.cpfSt, finger: { finger_index: this.currentFingerSequence[0], data: data.originalImage } }).then((result) => {
-                                    this.showLoader = false;
-                                    this.authenticationSimilarity = result.similarity;
-                                    if (this.authenticationSimilarity > 40) {
-                                        notify(this.componentContainer, "success", "Autenticado com sucesso");
-                                    }
-                                    else {
-                                        notify(this.componentContainer, "error", "Falha na autenticação");
-                                    }
-                                    if (this.onOpenbioMatcher) {
-                                        this.onOpenbioMatcher({ finger_index: this.currentFingerSequence[0], data: data.originalImage, nfiqScore: data.nfiqScore, similarity: result.similarity });
-                                    }
-                                }, (error) => {
-                                    console.log(error);
-                                });
+                        else if (data.originalImage) {
+                            this.nfiqScore = data.nfiqScore > 0 && data.nfiqScore <= 5 ? data.nfiqScore : 0;
+                            this.stopPreview();
+                            this.showLoader = true;
+                            if (data.fingersData.fingerCount > 1) {
+                                showImage(this.canvas, data.originalImage, 0);
                             }
-                            if (this.onCaptureFingerprint) {
-                                this.onCaptureFingerprint({ finger_index: this.currentFingerSequence[0], data: data.originalImage, nfiqScore: data.nfiqScore });
+                            else {
+                                showImage(this.canvas, data.fingersData.images[0].image, 0);
                             }
+                            this.originalImage = data.originalImage;
+                            this.model = data.deviceInfo.modelName;
+                            this.brand = data.deviceInfo.manufacturName;
+                            this.serial = data.deviceInfo.serialNumber;
+                            this.currentRollingStatus = 0;
+                            this.currentStatusLineX = data.rollingLineX;
+                            this.nfiqEvaluation(data);
                         }
                     }
                 });
@@ -663,9 +775,19 @@ export class OpenbioFingerComponent {
         }, 1000);
     }
     componentDidUnload() {
-        this.stopPreview();
-        this.stopPreviewprocessor();
+        if (!this.detached && this.serviceTime.hasCapture) {
+            saveServiceTime("FINGER", new Date().getTime() - this.serviceTime.start, this.person.id);
+        }
+        if (this.deviceReady) {
+            this.stopPreview();
+            this.stopPreviewprocessor();
+        }
         this.clearImages();
+    }
+    allFingersCollected() {
+        return ([flowTypes.FLOW_TYPE_TEN_FLAT_CAPTURES, flowTypes.FLOW_TYPE_TEN_ROLLED_CAPTURES, flowTypes.FLOW_TYPE_FIVE_FLAT_CAPTURES, flowTypes.FLOW_TYPE_THREE_FLAT_CAPTURES].includes(this.flowType) && this.fingers.length === 10 && this.backendSession.data.length === 10) ||
+            ([flowTypes.FLOW_TYPE_SEQUENCE_CONTROL_CAPTURE, flowTypes.FLOW_TYPE_TWO_FLAT_SEQUENCE_CONTROL_CAPTURE, flowTypes.FLOW_TYPE_FOUR_FLAT_SEQUENCE_CONTROL_CAPTURE].includes(this.flowType) && this.fingers.length === 20 && this.backendSession.data.length === 20) ||
+            (flowTypes.FLOW_TYPE_PINCH && this.fingers.length === 4 && this.backendSession.data.length === 4);
     }
     setFingersFromBackendSession() {
         const checkSessionInterval = setInterval(() => {
@@ -689,7 +811,7 @@ export class OpenbioFingerComponent {
             }
         }, 200);
     }
-    setCurrentFinger() {
+    async setCurrentFinger() {
         const fingerSessionData = this.getSequenceFingers();
         const orderedSequence = this.fingerSequence.reduce((a, b) => {
             return a.concat(b);
@@ -792,7 +914,7 @@ export class OpenbioFingerComponent {
             else
                 this.captureType = captureType.ROLLED_FINGER;
         }
-        this.captureTypeName = this.captureType === captureType.ROLLED_FINGER ? "Role" : "Posicione";
+        this.captureTypeName = this.captureType === captureType.ROLLED_FINGER ? this.translations.ROLL : this.translations.POSITION;
     }
     isFlatSequence() {
         return this.captureType !== captureType.ROLLED_FINGER;
@@ -800,19 +922,77 @@ export class OpenbioFingerComponent {
     isRolledSequence() {
         return this.captureType === captureType.ROLLED_FINGER;
     }
-    checkCaptureNeed() {
-        return (this.isFlatSequence() && this.anomaly.requires_flat) || (this.isRolledSequence() && this.anomaly.requires_rolled);
+    checkCaptureNeed(anomalyId = undefined) {
+        if (anomalyId) {
+            const anomaly = this.anomalyOptions.find((anomaly) => anomaly.id === anomalyId);
+            return (this.isFlatSequence() && (anomaly.requiresFlat || anomaly.requires_flat)) || (this.isRolledSequence() && (anomaly.requiresRolled || anomaly.requires_rolled));
+        }
+        else {
+            return (this.isFlatSequence() && (this.anomaly.requiresFlat || this.anomaly.requires_flat)) || (this.isRolledSequence() && (this.anomaly.requiresRolled || this.anomaly.requires_rolled));
+        }
+    }
+    getFingersPerStepByFlowType() {
+        if ([flowTypes.FLOW_TYPE_FIVE_FLAT_CAPTURES, flowTypes.FLOW_TYPE_TWO_FLAT_SEQUENCE_CONTROL_CAPTURE].includes(this.flowType)) {
+            return 2;
+        }
+        else if ([flowTypes.FLOW_TYPE_THREE_FLAT_CAPTURES, flowTypes.FLOW_TYPE_FOUR_FLAT_SEQUENCE_CONTROL_CAPTURE].includes(this.flowType)) {
+            return 4;
+        }
+        return 1;
     }
     saveAnomaly() {
-        if (!this.anomaly)
-            return;
-        if (this.checkCaptureNeed()) {
-            notify(this.componentContainer, "warning", "É necessário realizar a captura para este tipo de anomalia.");
+        let anomaliesWithImage = 0;
+        const fingersPerStep = this.getFingersPerStepByFlowType();
+        for (const index in this.currentFingerSequence) {
+            const fingerIndex = this.currentFingerSequence[index];
+            if (this.anomalies[fingerIndex]) {
+                if (this.checkCaptureNeed(this.anomalies[fingerIndex].id)) {
+                    Swal.fire({
+                        type: "warning",
+                        text: `A anomalia ${this.anomalies[fingerIndex].name} precisa de captura`,
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        allowEnterKey: false,
+                    });
+                    if (fingersPerStep === 1) {
+                        return;
+                    }
+                    anomaliesWithImage++;
+                    this.fingersToCapture.push({ fingerIndex, captureType: this.captureType });
+                }
+            }
+            else {
+                Swal.fire({
+                    type: "warning",
+                    text: `Realize a coleta do ${this.fingerNames[fingerIndex]}`,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    allowEnterKey: false,
+                });
+                this.fingersToCapture.push({ fingerIndex, captureType: this.captureType });
+                anomaliesWithImage++;
+            }
+        }
+        if (anomaliesWithImage < fingersPerStep) {
+            this.showLoader = true;
+            this.stopPreview();
+            this.saveFingers();
+            if (this.fingersToCapture.length > 0) {
+                this.editFinger(this, this.fingersToCapture[0]);
+                this.fingersToCapture.shift();
+            }
+        }
+        else {
+            Swal.fire({
+                type: "warning",
+                text: `A(s) anomalia(s) informada(s) necessita(m) de coleta de imagem`,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+            });
+            this.fingersToCapture = [];
             return;
         }
-        this.showLoader = true;
-        this.stopPreview();
-        this.saveFingers();
     }
     clearSession() {
         this.payload.action = "session-clear-data";
@@ -836,11 +1016,11 @@ export class OpenbioFingerComponent {
     }
     async saveFingers(fingersData) {
         let localization = undefined;
+        this.serviceTime.hasCapture = true;
         if (this.serviceConfigs && this.serviceConfigs.tools.geolocationService) {
             localization = await getLocalization();
         }
         let fingers = [];
-        console.log("saveFingers call", this.currentFingerSequence);
         for (const index in this.currentFingerSequence) {
             const fingerIndex = this.currentFingerSequence[index];
             let minutiateFinger = undefined;
@@ -857,9 +1037,9 @@ export class OpenbioFingerComponent {
                 rawData: fingersData ? fingersData.images[index].rawImage : "",
                 minutiateData: minutiateFinger ? minutiateFinger.data : "",
                 nfiqScore: fingersData ? fingersData.images[index].nfiqScore : null,
-                captureType: this.captureType,
+                captureType: this.captureType === captureType.ONE_FINGER_FLAT || this.captureType === captureType.TWO_FINGER_FLAT ? captureType.TWO_FINGER_FLAT : captureType.ROLLED_FINGER,
                 fingerIndex: fingerIndex,
-                anomalyId: this.anomaly ? this.anomaly.id : null,
+                anomalyId: this.anomalies && this.anomalies[fingerIndex] && this.anomalies[fingerIndex].id || null,
                 height: fingersData ? fingersData.heights[index] : 0,
                 width: fingersData ? fingersData.widths[index] : 0,
                 model: this.model,
@@ -873,12 +1053,10 @@ export class OpenbioFingerComponent {
             if (this.person && !this.singleCaptureSt) {
                 if (this.storeOriginalImage)
                     await this.saveOriginalImage();
-                console.log("fingers to be saved", fingers, "\n");
                 const saveFingersResult = await saveFingers({
                     personId: this.person.id,
                     fingers: JSON.stringify(fingers)
                 });
-                console.log("saved Fingers", saveFingersResult, "\n");
                 const parsedValue = await saveFingersResult.map((item) => {
                     return {
                         id: item.id,
@@ -985,8 +1163,28 @@ export class OpenbioFingerComponent {
         this.smearCount = 0;
         this.unmatchCount = 0;
         this.repeatedCount = 0;
-        if (!this.singleCaptureSt && this.currentFingerSequence.length > 0) {
+        if ((this.flowType === flowTypes.FLOW_TYPE_SEQUENCE_CONTROL_CAPTURE || this.flowType === flowTypes.FLOW_TYPE_TWO_FLAT_SEQUENCE_CONTROL_CAPTURE) && this.captureType === captureType.ROLLED_FINGER && this.currentFingerSequence.length > 0) {
+            const currentFingerIndex = this.currentFingerSequence[0];
+            const flatFinger = this.fingers.find((finger) => finger.fingerIndex === currentFingerIndex && (finger.captureType === captureType.TWO_FINGER_FLAT || finger.captureType === captureType.ONE_FINGER_FLAT));
+            const previousAnomalyId = flatFinger ? flatFinger.anomalyId : undefined;
+            if (previousAnomalyId && !this.checkCaptureNeed(previousAnomalyId)) {
+                this.anomaly = { id: previousAnomalyId };
+                this.saveAnomaly();
+            }
+            else if (!this.singleCaptureSt) {
+                this.startPreview();
+            }
+        }
+        else if (!this.singleCaptureSt && this.currentFingerSequence.length > 0) {
+            this.clearImages();
             this.startPreview();
+        }
+        else {
+            this.stopPreview();
+            if (!this.detached || (this.detached && this.currentFingerNames.length)) {
+                this.showLoader = false;
+            }
+            this.componentContainer.forceUpdate();
         }
         this.componentContainer.forceUpdate();
     }
@@ -1061,7 +1259,7 @@ export class OpenbioFingerComponent {
         const value = event.target.value;
         this[name] = parseInt(value, 10);
         this.setSelectionFingerList({ target: { name: "fingerList", value: this.stepPhase } });
-        this.captureTypeName = this.captureType === captureType.ROLLED_FINGER ? "Role" : "Posicione";
+        this.captureTypeName = this.captureType === captureType.ROLLED_FINGER ? this.translations.ROLL : this.translations.POSITION;
         this.getPersonInfo();
         this.stopPreview();
         setTimeout(() => {
@@ -1082,8 +1280,7 @@ export class OpenbioFingerComponent {
         this.disabledControls = !this.disabledControls;
     }
     capturedNfiq(index) {
-        const fingers = this.fingers;
-        const finger = fingers.find((finger) => finger.fingerIndex === index &&
+        const finger = this.fingers.find((finger) => finger.fingerIndex === index &&
             ((flatCaptureTypes.includes(this.captureType) && flatCaptureTypes.includes(finger.captureType)) ||
                 (this.captureType === captureType.ROLLED_FINGER && finger.captureType === captureType.ROLLED_FINGER)));
         return finger ? finger.nfiqScore : 0;
@@ -1094,6 +1291,7 @@ export class OpenbioFingerComponent {
         _this.editingId = finger.id;
         _this.stopPreview();
         _this.captureType = finger.captureType === captureType.ROLLED_FINGER ? captureType.ROLLED_FINGER : captureType.ONE_FINGER_FLAT;
+        _this.captureTypeName = finger.captureType === captureType.ROLLED_FINGER ? _this.translations.ROLL : _this.translations.POSITION;
         _this.currentFingerSequence = [finger.fingerIndex];
         _this.loadStepPhaseOnEdit(finger.fingerIndex);
         _this.currentFingerNames = _this.currentFingerSequence.map((item) => {
@@ -1113,6 +1311,29 @@ export class OpenbioFingerComponent {
                 this.stepPhase = fingerIndex + 10;
         }
     }
+    forceUpdate() {
+        this.componentContainer.forceUpdate();
+    }
+    setAnomaly(fingerIndex, event) {
+        const value = event.target.value;
+        this.anomalies[fingerIndex] = this.anomalyOptions.find((a) => a.id === parseInt(value));
+        this.forceUpdate();
+    }
+    anomaliesSelection() {
+        return this.currentFingerSequence.map((fingerIndex) => {
+            return (h("div", { style: { marginBottom: "4vh" } },
+                h("span", null,
+                    " ",
+                    this.fingerNamesList[fingerIndex],
+                    " "),
+                h("div", { class: "select is-small inline is-pulled-left" },
+                    h("select", { onChange: this.setAnomaly.bind(this, fingerIndex), name: "anomaly" },
+                        h("option", { value: undefined }, this.translations.CHOOSE_IN_ANOMALY_CASE),
+                        (this.anomalyOptions || []).map((option) => {
+                            return (h("option", { value: option.id, selected: this.anomalies && this.anomalies[fingerIndex] && this.anomalies[fingerIndex].id === option.id }, option.name));
+                        })))));
+        });
+    }
     render() {
         const personFaceBiometry = this.personInfo && this.personInfo.Biometries && this.personInfo.Biometries.find(item => item.biometry_type === 1);
         const anomalyOptions = (this.anomalyOptions || []).map((option) => {
@@ -1121,13 +1342,16 @@ export class OpenbioFingerComponent {
         const fingerCaptureGuide = (h("div", { class: "info" },
             this.currentFingerNames.length > 0 ?
                 h("span", null,
+                    " ",
                     this.captureTypeName,
-                    " o(s) dedo(s) ",
+                    " ",
+                    this.translations.THE_FINGERS,
+                    " ",
                     h("b", null,
                         this.currentFingerNames,
                         " "),
-                    "sobre o leitor.") :
-                h("span", null, "Coleta finalizada."),
+                    this.translations.ABOVE_READER) :
+                h("span", null, this.translations.COLLECTION_COMPLETED),
             h("p", { class: "finger-image" },
                 h("img", { alt: "", src: this.currentFingerImage }))));
         let personFingerList = undefined;
@@ -1156,34 +1380,40 @@ export class OpenbioFingerComponent {
                                 h("p", { class: "title is-4" }, this.personName || this.personInfo && this.personInfo.full_name),
                                 this.cpfSt || this.personInfo && this.personInfo.cpf ?
                                     h("p", { class: "subtitle is-6" },
-                                        "CPF: ",
+                                        this.translations.CPF,
+                                        ": ",
                                         this.cpfSt || this.personInfo && this.personInfo.cpf) : undefined))))) : (h("div", { class: "tabs is-left is-boxed" },
                     h("ul", null,
-                        h("li", { class: this.activeTabClass(0) },
-                            h("a", { onClick: () => this.setActiveTab(0) },
-                                h("span", { class: "tab-title" }, "Captura"))),
-                        h("li", { class: this.activeTabClass(1) },
-                            h("a", { onClick: () => this.setActiveTab(1) },
-                                h("span", { class: "tab-title" }, "Dedos Rolados"))),
-                        h("li", { class: this.activeTabClass(2) },
-                            h("a", { onClick: () => this.setActiveTab(2) },
-                                h("span", { class: "tab-title" }, "Dedos Pousados")))))),
-                this.tab === 0 ? h("div", { class: "columns is-mobile" },
+                        h("li", { class: this.activeTabClass(TABS.CAPTURE) },
+                            h("a", { onClick: () => this.setActiveTab(TABS.CAPTURE) },
+                                h("span", { class: "tab-title" }, this.translations.CAPTURE))),
+                        h("li", { class: this.activeTabClass(TABS.ROLLEDS) },
+                            h("a", { onClick: () => this.setActiveTab(TABS.ROLLEDS) },
+                                h("span", { class: "tab-title" }, this.translations.ROLLED_FINGERS))),
+                        h("li", { class: this.activeTabClass(TABS.FLATS) },
+                            h("a", { onClick: () => this.setActiveTab(TABS.FLATS) },
+                                h("span", { class: "tab-title" }, this.translations.FLAT_FINGERS)))))),
+                this.tab === TABS.CAPTURE ? h("div", { class: "columns is-mobile" },
                     h("div", { class: "column is-one-third" },
                         h("div", { class: "device-status-container" },
                             h("h6", { class: "title is-7 has-text-left" },
-                                "ESTADO DO DISPOSITIVO: ",
-                                this.deviceReady ? 'PRONTO' : 'NÃO CARREGADO')),
+                                this.translations.DEVICE_STATUS,
+                                ": ",
+                                this.deviceReady ? this.translations.READY : this.translations.NOT_LOADED)),
                         this.singleCaptureSt ?
                             h("div", null,
                                 h("p", { style: { marginBottom: "10px" } },
-                                    h("span", { style: { fontSize: "14px" } }, "Tipo de captura: "),
+                                    h("span", { style: { fontSize: "14px" } },
+                                        this.translations.CAPTURE_TYPE,
+                                        ": "),
                                     h("div", { class: "select is-small inline" },
                                         h("select", { onChange: this.setSelectionCaptureType.bind(this), name: "captureType", disabled: this.originalImage ? true : false },
-                                            h("option", { value: "0" }, "Pousada"),
-                                            h("option", { value: "2" }, "Rolada")))),
+                                            h("option", { value: "0" }, this.translations.FLAT),
+                                            h("option", { value: "2" }, this.translations.ROLLED)))),
                                 h("p", null,
-                                    h("span", { style: { fontSize: "14px" } }, "Dedo: "),
+                                    h("span", { style: { fontSize: "14px" } },
+                                        this.translations.FINGER,
+                                        ": "),
                                     h("div", { class: "select is-small inline", style: { marginLeft: "5px", minWidth: "142px" } },
                                         h("select", { onChange: this.setSelectionFingerList.bind(this), name: "fingerList", disabled: this.originalImage ? true : false }, personFingerList)))) : null,
                         this.serviceConfigs && (this.serviceConfigs.finger.help.guideImage || this.serviceConfigs.finger.help.content) ?
@@ -1194,7 +1424,7 @@ export class OpenbioFingerComponent {
                                 h("div", null,
                                     h("div", { class: "hand-status" },
                                         h("p", { class: "margin-name-hand" },
-                                            h("strong", null, "M\u00E3o direita")),
+                                            h("strong", null, this.translations.RIGHT_HAND)),
                                         h("ul", null,
                                             h("li", { class: `status-item status${this.capturedNfiq(0)}` }, this.capturedNfiq(0)),
                                             h("li", { class: `status-item status${this.capturedNfiq(1)}` }, this.capturedNfiq(1)),
@@ -1203,7 +1433,7 @@ export class OpenbioFingerComponent {
                                             h("li", { class: `status-item status${this.capturedNfiq(4)}` }, this.capturedNfiq(4)))),
                                     h("div", { class: "hand-status" },
                                         h("p", { class: "margin-name-hand" },
-                                            h("strong", null, "M\u00E3o esquerda")),
+                                            h("strong", null, this.translations.LEFT_HAND)),
                                         h("ul", null,
                                             h("li", { class: `status-item status${this.capturedNfiq(5)}` }, this.capturedNfiq(5)),
                                             h("li", { class: `status-item status${this.capturedNfiq(6)}` }, this.capturedNfiq(6)),
@@ -1214,27 +1444,22 @@ export class OpenbioFingerComponent {
                         h("span", { class: `status-item-line-in-canvas status-item status${this.nfiqScore}` }, this.nfiqScore),
                         h("canvas", { width: "460", height: "300", class: "canvas", ref: el => this.canvas = el }),
                         h("div", { class: "columns is-mobile action-buttons-container" },
-                            this.detached && !this.isTagComponent ? h("div", { class: "column has-text-centered" },
-                                h("a", { class: "button is-small is-pulled-right action-button", onClick: () => this.acceptData() }, "FINALIZAR")) : null,
+                            this.detached && !this.isTagComponent && this.captureDone && !this.currentFingerNames.length ? h("div", { class: "column has-text-centered" },
+                                h("a", { class: "button is-small is-pulled-right action-button", onClick: () => this.acceptData() }, this.translations.FINISH)) : null,
                             this.singleCaptureSt && this.originalImage ?
                                 h("div", { class: "column has-text-centered" },
-                                    h("a", { class: "button is-small is-pulled-right action-button", onClick: () => this.clearCapture() }, "LIMPAR CAPTURA")) : null),
-                        !this.singleCaptureSt ?
-                            h("div", { class: "columns is-mobile anomaly-buttons-container" },
-                                h("div", { class: "column" },
-                                    h("div", { class: "select is-small inline is-pulled-left" },
-                                        h("select", { onChange: this.setSelection.bind(this), name: "anomaly" },
-                                            h("option", { value: undefined }, "ESCOLHA EM CASO DE ANOMALIA"),
-                                            anomalyOptions))),
-                                h("div", { class: "column" },
-                                    h("a", { class: "button is-small is-pulled-right action-button", onClick: () => this.saveAnomaly() }, "SALVAR ANOMALIA"))) : null,
+                                    h("a", { class: "button is-small is-pulled-right action-button", onClick: () => this.clearCapture() }, this.translations.CLEAN_CAPTURE)) : null),
+                        h("div", { class: "columns is-mobile anomaly-buttons-container" },
+                            h("div", { class: "column" }, this.anomaliesSelection()),
+                            h("div", { class: "column", style: { marginTop: "2vh" } },
+                                h("a", { class: "button is-small is-pulled-right action-button", onClick: () => this.saveAnomaly() }, this.translations.SAVE_ANOMALY))),
                         this.showControlDisable ?
                             h("div", { class: "columns is-mobile" },
                                 h("div", { class: "column" },
                                     h("div", { class: "field" },
                                         h("input", { id: "disabledControls", type: "checkbox", name: "disabledControls", class: "switch is-rounded is-danger" }),
-                                        h("label", { htmlFor: "disabledControls", onClick: this.updateDisabledControls.bind(this) }, "Controles desabilitados")))) : null)) : null,
-                this.tab === 1 ? h("div", { class: "tab-content" },
+                                        h("label", { htmlFor: "disabledControls", onClick: this.updateDisabledControls.bind(this) }, this.translations.DISABLED_CONTROLS)))) : null)) : null,
+                this.tab === TABS.ROLLEDS ? h("div", { class: "tab-content" },
                     h("div", { class: "capture-result-container" },
                         h("div", { class: "columns is-mobile is-multiline is-left" },
                             h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(0), fingerName: this.fingerNames[0], fingerIndex: 0, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
@@ -1248,7 +1473,7 @@ export class OpenbioFingerComponent {
                             h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(7), fingerName: this.fingerNames[7], fingerIndex: 7, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
                             h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(8), fingerName: this.fingerNames[8], fingerIndex: 8, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
                             h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(9), fingerName: this.fingerNames[9], fingerIndex: 9, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage })))) : null,
-                this.tab === 2 ? h("div", { class: "tab-content" },
+                this.tab === TABS.FLATS ? h("div", { class: "tab-content" },
                     h("div", { class: "capture-result-container" },
                         h("div", { class: "columns is-mobile is-multiline is-left" },
                             h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(0), fingerName: this.fingerNames[0], fingerIndex: 0, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
@@ -1266,6 +1491,9 @@ export class OpenbioFingerComponent {
     static get is() { return "openbio-finger-details"; }
     static get encapsulation() { return "shadow"; }
     static get properties() { return {
+        "anomalies": {
+            "state": true
+        },
         "anomaly": {
             "state": true
         },
@@ -1285,6 +1513,9 @@ export class OpenbioFingerComponent {
             "state": true
         },
         "capturedData": {
+            "state": true
+        },
+        "captureDone": {
             "state": true
         },
         "captureType": {
@@ -1320,7 +1551,8 @@ export class OpenbioFingerComponent {
         },
         "detached": {
             "type": Boolean,
-            "attr": "detached"
+            "attr": "detached",
+            "mutable": true
         },
         "deviceReady": {
             "state": true
@@ -1338,10 +1570,16 @@ export class OpenbioFingerComponent {
             "type": Number,
             "attr": "finger-capture-type"
         },
+        "fingerNamesList": {
+            "state": true
+        },
         "fingers": {
             "state": true
         },
         "fingerSequence": {
+            "state": true
+        },
+        "fingersToCapture": {
             "state": true
         },
         "flowOptions": {
@@ -1359,6 +1597,12 @@ export class OpenbioFingerComponent {
         "isTagComponent": {
             "type": Boolean,
             "attr": "is-tag-component"
+        },
+        "locale": {
+            "type": String,
+            "attr": "locale",
+            "mutable": true,
+            "watchCallbacks": ["listenLocale"]
         },
         "match": {
             "state": true
@@ -1412,6 +1656,9 @@ export class OpenbioFingerComponent {
         "serviceConfigs": {
             "state": true
         },
+        "serviceTime": {
+            "state": true
+        },
         "showControlDisable": {
             "state": true
         },
@@ -1447,6 +1694,9 @@ export class OpenbioFingerComponent {
         "tempPerson": {
             "type": "Any",
             "attr": "temp-person"
+        },
+        "translations": {
+            "state": true
         },
         "unmatchCount": {
             "state": true

@@ -1,6 +1,27 @@
 {
   "tags": [
     {
+      "label": "cnh-preview",
+      "description": "",
+      "attributes": [
+        {
+          "label": "input-signature",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "person",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "photo",
+          "description": "",
+          "required": false
+        }
+      ]
+    },
+    {
       "label": "help-component",
       "description": "",
       "attributes": [
@@ -10,7 +31,135 @@
           "required": false
         },
         {
+          "label": "locale",
+          "description": "",
+          "required": false
+        },
+        {
           "label": "src",
+          "description": "",
+          "required": false
+        }
+      ]
+    },
+    {
+      "label": "image-cropper-component",
+      "description": "",
+      "attributes": [
+        {
+          "label": "aspect-ratio",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "crop-box-resizable",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "crop-callback",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "current-element-tag",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "locale",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "parent-component-context",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "parent-element-tag",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "src",
+          "description": "",
+          "required": false
+        }
+      ]
+    },
+    {
+      "label": "image-filter-component",
+      "description": "",
+      "attributes": [
+        {
+          "label": "current-element-tag",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "filter-callback",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "locale",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "parent-component-context",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "parent-element-tag",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "src",
+          "description": "",
+          "required": false
+        }
+      ]
+    },
+    {
+      "label": "image-segmentation-adjustment-component",
+      "description": "",
+      "attributes": [
+        {
+          "label": "current-element-tag",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "image-adjustment-callback",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "original-image",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "parent-component-context",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "parent-element-tag",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "save-adjusted-image-callback",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "segmented-image",
           "description": "",
           "required": false
         }
@@ -65,6 +214,47 @@
       ]
     },
     {
+      "label": "openbio-face-auth",
+      "description": "",
+      "attributes": [
+        {
+          "label": "cpf",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "hidden-camera",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "is-debug",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "locale",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "person-image",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "person-name",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "use-openbio-matcher",
+          "description": "",
+          "required": false
+        }
+      ]
+    },
+    {
       "label": "openbio-face-details",
       "description": "",
       "attributes": [
@@ -75,6 +265,11 @@
         },
         {
           "label": "is-tag-component",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "locale",
           "description": "",
           "required": false
         },
@@ -101,6 +296,11 @@
         },
         {
           "label": "left-icon",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "locale",
           "description": "",
           "required": false
         },
@@ -132,6 +332,11 @@
         },
         {
           "label": "is-debug",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "locale",
           "description": "",
           "required": false
         },
@@ -177,6 +382,11 @@
           "required": false
         },
         {
+          "label": "locale",
+          "description": "",
+          "required": false
+        },
+        {
           "label": "person-image",
           "description": "",
           "required": false
@@ -213,6 +423,11 @@
       "description": "",
       "attributes": [
         {
+          "label": "allow-upload",
+          "description": "",
+          "required": false
+        },
+        {
           "label": "edit-finger-callback",
           "description": "",
           "required": false
@@ -229,6 +444,11 @@
         },
         {
           "label": "finger-name",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "locale",
           "description": "",
           "required": false
         },
@@ -264,12 +484,88 @@
           "required": false
         },
         {
+          "label": "locale",
+          "description": "",
+          "required": false
+        },
+        {
           "label": "temp-mugshot-photos",
           "description": "",
           "required": false
         },
         {
           "label": "temp-person",
+          "description": "",
+          "required": false
+        }
+      ]
+    },
+    {
+      "label": "openbio-oma-face",
+      "description": "",
+      "attributes": [
+        {
+          "label": "action",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "camera-height",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "camera-width",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "container-background-color",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "header-title",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "locale",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "primary-color",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "project-id",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "record-id",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "request-key",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "show-header",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "text-color",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "token",
           "description": "",
           "required": false
         }
@@ -286,6 +582,11 @@
         },
         {
           "label": "is-tag-component",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "locale",
           "description": "",
           "required": false
         },
@@ -307,6 +608,11 @@
         },
         {
           "label": "is-tag-component",
+          "description": "",
+          "required": false
+        },
+        {
+          "label": "locale",
           "description": "",
           "required": false
         },

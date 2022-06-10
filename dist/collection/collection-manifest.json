@@ -1,6 +1,54 @@
 {
   "components": [
     {
+      "tag": "cnh-preview",
+      "dependencies": [],
+      "componentClass": "CnhPreviewComponent",
+      "componentPath": "components/cnh-preview-component/cnh-preview-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/cnh-preview-component/cnh-preview-component.scss"
+          ]
+        }
+      },
+      "props": [
+        {
+          "name": "inputSignature",
+          "type": "Any",
+          "attr": "input-signature"
+        },
+        {
+          "name": "person",
+          "type": "Any",
+          "mutable": true,
+          "attr": "person"
+        },
+        {
+          "name": "photo",
+          "type": "Any",
+          "attr": "photo"
+        },
+        {
+          "name": "size",
+          "mutable": true,
+          "attr": "size"
+        }
+      ],
+      "states": [
+        {
+          "name": "cnhTemplate"
+        },
+        {
+          "name": "signature"
+        }
+      ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
+      "shadow": true
+    },
+    {
       "tag": "help-component",
       "dependencies": [],
       "componentClass": "GuideImageComponent",
@@ -20,6 +68,15 @@
           "attr": "help-text"
         },
         {
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
+        },
+        {
           "name": "src",
           "type": "String",
           "attr": "src"
@@ -28,8 +85,294 @@
       "states": [
         {
           "name": "isHelpModalActive"
+        },
+        {
+          "name": "translations"
         }
       ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
+      "shadow": true
+    },
+    {
+      "tag": "image-cropper-component",
+      "dependencies": [],
+      "componentClass": "ImageCropperComponent",
+      "componentPath": "components/image-cropper-component/image-cropper-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "../node_modules/bulma-checkradio/dist/css/bulma-checkradio.min.css",
+            "../node_modules/cropperjs/dist/cropper.css",
+            "components/image-cropper-component/image-cropper-component.scss"
+          ]
+        }
+      },
+      "props": [
+        {
+          "name": "aspectRatio",
+          "type": "Any",
+          "attr": "aspect-ratio"
+        },
+        {
+          "name": "cropBoxResizable",
+          "type": "Boolean",
+          "attr": "crop-box-resizable"
+        },
+        {
+          "name": "cropCallback",
+          "type": "Any",
+          "attr": "crop-callback"
+        },
+        {
+          "name": "currentElementTag",
+          "type": "String",
+          "attr": "current-element-tag"
+        },
+        {
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
+        },
+        {
+          "name": "parentComponentContext",
+          "type": "Any",
+          "attr": "parent-component-context"
+        },
+        {
+          "name": "parentElementTag",
+          "type": "String",
+          "attr": "parent-element-tag"
+        },
+        {
+          "name": "src",
+          "type": "String",
+          "attr": "src"
+        }
+      ],
+      "states": [
+        {
+          "name": "cropper"
+        },
+        {
+          "name": "segment"
+        },
+        {
+          "name": "translations"
+        }
+      ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
+      "shadow": true
+    },
+    {
+      "tag": "image-filter-component",
+      "dependencies": [],
+      "componentClass": "GuideImageComponent",
+      "componentPath": "components/image-filter-component/image-filter-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "../node_modules/@mdi/font/css/materialdesignicons.css",
+            "../node_modules/bulma-checkradio/dist/css/bulma-checkradio.min.css",
+            "../node_modules/bulma-slider/dist/css/bulma-slider.min.css",
+            "components/image-filter-component/image-filter-component.scss"
+          ]
+        }
+      },
+      "props": [
+        {
+          "name": "currentElementTag",
+          "type": "String",
+          "attr": "current-element-tag"
+        },
+        {
+          "name": "filterCallback",
+          "type": "Any",
+          "attr": "filter-callback"
+        },
+        {
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
+        },
+        {
+          "name": "parentComponentContext",
+          "type": "Any",
+          "attr": "parent-component-context"
+        },
+        {
+          "name": "parentElementTag",
+          "type": "String",
+          "attr": "parent-element-tag"
+        },
+        {
+          "name": "src",
+          "type": "String",
+          "attr": "src"
+        }
+      ],
+      "states": [
+        {
+          "name": "filters"
+        },
+        {
+          "name": "translations"
+        }
+      ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
+      "shadow": true
+    },
+    {
+      "tag": "image-segmentation-adjustment-component",
+      "dependencies": [],
+      "componentClass": "ImageSegmentationAdjustmentComponent",
+      "componentPath": "components/image-segmentation-adjustment-component/image-segmentation-adjustment-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/image-segmentation-adjustment-component/image-segmentation-adjustment-component.scss"
+          ]
+        }
+      },
+      "props": [
+        {
+          "name": "currentElementTag",
+          "type": "String",
+          "attr": "current-element-tag"
+        },
+        {
+          "name": "imageAdjustmentCallback",
+          "type": "Any",
+          "attr": "image-adjustment-callback"
+        },
+        {
+          "name": "originalImage",
+          "type": "Any",
+          "attr": "original-image"
+        },
+        {
+          "name": "parentComponentContext",
+          "type": "Any",
+          "attr": "parent-component-context"
+        },
+        {
+          "name": "parentElementTag",
+          "type": "String",
+          "attr": "parent-element-tag"
+        },
+        {
+          "name": "saveAdjustedImageCallback",
+          "type": "Any",
+          "attr": "save-adjusted-image-callback"
+        },
+        {
+          "name": "segmentedImage",
+          "type": "Any",
+          "attr": "segmented-image"
+        }
+      ],
+      "states": [
+        {
+          "name": "area_select"
+        },
+        {
+          "name": "backgroundCanvas"
+        },
+        {
+          "name": "backgroundContext"
+        },
+        {
+          "name": "backgroundImage"
+        },
+        {
+          "name": "brush_radius"
+        },
+        {
+          "name": "color"
+        },
+        {
+          "name": "eraser_radius"
+        },
+        {
+          "name": "imagesArray"
+        },
+        {
+          "name": "index"
+        },
+        {
+          "name": "inputColor"
+        },
+        {
+          "name": "isPress"
+        },
+        {
+          "name": "old"
+        },
+        {
+          "name": "overlayCanvas"
+        },
+        {
+          "name": "overlayContext"
+        },
+        {
+          "name": "overlayImage"
+        },
+        {
+          "name": "paint_radius"
+        },
+        {
+          "name": "radius"
+        },
+        {
+          "name": "rangeContainer"
+        },
+        {
+          "name": "redo_disable"
+        },
+        {
+          "name": "restorer_radius"
+        },
+        {
+          "name": "tool"
+        },
+        {
+          "name": "tooltip"
+        },
+        {
+          "name": "translations"
+        },
+        {
+          "name": "undo_disabled"
+        },
+        {
+          "name": "x_old"
+        },
+        {
+          "name": "x_select"
+        },
+        {
+          "name": "y_old"
+        },
+        {
+          "name": "y_select"
+        }
+      ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
       "shadow": true
     },
     {
@@ -128,12 +471,26 @@
           ]
         }
       },
+      "props": [
+        {
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
+        }
+      ],
       "states": [
         {
           "name": "deviceReady"
         },
         {
           "name": "forceLoadComponent"
+        },
+        {
+          "name": "translations"
         }
       ],
       "hostElement": {
@@ -142,9 +499,124 @@
       "shadow": true
     },
     {
+      "tag": "openbio-face-auth",
+      "dependencies": [
+        "loader-component"
+      ],
+      "componentClass": "OpenbioFaceAuthComponent",
+      "componentPath": "components/openbio-face-auth-component/openbio-face-auth-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/openbio-face-auth-component/openbio-face-auth-component.scss"
+          ]
+        }
+      },
+      "props": [
+        {
+          "name": "cpf",
+          "type": "String",
+          "attr": "cpf"
+        },
+        {
+          "name": "hiddenCamera",
+          "type": "Boolean",
+          "attr": "hidden-camera"
+        },
+        {
+          "name": "isDebug",
+          "type": "Boolean",
+          "attr": "is-debug"
+        },
+        {
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
+        },
+        {
+          "name": "personImage",
+          "type": "String",
+          "attr": "person-image"
+        },
+        {
+          "name": "personName",
+          "type": "String",
+          "attr": "person-name"
+        },
+        {
+          "name": "useOpenbioMatcher",
+          "type": "Boolean",
+          "attr": "use-openbio-matcher"
+        }
+      ],
+      "states": [
+        {
+          "name": "authenticateError"
+        },
+        {
+          "name": "cameraInitialized"
+        },
+        {
+          "name": "captured"
+        },
+        {
+          "name": "countdown"
+        },
+        {
+          "name": "cpfState"
+        },
+        {
+          "name": "debug"
+        },
+        {
+          "name": "faceDetected"
+        },
+        {
+          "name": "person"
+        },
+        {
+          "name": "personImageState"
+        },
+        {
+          "name": "personNameState"
+        },
+        {
+          "name": "showFullscreenLoader"
+        },
+        {
+          "name": "thresholdAuthenticate"
+        },
+        {
+          "name": "translations"
+        },
+        {
+          "name": "useOpenbioMatcherState"
+        },
+        {
+          "name": "videoInterval"
+        }
+      ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
+      "events": [
+        {
+          "event": "onMatcherResult"
+        }
+      ],
+      "shadow": true
+    },
+    {
       "tag": "openbio-face-details",
       "dependencies": [
         "help-component",
+        "image-cropper-component",
+        "image-filter-component",
+        "image-segmentation-adjustment-component",
         "loader-component",
         "openbio-face-validation-box-component"
       ],
@@ -161,12 +633,22 @@
         {
           "name": "detached",
           "type": "Boolean",
+          "mutable": true,
           "attr": "detached"
         },
         {
           "name": "isTagComponent",
           "type": "Boolean",
           "attr": "is-tag-component"
+        },
+        {
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
         },
         {
           "name": "tempFace",
@@ -180,6 +662,12 @@
         }
       ],
       "states": [
+        {
+          "name": "adjustedImage"
+        },
+        {
+          "name": "adjustment"
+        },
         {
           "name": "allowConfiguration"
         },
@@ -229,6 +717,15 @@
           "name": "croppedImage"
         },
         {
+          "name": "croppedImageURL"
+        },
+        {
+          "name": "cropperModal"
+        },
+        {
+          "name": "cropSegment"
+        },
+        {
           "name": "deviceReady"
         },
         {
@@ -263,6 +760,15 @@
         },
         {
           "name": "flashWidth"
+        },
+        {
+          "name": "imageAdjustmentModal"
+        },
+        {
+          "name": "imageFilterBase64"
+        },
+        {
+          "name": "imageFilterModal"
         },
         {
           "name": "imageFormat"
@@ -319,6 +825,9 @@
           "name": "serviceConfigs"
         },
         {
+          "name": "serviceTime"
+        },
+        {
           "name": "shallCapture"
         },
         {
@@ -340,7 +849,13 @@
           "name": "track"
         },
         {
+          "name": "translations"
+        },
+        {
           "name": "uploadedBase64"
+        },
+        {
+          "name": "uploadedBase64Original"
         },
         {
           "name": "validation"
@@ -381,6 +896,15 @@
           "attr": "left-icon"
         },
         {
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
+        },
+        {
           "name": "status",
           "type": "Any",
           "attr": "status"
@@ -399,8 +923,14 @@
       "states": [
         {
           "name": "statusMessage"
+        },
+        {
+          "name": "translations"
         }
       ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
       "shadow": true
     },
     {
@@ -417,12 +947,26 @@
           ]
         }
       },
+      "props": [
+        {
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
+        }
+      ],
       "states": [
         {
           "name": "deviceReady"
         },
         {
           "name": "forceLoadComponent"
+        },
+        {
+          "name": "translations"
         }
       ],
       "hostElement": {
@@ -456,12 +1000,13 @@
           "attr": "is-debug"
         },
         {
-          "name": "onCaptureFingerprintResult",
-          "attr": "on-capture-fingerprint-result"
-        },
-        {
-          "name": "onMatcherResult",
-          "attr": "on-matcher-result"
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
         },
         {
           "name": "personImage",
@@ -481,7 +1026,7 @@
       ],
       "states": [
         {
-          "name": "captureStep"
+          "name": "captureMessage"
         },
         {
           "name": "captureType"
@@ -503,6 +1048,9 @@
         },
         {
           "name": "deviceSerial"
+        },
+        {
+          "name": "fingerAuthenticate"
         },
         {
           "name": "fingerAuthenticationSimilarity"
@@ -532,10 +1080,19 @@
           "name": "personNameState"
         },
         {
+          "name": "ready"
+        },
+        {
           "name": "selectedFinger"
         },
         {
           "name": "showFullscreenLoader"
+        },
+        {
+          "name": "thresholdAuthenticate"
+        },
+        {
+          "name": "translations"
         },
         {
           "name": "useOpenbioMatcherState"
@@ -544,6 +1101,14 @@
       "hostElement": {
         "name": "componentContainer"
       },
+      "events": [
+        {
+          "event": "onCaptureFingerprintResult"
+        },
+        {
+          "event": "onMatcherResult"
+        }
+      ],
       "shadow": true
     },
     {
@@ -571,6 +1136,7 @@
         {
           "name": "detached",
           "type": "Boolean",
+          "mutable": true,
           "attr": "detached"
         },
         {
@@ -582,6 +1148,15 @@
           "name": "isTagComponent",
           "type": "Boolean",
           "attr": "is-tag-component"
+        },
+        {
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
         },
         {
           "name": "onCaptureFingerprint",
@@ -624,6 +1199,9 @@
       ],
       "states": [
         {
+          "name": "anomalies"
+        },
+        {
           "name": "anomaly"
         },
         {
@@ -643,6 +1221,9 @@
         },
         {
           "name": "capturedData"
+        },
+        {
+          "name": "captureDone"
         },
         {
           "name": "captureType"
@@ -681,10 +1262,16 @@
           "name": "failControl"
         },
         {
+          "name": "fingerNamesList"
+        },
+        {
           "name": "fingers"
         },
         {
           "name": "fingerSequence"
+        },
+        {
+          "name": "fingersToCapture"
         },
         {
           "name": "flowOptions"
@@ -735,6 +1322,9 @@
           "name": "serviceConfigs"
         },
         {
+          "name": "serviceTime"
+        },
+        {
           "name": "showControlDisable"
         },
         {
@@ -757,6 +1347,9 @@
         },
         {
           "name": "tab"
+        },
+        {
+          "name": "translations"
         },
         {
           "name": "unmatchCount"
@@ -784,6 +1377,11 @@
       },
       "props": [
         {
+          "name": "allowUpload",
+          "type": "Boolean",
+          "attr": "allow-upload"
+        },
+        {
           "name": "editFingerCallback",
           "type": "Any",
           "attr": "edit-finger-callback"
@@ -804,6 +1402,15 @@
           "attr": "finger-name"
         },
         {
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
+        },
+        {
           "name": "parentComponentContext",
           "type": "Any",
           "attr": "parent-component-context"
@@ -820,8 +1427,14 @@
         },
         {
           "name": "isModalShown"
+        },
+        {
+          "name": "translations"
         }
       ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
       "shadow": true
     },
     {
@@ -838,12 +1451,26 @@
           ]
         }
       },
+      "props": [
+        {
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
+        }
+      ],
       "states": [
         {
           "name": "deviceReady"
         },
         {
           "name": "forceLoadComponent"
+        },
+        {
+          "name": "translations"
         }
       ],
       "hostElement": {
@@ -883,6 +1510,15 @@
           "attr": "is-tag-component"
         },
         {
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
+        },
+        {
           "name": "tempMugshotPhotos",
           "type": "Any",
           "attr": "temp-mugshot-photos"
@@ -911,6 +1547,9 @@
         },
         {
           "name": "brand"
+        },
+        {
+          "name": "cameraPresetOptions"
         },
         {
           "name": "cameraSettingsOptions"
@@ -982,6 +1621,9 @@
           "name": "poseAngleYaw"
         },
         {
+          "name": "preset"
+        },
+        {
           "name": "rawImage"
         },
         {
@@ -1000,6 +1642,12 @@
           "name": "serviceConfigs"
         },
         {
+          "name": "serviceTime"
+        },
+        {
+          "name": "showCameraConfiguration"
+        },
+        {
           "name": "showLoader"
         },
         {
@@ -1012,10 +1660,127 @@
           "name": "track"
         },
         {
+          "name": "translations"
+        },
+        {
           "name": "video"
         },
         {
           "name": "whiteBalance"
+        }
+      ],
+      "hostElement": {
+        "name": "componentContainer"
+      },
+      "shadow": true
+    },
+    {
+      "tag": "openbio-oma-face",
+      "dependencies": [
+        "loader-component"
+      ],
+      "componentClass": "OpenbioFaceOmaComponent",
+      "componentPath": "components/openbio-oma-face-component/openbio-oma-face-component.js",
+      "styles": {
+        "$": {
+          "stylePaths": [
+            "components/openbio-oma-face-component/openbio-oma-face-component.scss"
+          ]
+        }
+      },
+      "props": [
+        {
+          "name": "action",
+          "type": "String",
+          "attr": "action"
+        },
+        {
+          "name": "callback",
+          "attr": "callback"
+        },
+        {
+          "name": "cameraHeight",
+          "type": "Number",
+          "attr": "camera-height"
+        },
+        {
+          "name": "cameraWidth",
+          "type": "Number",
+          "attr": "camera-width"
+        },
+        {
+          "name": "containerBackgroundColor",
+          "type": "String",
+          "attr": "container-background-color"
+        },
+        {
+          "name": "headerTitle",
+          "type": "String",
+          "attr": "header-title"
+        },
+        {
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
+        },
+        {
+          "name": "primaryColor",
+          "type": "String",
+          "attr": "primary-color"
+        },
+        {
+          "name": "projectId",
+          "type": "String",
+          "attr": "project-id"
+        },
+        {
+          "name": "recordId",
+          "type": "String",
+          "attr": "record-id"
+        },
+        {
+          "name": "requestKey",
+          "type": "String",
+          "attr": "request-key"
+        },
+        {
+          "name": "showHeader",
+          "type": "Boolean",
+          "attr": "show-header"
+        },
+        {
+          "name": "textColor",
+          "type": "String",
+          "attr": "text-color"
+        },
+        {
+          "name": "token",
+          "type": "String",
+          "attr": "token"
+        }
+      ],
+      "states": [
+        {
+          "name": "captured"
+        },
+        {
+          "name": "capturedImage"
+        },
+        {
+          "name": "showFullscreenLoader"
+        },
+        {
+          "name": "translations"
+        },
+        {
+          "name": "videoElement"
+        },
+        {
+          "name": "videoInterval"
         }
       ],
       "hostElement": {
@@ -1060,6 +1825,7 @@
         {
           "name": "detached",
           "type": "Boolean",
+          "mutable": true,
           "attr": "detached"
         },
         {
@@ -1068,12 +1834,27 @@
           "attr": "is-tag-component"
         },
         {
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
+        },
+        {
           "name": "tempPerson",
           "type": "Any",
           "attr": "temp-person"
         }
       ],
       "states": [
+        {
+          "name": "anomaly"
+        },
+        {
+          "name": "anomalyOptions"
+        },
         {
           "name": "backendSession"
         },
@@ -1096,6 +1877,9 @@
           "name": "deviceStatus"
         },
         {
+          "name": "disableFormSelection"
+        },
+        {
           "name": "form"
         },
         {
@@ -1114,6 +1898,12 @@
           "name": "model"
         },
         {
+          "name": "palmAnomalyOptions"
+        },
+        {
+          "name": "palmFormType"
+        },
+        {
           "name": "palmType"
         },
         {
@@ -1130,6 +1920,9 @@
         },
         {
           "name": "showLoader"
+        },
+        {
+          "name": "translations"
         }
       ],
       "hostElement": {
@@ -1151,6 +1944,17 @@
           ]
         }
       },
+      "props": [
+        {
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
+        }
+      ],
       "states": [
         {
           "name": "captureInput"
@@ -1160,6 +1964,9 @@
         },
         {
           "name": "forceLoadComponent"
+        },
+        {
+          "name": "translations"
         }
       ],
       "hostElement": {
@@ -1171,6 +1978,7 @@
       "tag": "openbio-signature-details",
       "dependencies": [
         "help-component",
+        "image-cropper-component",
         "loader-component"
       ],
       "componentClass": "OpenbioSignatureComponentDetails",
@@ -1192,6 +2000,15 @@
           "name": "isTagComponent",
           "type": "Boolean",
           "attr": "is-tag-component"
+        },
+        {
+          "name": "locale",
+          "type": "String",
+          "mutable": true,
+          "attr": "locale",
+          "watch": [
+            "listenLocale"
+          ]
         },
         {
           "name": "tempPerson",
@@ -1216,6 +2033,12 @@
         },
         {
           "name": "brand"
+        },
+        {
+          "name": "captureDone"
+        },
+        {
+          "name": "cropperModal"
         },
         {
           "name": "deviceOpened"
@@ -1251,6 +2074,9 @@
           "name": "serviceConfigs"
         },
         {
+          "name": "serviceTime"
+        },
+        {
           "name": "showLoader"
         },
         {
@@ -1258,6 +2084,12 @@
         },
         {
           "name": "tab"
+        },
+        {
+          "name": "translations"
+        },
+        {
+          "name": "uploadedBase64"
         }
       ],
       "hostElement": {

@@ -1,4 +1,5 @@
 import '../../stencil.core';
+import { EventEmitter } from "../../stencil.core";
 import WS from "../../utils/websocket";
 declare enum FlowTypes {
     FLOW_TYPE_TEN_FLAT_CAPTURES = 0,
@@ -35,6 +36,14 @@ declare enum Finger {
     LEFT_RING = 8,
     LEFT_LITTLE = 9
 }
+interface AuthLogBody {
+    type?: string;
+    cpf?: string;
+    status: string;
+    description?: string;
+    matchImage?: string;
+    score?: number;
+}
 export declare class OpenbioFingerAuthComponent {
     ws: WS;
     private wsStatusInterval;
@@ -42,8 +51,6 @@ export declare class OpenbioFingerAuthComponent {
     private fingerNames;
     useOpenbioMatcher: boolean;
     cpf: string;
-    onMatcherResult: Function;
-    onCaptureFingerprintResult: Function;
     isDebug: boolean;
     personName: string;
     personImage: string;
@@ -64,13 +71,23 @@ export declare class OpenbioFingerAuthComponent {
         name: string;
     };
     currentFingerImage: string;
-    captureStep: boolean;
     useOpenbioMatcherState: boolean;
     cpfState: string;
     personNameState: string;
     personImageState: string;
     debug: boolean;
+    fingerAuthenticate: boolean;
+    thresholdAuthenticate: number;
+    captureMessage: string;
     person: any;
+    ready: boolean;
+    translations: any;
+    locale: string;
+    listenLocale(newValue: string): Promise<void>;
+    componentWillLoad(): Promise<void>;
+    setI18nParameters(locale: any): Promise<void>;
+    onMatcherResult: EventEmitter<any>;
+    onCaptureFingerprintResult: EventEmitter<any>;
     private payload;
     clearCanvasFingerImage(): void;
     session: {
@@ -78,6 +95,7 @@ export declare class OpenbioFingerAuthComponent {
     };
     device: {
         open: () => void;
+        close: () => void;
         prepareToPreview: () => void;
         startPreview: () => void;
         stopPreview: () => void;
@@ -85,14 +103,17 @@ export declare class OpenbioFingerAuthComponent {
         clearCapture: () => void;
     };
     getModalSettings(): Promise<void>;
+    closeComponent(): void;
+    saveLog(authLogBody: AuthLogBody): void;
     loadWebsocketListeners(): void;
     getPerson(): Promise<void>;
     setCurrentFingerImage(): void;
     setSelectionCaptureType(event: any): void;
     setSelectionFingerList(event: any): void;
-    changeCaptureStep(): void;
     componentDidLoad(): void;
     componentDidUnload(): void;
+    applyCpfMask(cpf: string): string;
+    getPersonPhoto(): string;
     render(): JSX.Element;
 }
 export {};
