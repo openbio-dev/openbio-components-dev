@@ -286,6 +286,14 @@ export class OpenbioFaceOmaComponent {
             this.showFullscreenLoader = false;
             if (this.action === ACTIONS.VERIFY && this.callback) {
                 this.callback({ recordId: this.recordId, match: resolve.ResultStatus === RESULT_STATUS.VERIFIED });
+                return Swal.fire({
+                    type: "success",
+                    title: 'Autenticado',
+                    showCloseButton: true,
+                    showCancelButton: false,
+                    focusConfirm: false,
+                    confirmButtonColor: this.primaryColor || '#0D3F56',
+                });
             }
             else {
                 return resolve.ResultStatus === RESULT_STATUS.VERIFIED;

@@ -48,7 +48,7 @@ export declare class OpenbioFaceOmaComponent {
     updateRecord(): Promise<any>;
     verifyRecordIdExistency(): Promise<{}>;
     register(): Promise<any>;
-    verify(): Promise<boolean>;
+    verify(): Promise<any>;
     takeSnapShot(): Promise<void>;
     render(): JSX.Element;
 }
