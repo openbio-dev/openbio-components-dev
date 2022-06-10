@@ -29,6 +29,8 @@ export class OpenbioFaceOmaComponent {
     constructor() {
         this.defaultWidth = 640;
         this.defaultHeight = 480;
+        this.projectId = '1';
+        this.recordId = '1';
         this.locale = 'pt';
         this.showHeader = true;
         this.showFullscreenLoader = false;
@@ -287,8 +289,8 @@ export class OpenbioFaceOmaComponent {
             if (this.action === ACTIONS.VERIFY && this.callback) {
                 this.callback({ recordId: this.recordId, match: resolve.ResultStatus === RESULT_STATUS.VERIFIED });
                 return Swal.fire({
-                    type: "success",
-                    title: 'Autenticado',
+                    type: resolve.ResultStatus === RESULT_STATUS.VERIFIED ? 'success' : 'error',
+                    title: resolve.ResultStatus === RESULT_STATUS.VERIFIED ? 'Autenticado' : 'Falha na autenticação',
                     showCloseButton: true,
                     showCancelButton: false,
                     focusConfirm: false,
