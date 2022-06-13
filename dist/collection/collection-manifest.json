@@ -1719,6 +1719,11 @@
           "attr": "header-title"
         },
         {
+          "name": "livenessMin",
+          "type": "Number",
+          "attr": "liveness-min"
+        },
+        {
           "name": "locale",
           "type": "String",
           "mutable": true,

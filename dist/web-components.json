@@ -530,6 +530,11 @@
           "required": false
         },
         {
+          "label": "liveness-min",
+          "description": "",
+          "required": false
+        },
+        {
           "label": "locale",
           "description": "",
           "required": false

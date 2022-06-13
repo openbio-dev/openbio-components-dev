@@ -306,6 +306,7 @@ export namespace Components {
     'cameraWidth': number;
     'containerBackgroundColor': string;
     'headerTitle': string;
+    'livenessMin': number;
     'locale': string;
     'primaryColor': string;
     'projectId': string;
@@ -322,6 +323,7 @@ export namespace Components {
     'cameraWidth'?: number;
     'containerBackgroundColor'?: string;
     'headerTitle'?: string;
+    'livenessMin'?: number;
     'locale'?: string;
     'primaryColor'?: string;
     'projectId'?: string;

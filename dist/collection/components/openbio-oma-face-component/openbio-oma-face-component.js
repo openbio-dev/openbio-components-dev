@@ -31,6 +31,7 @@ export class OpenbioFaceOmaComponent {
         this.defaultHeight = 480;
         this.projectId = '1';
         this.recordId = '1';
+        this.livenessMin = 0.8;
         this.locale = 'pt';
         this.showHeader = true;
         this.showFullscreenLoader = false;
@@ -382,6 +383,10 @@ export class OpenbioFaceOmaComponent {
         "headerTitle": {
             "type": String,
             "attr": "header-title"
+        },
+        "livenessMin": {
+            "type": Number,
+            "attr": "liveness-min"
         },
         "locale": {
             "type": String,
