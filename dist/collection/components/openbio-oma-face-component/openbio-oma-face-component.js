@@ -29,8 +29,6 @@ export class OpenbioFaceOmaComponent {
     constructor() {
         this.defaultWidth = 640;
         this.defaultHeight = 480;
-        this.projectId = '1';
-        this.recordId = '1';
         this.livenessMin = 0.8;
         this.locale = 'pt';
         this.showHeader = true;
@@ -196,6 +194,10 @@ export class OpenbioFaceOmaComponent {
             this.showFullscreenLoader = true;
             const resolveLiveness = await OMA.checkLiveness(this.getOMALivenessBody(), this.token);
             this.showFullscreenLoader = false;
+            if (resolveLiveness.liveness_prob < this.livenessMin) {
+                this.showLivenessError();
+                resolve(false);
+            }
             resolve(true);
         });
     }

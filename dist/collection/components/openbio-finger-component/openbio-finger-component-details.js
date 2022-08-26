@@ -617,6 +617,7 @@ export class OpenbioFingerComponent {
                         this.showLoader = false;
                         this.unmatchCount = this.unmatchCount + 1;
                         const attemptLimit = this.failControl.attemptLimit[this.currentFingerSequence[0]].rolled.match;
+                        const message = this.translations.UNMATCH_MESSAGE;
                         if (this.unmatchCount === attemptLimit) {
                             this.confirmSaveManually()
                                 .then(async (result) => {
@@ -626,7 +627,7 @@ export class OpenbioFingerComponent {
                                 else {
                                     Swal.fire({
                                         type: "warning",
-                                        text: UNMATCH_MESSAGE,
+                                        text: message,
                                         allowOutsideClick: false,
                                         allowEscapeKey: false,
                                         allowEnterKey: false,
@@ -644,7 +645,7 @@ export class OpenbioFingerComponent {
                         else {
                             Swal.fire({
                                 type: "warning",
-                                text: UNMATCH_MESSAGE,
+                                text: message,
                                 allowOutsideClick: false,
                                 allowEscapeKey: false,
                                 allowEnterKey: false,
@@ -658,6 +659,7 @@ export class OpenbioFingerComponent {
                         this.showLoader = false;
                         this.repeatedCount = this.repeatedCount + 1;
                         const attemptLimit = this.failControl.attemptLimit[this.currentFingerSequence[0]].flat.repetition;
+                        const message = this.translations.REPEAT_MESSAGE.replace("{1}", this.fingerNames[data.similarFingerIndex]);
                         if (this.repeatedCount === attemptLimit) {
                             this.confirmSaveWithException()
                                 .then(async (result) => {
@@ -667,7 +669,7 @@ export class OpenbioFingerComponent {
                                 else {
                                     Swal.fire({
                                         type: "warning",
-                                        text: REPEAT_MESSAGE,
+                                        text: message,
                                         allowOutsideClick: false,
                                         allowEscapeKey: false,
                                         allowEnterKey: false,
@@ -683,7 +685,7 @@ export class OpenbioFingerComponent {
                         else {
                             Swal.fire({
                                 type: "warning",
-                                text: REPEAT_MESSAGE,
+                                text: message,
                                 allowOutsideClick: false,
                                 allowEscapeKey: false,
                                 allowEnterKey: false,
@@ -1462,31 +1464,31 @@ export class OpenbioFingerComponent {
                 this.tab === TABS.ROLLEDS ? h("div", { class: "tab-content" },
                     h("div", { class: "capture-result-container" },
                         h("div", { class: "columns is-mobile is-multiline is-left" },
-                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(0), fingerName: this.fingerNames[0], fingerIndex: 0, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
-                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(1), fingerName: this.fingerNames[1], fingerIndex: 1, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
-                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(2), fingerName: this.fingerNames[2], fingerIndex: 2, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
-                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(3), fingerName: this.fingerNames[3], fingerIndex: 3, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
-                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(4), fingerName: this.fingerNames[4], fingerIndex: 4, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage })),
+                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(0), fingerName: this.fingerNames[0], fingerIndex: 0, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage }),
+                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(1), fingerName: this.fingerNames[1], fingerIndex: 1, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage }),
+                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(2), fingerName: this.fingerNames[2], fingerIndex: 2, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage }),
+                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(3), fingerName: this.fingerNames[3], fingerIndex: 3, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage }),
+                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(4), fingerName: this.fingerNames[4], fingerIndex: 4, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage })),
                         h("div", { class: "columns is-mobile is-multiline is-left" },
-                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(5), fingerName: this.fingerNames[5], fingerIndex: 5, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
-                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(6), fingerName: this.fingerNames[6], fingerIndex: 6, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
-                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(7), fingerName: this.fingerNames[7], fingerIndex: 7, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
-                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(8), fingerName: this.fingerNames[8], fingerIndex: 8, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
-                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(9), fingerName: this.fingerNames[9], fingerIndex: 9, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage })))) : null,
+                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(5), fingerName: this.fingerNames[5], fingerIndex: 5, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage }),
+                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(6), fingerName: this.fingerNames[6], fingerIndex: 6, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage }),
+                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(7), fingerName: this.fingerNames[7], fingerIndex: 7, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage }),
+                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(8), fingerName: this.fingerNames[8], fingerIndex: 8, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage }),
+                            h("openbio-finger-image-component", { finger: this.getRolledFingerFromIndex(9), fingerName: this.fingerNames[9], fingerIndex: 9, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage })))) : null,
                 this.tab === TABS.FLATS ? h("div", { class: "tab-content" },
                     h("div", { class: "capture-result-container" },
                         h("div", { class: "columns is-mobile is-multiline is-left" },
-                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(0), fingerName: this.fingerNames[0], fingerIndex: 0, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
-                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(1), fingerName: this.fingerNames[1], fingerIndex: 1, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
-                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(2), fingerName: this.fingerNames[2], fingerIndex: 2, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
-                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(3), fingerName: this.fingerNames[3], fingerIndex: 3, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
-                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(4), fingerName: this.fingerNames[4], fingerIndex: 4, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage })),
+                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(0), fingerName: this.fingerNames[0], fingerIndex: 0, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage }),
+                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(1), fingerName: this.fingerNames[1], fingerIndex: 1, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage }),
+                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(2), fingerName: this.fingerNames[2], fingerIndex: 2, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage }),
+                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(3), fingerName: this.fingerNames[3], fingerIndex: 3, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage }),
+                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(4), fingerName: this.fingerNames[4], fingerIndex: 4, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage })),
                         h("div", { class: "columns is-mobile is-multiline is-left" },
-                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(5), fingerName: this.fingerNames[5], fingerIndex: 5, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
-                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(6), fingerName: this.fingerNames[6], fingerIndex: 6, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
-                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(7), fingerName: this.fingerNames[7], fingerIndex: 7, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
-                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(8), fingerName: this.fingerNames[8], fingerIndex: 8, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage }),
-                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(9), fingerName: this.fingerNames[9], fingerIndex: 9, editFingerCallback: this.editFinger, parentComponentContext: this, uploadFingerImageCallback: this.uploadFingerImage })))) : null) : h("loader-component", { enabled: this.showLoader })));
+                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(5), fingerName: this.fingerNames[5], fingerIndex: 5, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage }),
+                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(6), fingerName: this.fingerNames[6], fingerIndex: 6, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage }),
+                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(7), fingerName: this.fingerNames[7], fingerIndex: 7, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage }),
+                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(8), fingerName: this.fingerNames[8], fingerIndex: 8, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage }),
+                            h("openbio-finger-image-component", { finger: this.getFlatFingerFromIndex(9), fingerName: this.fingerNames[9], fingerIndex: 9, editFingerCallback: this.editFinger, parentComponentContext: this, allowUpload: this.serviceConfigs.finger.uploadSettings.enabled, uploadFingerImageCallback: this.uploadFingerImage })))) : null) : h("loader-component", { enabled: this.showLoader })));
     }
     static get is() { return "openbio-finger-details"; }
     static get encapsulation() { return "shadow"; }

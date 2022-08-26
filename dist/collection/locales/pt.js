@@ -115,7 +115,7 @@ export default {
     "CAPTURE_ERROR_SPOOFING_ALERT": "Falha na captura (possibilidade de spoofing)",
     "AUTHENTICATION_ERROR_TRY_AGAIN": "Falha na autenticação. Tente novamente",
     "UNMATCH_MESSAGE": "Captura não condiz com dedo capturado anteriormente, por favor tente novamente",
-    "REPEAT_MESSAGE": "Este dedo já foi capturado, por favor tente novamente",
+    "REPEAT_MESSAGE": "Este dedo já foi capturado, similar ao dedo {1}, por favor tente novamente",
     "SMEAR_MESSAGE": "Captura borrada, por favor tente novamente",
     "NFIQ_QUALITY_MESSAGE": "Qualidade da captura inferior ao permitido. Por favor tente novamente",
     "ERROR_MESSAGE": "Ocorreu um erro, por favor tente novamente",
@@ -230,5 +230,6 @@ export default {
     "ANOMALY_X_REQUIRES_CAPTURE": "A anomalia {1} requer captura",
     "AN_ERROR_OCCURRED": "Ocorreu um erro ({1})",
     "ANOMALY": "Anomalia",
-    "CONFIRM_CAPTURE": "Confirmar coleta"
+    "CONFIRM_CAPTURE": "Confirmar coleta",
+    "CURRENT_SEGMENTATION_RESULT": "Resultado atual da segmentação"
 };

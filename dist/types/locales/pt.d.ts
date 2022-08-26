@@ -231,5 +231,6 @@ declare const _default: {
     "AN_ERROR_OCCURRED": string;
     "ANOMALY": string;
     "CONFIRM_CAPTURE": string;
+    "CURRENT_SEGMENTATION_RESULT": string;
 };
 export default _default;

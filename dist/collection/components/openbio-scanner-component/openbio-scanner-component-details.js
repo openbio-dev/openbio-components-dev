@@ -322,6 +322,10 @@ export class OpenbioSignatureComponentDetails {
         ctx.drawImage(this.form.fileData.image, 0, 0, this.form.fileData.image.width, this.form.fileData.image.height, 0, 0, this.form.canvas.width, this.form.canvas.height);
     }
     loadRoiImage(file) {
+        if (file && file.size === 0) {
+            notify(this.componentContainer, "error", 'Imagem vazia - verifique o arquivo/scan de entrada');
+            return;
+        }
         if (file.type.toUpperCase() !== `image/${this.form.configs.imageType}`.toUpperCase()) {
             notify(this.componentContainer, "warning", TranslationUtils.concatTranslate('IMAGE_TYPE_NOT_ACCPTABLE', [this.form.configs.imageType]));
             return;
@@ -519,7 +523,7 @@ export class OpenbioSignatureComponentDetails {
                                             nfiq: f.nfiq,
                                             nfiqScore: f.nfiqScore,
                                             wsq: f.wsq,
-                                            captureType: constants.captureTypes.ONE_FINGER_FLAT,
+                                            captureType: constants.captureTypes.ROLLED_FINGER,
                                             wsqData: f.wsqBase64
                                         };
                                     }))
@@ -836,7 +840,7 @@ export class OpenbioSignatureComponentDetails {
         return new Promise((resolve, _) => {
             for (let i = 0; i < this.form.croppedFingers.length; i++) {
                 const finger = this.form.croppedFingers[i];
-                finger.captureType = constants.captureTypes.ONE_FINGER_FLAT;
+                finger.captureType = constants.captureTypes.ROLLED_FINGER;
                 finger.wsqData = finger.wsq.data || finger.wsqBase64;
                 finger.nfiqScore = finger.wsq.nfiqScore || finger.nfiqScore;
                 finger.fingerIndex = finger.index;
@@ -991,7 +995,7 @@ export class OpenbioSignatureComponentDetails {
                                             nfiq: f.nfiq,
                                             nfiqScore: f.nfiqScore,
                                             wsq: f.wsq,
-                                            captureType: constants.captureTypes.ONE_FINGER_FLAT,
+                                            captureType: constants.captureTypes.ROLLED_FINGER,
                                             wsqData: f.wsqBase64
                                         };
                                     }))

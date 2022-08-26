@@ -353,6 +353,7 @@ export class OpenbioFaceComponentDetails {
             'whiteBalance',
             'previewSize',
             'previewType',
+            'aperture',
         ];
         currentCameraSettings.forEach((setting) => {
             this.payload.action = "camera-properties";
@@ -367,7 +368,6 @@ export class OpenbioFaceComponentDetails {
         this.cameraSettingsOptions = await getCameraSettingsOptions();
         const cameraSettings = await getCameraSettings();
         this.flashProperty = cameraSettings.flash_property;
-        this.flashProperty = cameraSettings.flash_property;
         this.flashWidth = cameraSettings.flash_width;
         this.shutterSpeed = cameraSettings.shutter_speed;
         this.imageFormat = cameraSettings.image_format;
@@ -376,6 +376,7 @@ export class OpenbioFaceComponentDetails {
         this.preset = cameraSettings.preset;
         this.previewSize = cameraSettings.previewSize || 2;
         this.previewType = cameraSettings.previewType || 2;
+        this.aperture = cameraSettings.aperture;
     }
     isWebcam() {
         return this.payload.deviceName === constants.device.WEBCAM;
@@ -487,6 +488,12 @@ export class OpenbioFaceComponentDetails {
             });
             this.ws.deviceSocket.addEventListener("message", async (event) => {
                 const data = JSON.parse(event.data);
+                if (data.status === "initialized-camera-capture") {
+                    this.showLoader = true;
+                }
+                if (data.status === "camera-capture-finished") {
+                    this.showLoader = false;
+                }
                 if (data.status === "initialized") {
                     if (data.deviceInfo.ready) {
                         this.deviceReady = true;
@@ -786,7 +793,8 @@ export class OpenbioFaceComponentDetails {
             whiteBalance: this.whiteBalance,
             segmentation: this.segmentation,
             autoCapture: this.autoCapture,
-            preset: this.preset
+            preset: this.preset,
+            aperture: this.aperture
         };
         saveCameraSettings(tempCameraSettings);
     }
@@ -1084,9 +1092,30 @@ export class OpenbioFaceComponentDetails {
     }
     applyImageAdjust() {
         this.showLoader = false;
+        const html = `
+      <div>
+        <div class="swal2-content">
+          <h2 style="display: flex;
+            justify-content: center;
+            margin: 20px;
+            font-size: 1.4em;
+            font-weight: 600;
+            word-wrap: break-word;
+            color: #00608c"
+          >${this.translations.CURRENT_SEGMENTATION_RESULT}</h2>
+        </div>
+        <img src="data:image/jpeg;base64,${this.segmentedImage}" class="object-fit-contain" style="max-height: 300px; position: relative" />
+        <div class="swal2-content">
+          <h2 style="display: flex;
+            justify-content: center;
+            margin: 20px;
+            word-wrap: break-word;
+            margin-bottom: 0;"
+          >${this.translations.WOULD_OPEN_IMAGE_ADJUSTMENT}</h2>
+        </div>
+      </div>`;
         Swal.fire({
-            type: "info",
-            text: this.translations.WOULD_OPEN_IMAGE_ADJUSTMENT,
+            html,
             allowOutsideClick: false,
             allowEscapeKey: false,
             allowEnterKey: false,

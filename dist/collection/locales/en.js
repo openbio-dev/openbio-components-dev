@@ -115,7 +115,7 @@ export default {
     "CAPTURE_ERROR_SPOOFING_ALERT": "Capture error (spoofing possibility)",
     "AUTHENTICATION_ERROR_TRY_AGAIN": "Authentication error. Try again",
     "UNMATCH_MESSAGE": "Capture does not match previously captured finger, please try again",
-    "REPEAT_MESSAGE": "This finger has already been captured, please try again",
+    "REPEAT_MESSAGE": "This finger has already been captured, similar to {1}, please try again",
     "SMEAR_MESSAGE": "Blurred capture, please try again",
     "NFIQ_QUALITY_MESSAGE": "Capture quality lower than allowed. Please try again",
     "ERROR_MESSAGE": "An error occurred. Please try again",
@@ -230,5 +230,6 @@ export default {
     "ANOMALY_X_REQUIRES_CAPTURE": "Anomaly {1} requires image",
     "AN_ERROR_OCCURRED": "An error occurred ({1})",
     "ANOMALY": "Anomaly",
-    "CONFIRM_CAPTURE": "Confirm capture"
+    "CONFIRM_CAPTURE": "Confirm capture",
+    "CURRENT_SEGMENTATION_RESULT": "Current segmentation result"
 };
