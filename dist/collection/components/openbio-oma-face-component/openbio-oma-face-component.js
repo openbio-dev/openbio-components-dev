@@ -110,8 +110,8 @@ export class OpenbioFaceOmaComponent {
                 var reader = new FileReader();
                 reader.onload = () => {
                     this.capturedImage = {
-                        data: canvas.toDataURL('image/png'),
-                        file: new File([reader.result], "image.png", { type: blob.type })
+                        data: canvas.toDataURL('image/jpg', 1),
+                        file: new File([reader.result], "image.jpg", { type: blob.type })
                     };
                     resolve(true);
                 };
