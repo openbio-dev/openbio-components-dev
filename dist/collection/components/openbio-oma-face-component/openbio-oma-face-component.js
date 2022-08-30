@@ -286,24 +286,25 @@ export class OpenbioFaceOmaComponent {
         }
     }
     async verify() {
-        this.showFullscreenLoader = true;
-        return await OMA.verify(this.getOMAMatcherBody(), this.token).then((resolve) => {
-            this.showFullscreenLoader = false;
-            if (this.action === ACTIONS.VERIFY && this.callback) {
-                this.callback({ recordId: this.recordId, match: resolve.ResultStatus === RESULT_STATUS.VERIFIED });
-                return Swal.fire({
-                    type: resolve.ResultStatus === RESULT_STATUS.VERIFIED ? 'success' : 'error',
-                    title: resolve.ResultStatus === RESULT_STATUS.VERIFIED ? 'Autenticado' : 'Falha na autenticação',
-                    showCloseButton: true,
-                    showCancelButton: false,
-                    focusConfirm: false,
-                    confirmButtonColor: this.primaryColor || '#0D3F56',
-                });
-            }
-            else {
-                return resolve.ResultStatus === RESULT_STATUS.VERIFIED;
-            }
-        });
+        if (await this.checkLiveness()) {
+            return await OMA.verify(this.getOMAMatcherBody(), this.token).then((resolve) => {
+                this.showFullscreenLoader = false;
+                if (this.action === ACTIONS.VERIFY && this.callback) {
+                    this.callback({ recordId: this.recordId, match: resolve.ResultStatus === RESULT_STATUS.VERIFIED });
+                    return Swal.fire({
+                        type: resolve.ResultStatus === RESULT_STATUS.VERIFIED ? 'success' : 'error',
+                        title: resolve.ResultStatus === RESULT_STATUS.VERIFIED ? 'Autenticado' : 'Falha na autenticação',
+                        showCloseButton: true,
+                        showCancelButton: false,
+                        focusConfirm: false,
+                        confirmButtonColor: this.primaryColor || '#0D3F56',
+                    });
+                }
+                else {
+                    return resolve.ResultStatus === RESULT_STATUS.VERIFIED;
+                }
+            });
+        }
     }
     async takeSnapShot() {
         this.stopVideo();

@@ -582,7 +582,8 @@ export class OpenbioSignatureComponentDetails {
         },
         "detached": {
             "type": Boolean,
-            "attr": "detached"
+            "attr": "detached",
+            "mutable": true
         },
         "deviceOpened": {
             "state": true

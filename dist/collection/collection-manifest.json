@@ -1998,6 +1998,7 @@
         {
           "name": "detached",
           "type": "Boolean",
+          "mutable": true,
           "attr": "detached"
         },
         {
