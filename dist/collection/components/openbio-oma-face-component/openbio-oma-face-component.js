@@ -29,6 +29,8 @@ export class OpenbioFaceOmaComponent {
     constructor() {
         this.defaultWidth = 640;
         this.defaultHeight = 480;
+        this.requestKey = 'WYSMVVGFKB-BUMZN4JTSO-DWPGTGHOCX';
+        this.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2xhdWRpbyIsInV1aWQiOiIwMGE3N2JhMy00M2FiLTQxMTAtOTlmNy05ZjQyN2M3NzkzYTQiLCJpYXQiOjE2NjE4NzA5MjksImV4cCI6MTY2MTk1NzMyOX0.ANODApOJMx5K-7L6X8ymNhb88g6lyMN0nPvuHtlHvDI';
         this.livenessMin = 0.8;
         this.locale = 'pt';
         this.showHeader = true;
@@ -102,16 +104,18 @@ export class OpenbioFaceOmaComponent {
     async getImageFromVideo() {
         return new Promise((resolve) => {
             const canvas = document.createElement('canvas');
-            canvas.width = this.cameraWidth || this.defaultWidth;
-            canvas.height = this.cameraHeight || this.defaultHeight;
+            canvas.width = 1440;
+            this.cameraWidth || this.defaultWidth;
+            canvas.height = 1080;
+            this.cameraHeight || this.defaultHeight;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
             canvas.toBlob((blob) => {
                 var reader = new FileReader();
                 reader.onload = () => {
                     this.capturedImage = {
-                        data: canvas.toDataURL('image/jpg', 1),
-                        file: new File([reader.result], "image.jpg", { type: blob.type })
+                        data: canvas.toDataURL('image/jpeg', 1),
+                        file: new File([reader.result], "image.jpeg", { type: blob.type })
                     };
                     resolve(true);
                 };
@@ -134,7 +138,7 @@ export class OpenbioFaceOmaComponent {
     confirmPicture() {
         const html = `
       <div>
-        <img src="${this.capturedImage.data}" class="object-fit-contain" style="max-height: 300px" />
+        <img src="${this.capturedImage.data}" class="object-fit-contain" style="max-height: 300px;" />
         <div class="swal2-content">
           <h2 style="display: flex;
             justify-content: center;
@@ -340,7 +344,9 @@ export class OpenbioFaceOmaComponent {
                                     display: this.captured ? "none" : "inline-block"
                                 } },
                                 h("video", { id: "video", ref: el => { this.videoElement = el; }, class: "webcam-video", width: this.cameraWidth || this.defaultWidth, height: this.cameraHeight || this.defaultHeight, autoplay: true, muted: true, style: { display: this.captured ? "none" : "inline-block" } })),
-                            h("img", { id: "img", height: this.cameraHeight || this.defaultHeight, class: "webcam-snapshot", style: {
+                            h("img", { id: "img", width: this.cameraWidth || this.defaultWidth, height: this.cameraHeight || this.defaultHeight, class: "webcam-snapshot", style: {
+                                    maxWidth: `${this.cameraWidth || this.defaultWidth}px !important`,
+                                    maxHeight: `${this.cameraHeight || this.defaultHeight}px !important`,
                                     height: `${this.cameraHeight || this.defaultHeight}px !important`,
                                     display: this.captured ? "inline" : "none",
                                     marginBottom: "5px"
