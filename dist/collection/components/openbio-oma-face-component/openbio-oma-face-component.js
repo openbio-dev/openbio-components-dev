@@ -29,8 +29,6 @@ export class OpenbioFaceOmaComponent {
     constructor() {
         this.defaultWidth = 640;
         this.defaultHeight = 480;
-        this.requestKey = 'WYSMVVGFKB-BUMZN4JTSO-DWPGTGHOCX';
-        this.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2xhdWRpbyIsInV1aWQiOiIwMGE3N2JhMy00M2FiLTQxMTAtOTlmNy05ZjQyN2M3NzkzYTQiLCJpYXQiOjE2NjE4NzA5MjksImV4cCI6MTY2MTk1NzMyOX0.ANODApOJMx5K-7L6X8ymNhb88g6lyMN0nPvuHtlHvDI';
         this.livenessMin = 0.8;
         this.locale = 'pt';
         this.showHeader = true;
@@ -328,6 +326,14 @@ export class OpenbioFaceOmaComponent {
         }
     }
     render() {
+        const overlay = () => {
+            return h("svg", { width: "100%", height: "100%", className: "svg", viewBox: "0 0 640 480", version: "1.1", xmlns: "http://www.w3.org/2000/svg", xmlnsXlink: "http://www.w3.org/1999/xlink" },
+                h("defs", null,
+                    h("mask", { id: "overlay-mask", x: "0", y: "0", width: "100%", height: "100%" },
+                        h("rect", { x: "0", y: "0", width: "100%", height: "100%", fill: "#fff" }),
+                        h("ellipse", { cx: "50%", cy: "50%", rx: "130", ry: "200" }))),
+                h("rect", { x: "0", y: "0", width: "100%", height: "100%", mask: "url(#overlay-mask)" }));
+        };
         return (h("div", { style: { "background-color": this.containerBackgroundColor || "#FFFFFF" } },
             h("div", { class: "window-size", style: { "padding": '0' } },
                 h("loader-component", { enabled: this.showFullscreenLoader }),
@@ -343,7 +349,8 @@ export class OpenbioFaceOmaComponent {
                                     height: `${this.cameraHeight}px` || `${this.defaultHeight}px`,
                                     display: this.captured ? "none" : "inline-block"
                                 } },
-                                h("video", { id: "video", ref: el => { this.videoElement = el; }, class: "webcam-video", width: this.cameraWidth || this.defaultWidth, height: this.cameraHeight || this.defaultHeight, autoplay: true, muted: true, style: { display: this.captured ? "none" : "inline-block" } })),
+                                h("video", { id: "video", ref: el => { this.videoElement = el; }, class: "webcam-video", width: this.cameraWidth || this.defaultWidth, height: this.cameraHeight || this.defaultHeight, autoplay: true, muted: true, style: { display: this.captured ? "none" : "inline-block" } }),
+                                h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7" } }, overlay())),
                             h("img", { id: "img", width: this.cameraWidth || this.defaultWidth, height: this.cameraHeight || this.defaultHeight, class: "webcam-snapshot", style: {
                                     maxWidth: `${this.cameraWidth || this.defaultWidth}px !important`,
                                     maxHeight: `${this.cameraHeight || this.defaultHeight}px !important`,

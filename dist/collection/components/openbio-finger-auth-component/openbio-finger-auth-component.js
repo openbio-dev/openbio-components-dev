@@ -89,6 +89,18 @@ export class OpenbioFingerAuthComponent {
                     biometry: authentication
                 };
                 this.ws.respondToDeviceWS(this.payload);
+            },
+            load: () => {
+                this.payload.action = "component-opened";
+                this.payload.data = {
+                    type: "modal"
+                };
+                const checkStatusInterval = setInterval(() => {
+                    if (this.ws.componentSocket.readyState === 1) {
+                        clearInterval(checkStatusInterval);
+                        this.ws.respondToComponentWS(this.payload);
+                    }
+                }, 200);
             }
         };
         this.device = {
@@ -320,18 +332,38 @@ export class OpenbioFingerAuthComponent {
                 }
                 else {
                     const authResult = {
-                        finger_index: this.selectedFinger && this.selectedFinger.index,
                         data: originalImage,
+                        captureType: this.captureType,
+                        finger_index: this.selectedFinger && this.selectedFinger.index,
+                        fingerIndex: this.selectedFinger && this.selectedFinger.index,
                         nfiqScore: nfiqScore,
                     };
                     this.session.store(authResult);
+                    this.payload.action = "store-session";
+                    this.payload.data = {
+                        type: "MODAL",
+                        owner: "default-user",
+                        biometry: authResult
+                    };
+                    this.ws.respondToDeviceWS(this.payload);
                     this.closeComponent();
                 }
                 this.onCaptureFingerprintResult.emit({
                     finger_index: this.selectedFinger.index,
+                    fingerIndex: this.selectedFinger && this.selectedFinger.index,
                     data: originalImage,
                     nfiqScore: nfiqScore
                 });
+            }
+        });
+        this.ws.componentSocket.addEventListener("message", (event) => {
+            const { action, session } = JSON.parse(event.data);
+            if (action === "session-data") {
+                console.log('aaaa', session);
+                this.useOpenbioMatcherState = false;
+                this.captureType = session.captureType;
+                this.selectedFinger = { index: parseInt(session.fingerIndex, 10), name: this.fingerNames[parseInt(session.fingerIndex, 10)] };
+                this.setCurrentFingerImage();
             }
         });
     }
@@ -382,7 +414,11 @@ export class OpenbioFingerAuthComponent {
         }
     }
     setCurrentFingerImage() {
-        this.currentFingerImage = `./assets/fingers/${this.captureType === CaptureType.ROLLED ? "roll" : "slap"}/d${this.selectedFinger.index}.gif`;
+        this.currentFingerImage = `./assets/fingers/${this.captureType === CaptureType.FLAT ? "slap" : "roll"}/d${this.selectedFinger.index}.gif`;
+        this.device.stopPreview();
+        setTimeout(() => {
+            this.device.startPreview();
+        }, 100);
     }
     setSelectionCaptureType(event) {
         const name = event.target.name;
@@ -439,6 +475,7 @@ export class OpenbioFingerAuthComponent {
         this.getModalSettings();
         this.loadWebsocketListeners();
         this.device.prepareToPreview();
+        this.session.load();
     }
     componentDidUnload() {
         this.device.close();
@@ -462,6 +499,19 @@ export class OpenbioFingerAuthComponent {
     }
     render() {
         const personFaceBiometry = this.person && this.person.Biometries && this.person.Biometries.find(item => item.biometry_type === 1);
+        const fingerCaptureGuide = (h("div", { class: "info" },
+            this.currentFingerImage && h("span", null,
+                " ",
+                this.captureType === CaptureType.FLAT ? this.translations.POSITION : this.translations.ROLL,
+                " ",
+                this.translations.THE_FINGERS,
+                " ",
+                h("b", null,
+                    this.selectedFinger && this.selectedFinger.name,
+                    " "),
+                this.translations.ABOVE_READER),
+            h("p", { class: "finger-image" },
+                h("img", { alt: "", src: this.currentFingerImage }))));
         return (h("div", null,
             h("div", { class: "window-size margin-left-fix" },
                 this.showFullscreenLoader ? h("loader-component", { enabled: this.showFullscreenLoader }) : null,
@@ -472,9 +522,9 @@ export class OpenbioFingerAuthComponent {
                     h("div", { class: 'level', style: { "margin-top": "30px" } },
                         h("div", { class: 'level-item has-text-centered', style: { width: "50%" } },
                             h("div", { class: 'section' },
-                                h("section", { class: "section" },
+                                h("section", { class: "section" }, this.useOpenbioMatcherState ?
                                     h("figure", { class: "image" },
-                                        h("img", { class: "is-rounded", style: { "width": "100%", "max-width": "250px", "max-height": "250px", "object-fit": "cover" }, src: this.getPersonPhoto() }))),
+                                        h("img", { class: "is-rounded", style: { "width": "100%", "max-width": "250px", "max-height": "250px", "object-fit": "cover" }, src: this.getPersonPhoto() })) : fingerCaptureGuide),
                                 h("div", { class: "media-content" },
                                     h("p", { class: "title is-4 has-text-weight-semibold", style: { textAlign: "center" } }, this.debug ? 'Ana Júlia Teste' : (this.personNameState || this.person && this.person.full_name)),
                                     this.cpfState || this.person && this.person.cpf ?
@@ -484,14 +534,15 @@ export class OpenbioFingerAuthComponent {
                             h("div", { style: { "border-left": "1px solid #16658a", "height": "500px" } })),
                         h("div", { class: 'level-item has-text-centered', style: { width: "50%" } },
                             h("section", { class: "section" },
-                                h("figure", { class: "image", style: { padding: "23px 0" } },
-                                    h("img", { class: "is-rounded", style: { "width": "300px", "height": "300px" }, src: this.fingerAuthenticate === true ? './assets/fingerprint-success.gif' : this.fingerAuthenticate === false ? './assets/fingerprint-outline-error.gif' : './assets/fingerprint-outline.gif' })),
+                                h("canvas", { width: "300", height: "300", style: { "display": this.useOpenbioMatcherState ? "none" : "block" }, class: "canvas", ref: el => this.fingerPreviewCanvas = el }),
+                                this.useOpenbioMatcherState &&
+                                    h("figure", { class: "image", style: { padding: "23px 0" } },
+                                        h("img", { class: "is-rounded", style: { "width": "300px", "height": "300px" }, src: this.fingerAuthenticate === true ? './assets/fingerprint-success.gif' : this.fingerAuthenticate === false ? './assets/fingerprint-outline-error.gif' : './assets/fingerprint-outline.gif' })),
                                 h("p", { class: "title is-5 has-text-weight-semibold", style: { "margin-top": "10px" } }, this.captureMessage),
                                 !this.fingerAuthenticate ? h("p", null,
                                     " ",
                                     (this.selectedFinger && this.selectedFinger.name) || "",
-                                    " ") : null,
-                                h("canvas", { width: "300", height: "300", style: { "display": "none" }, class: "canvas", ref: el => this.fingerPreviewCanvas = el }))))
+                                    " ") : null)))
                     : null)));
     }
     static get is() { return "openbio-finger-auth"; }

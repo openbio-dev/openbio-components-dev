@@ -92,6 +92,7 @@ export declare class OpenbioFingerAuthComponent {
     clearCanvasFingerImage(): void;
     session: {
         store: (authentication: any) => void;
+        load: () => void;
     };
     device: {
         open: () => void;
