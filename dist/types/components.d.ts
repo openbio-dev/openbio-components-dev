@@ -301,6 +301,7 @@ export namespace Components {
 
   interface OpenbioOmaFace {
     'action': 'REGISTER' | 'VERIFY';
+    'allowLivenessNoncompliance': boolean;
     'callback': Function;
     'cameraHeight': number;
     'cameraWidth': number;
@@ -318,6 +319,7 @@ export namespace Components {
   }
   interface OpenbioOmaFaceAttributes extends StencilHTMLAttributes {
     'action'?: 'REGISTER' | 'VERIFY';
+    'allowLivenessNoncompliance'?: boolean;
     'callback'?: Function;
     'cameraHeight'?: number;
     'cameraWidth'?: number;

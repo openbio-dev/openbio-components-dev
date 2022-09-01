@@ -510,6 +510,11 @@
           "required": false
         },
         {
+          "label": "allow-liveness-noncompliance",
+          "description": "",
+          "required": false
+        },
+        {
           "label": "camera-height",
           "description": "",
           "required": false

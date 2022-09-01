@@ -197,7 +197,6 @@ export class OpenbioFaceOmaComponent {
             const resolveLiveness = await OMA.checkLiveness(this.getOMALivenessBody(), this.token);
             this.showFullscreenLoader = false;
             if (resolveLiveness.liveness_prob < this.livenessMin) {
-                this.showLivenessError();
                 resolve(false);
             }
             resolve(true);
@@ -288,14 +287,25 @@ export class OpenbioFaceOmaComponent {
         }
     }
     async verify() {
-        if (await this.checkLiveness()) {
-            return await OMA.verify(this.getOMAMatcherBody(), this.token).then((resolve) => {
-                this.showFullscreenLoader = false;
-                if (this.action === ACTIONS.VERIFY && this.callback) {
-                    this.callback({ recordId: this.recordId, match: resolve.ResultStatus === RESULT_STATUS.VERIFIED });
+        return await OMA.verify(this.getOMAMatcherBody(), this.token).then(async (resolve) => {
+            this.showFullscreenLoader = false;
+            const isMatchOk = resolve.ResultStatus === RESULT_STATUS.VERIFIED;
+            if (!isMatchOk) {
+                return Swal.fire({
+                    type: 'error',
+                    title: 'Falha na verificação de autenticidade do registro.',
+                    showCloseButton: true,
+                    showCancelButton: false,
+                    focusConfirm: false,
+                    confirmButtonColor: this.primaryColor || '#0D3F56',
+                });
+            }
+            if (await this.checkLiveness()) {
+                if (this.callback) {
+                    this.callback({ recordId: this.recordId, match: isMatchOk });
                     return Swal.fire({
-                        type: resolve.ResultStatus === RESULT_STATUS.VERIFIED ? 'success' : 'error',
-                        title: resolve.ResultStatus === RESULT_STATUS.VERIFIED ? 'Autenticado' : 'Falha na autenticação',
+                        type: 'success',
+                        title: 'Autenticado',
                         showCloseButton: true,
                         showCancelButton: false,
                         focusConfirm: false,
@@ -303,10 +313,31 @@ export class OpenbioFaceOmaComponent {
                     });
                 }
                 else {
-                    return resolve.ResultStatus === RESULT_STATUS.VERIFIED;
+                    return isMatchOk;
                 }
-            });
-        }
+            }
+            else {
+                return Swal.fire({
+                    type: 'warning',
+                    title: 'Registro verificado. Falha na verificação de vivacidade.',
+                    showCloseButton: true,
+                    showCancelButton: this.allowLivenessNoncompliance,
+                    focusConfirm: false,
+                    cancelButtonText: 'Voltar',
+                    confirmButtonText: this.allowLivenessNoncompliance ? 'Estou de acordo' : undefined,
+                    confirmButtonColor: this.primaryColor || '#0D3F56',
+                }).then((result) => {
+                    if (result.value) {
+                        if (this.callback) {
+                            return this.callback({ recordId: this.recordId, match: isMatchOk });
+                        }
+                        else {
+                            return isMatchOk;
+                        }
+                    }
+                });
+            }
+        });
     }
     async takeSnapShot() {
         this.stopVideo();
@@ -370,6 +401,10 @@ export class OpenbioFaceOmaComponent {
         "action": {
             "type": String,
             "attr": "action"
+        },
+        "allowLivenessNoncompliance": {
+            "type": Boolean,
+            "attr": "allow-liveness-noncompliance"
         },
         "callback": {
             "type": "Any",

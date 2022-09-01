@@ -12,6 +12,7 @@ export declare class OpenbioFaceOmaComponent {
     requestKey: string;
     token: string;
     livenessMin: number;
+    allowLivenessNoncompliance: boolean;
     locale: string;
     headerTitle: string;
     action: 'REGISTER' | 'VERIFY';

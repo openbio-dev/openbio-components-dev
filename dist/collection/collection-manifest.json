@@ -1695,6 +1695,11 @@
           "attr": "action"
         },
         {
+          "name": "allowLivenessNoncompliance",
+          "type": "Boolean",
+          "attr": "allow-liveness-noncompliance"
+        },
+        {
           "name": "callback",
           "attr": "callback"
         },
