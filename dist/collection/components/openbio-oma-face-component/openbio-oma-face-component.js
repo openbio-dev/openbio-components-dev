@@ -1,6 +1,7 @@
 import Swal from 'sweetalert2/dist/sweetalert2.all.min.js';
 import OMA from './api';
 import { TranslationUtils } from '../../locales/translation';
+const VERSION = 3.7;
 var ACTIONS;
 (function (ACTIONS) {
     ACTIONS["REGISTER"] = "REGISTER";
@@ -182,6 +183,7 @@ export class OpenbioFaceOmaComponent {
             projectID: this.projectId,
             registrationID: this.recordId,
             requestKey: this.requestKey,
+            componentVersion: VERSION,
         };
     }
     getOMALivenessBody() {
@@ -189,6 +191,7 @@ export class OpenbioFaceOmaComponent {
         omaLivenessBody.append('Image', this.capturedImage.file);
         omaLivenessBody.append('data', this.capturedImage.file);
         omaLivenessBody.append('requestKey', this.requestKey);
+        omaLivenessBody.append('componentVersion', String(VERSION));
         return omaLivenessBody;
     }
     async checkLiveness() {
