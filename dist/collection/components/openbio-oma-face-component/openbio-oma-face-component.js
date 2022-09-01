@@ -324,7 +324,7 @@ export class OpenbioFaceOmaComponent {
                     showCancelButton: this.allowLivenessNoncompliance,
                     focusConfirm: false,
                     cancelButtonText: 'Voltar',
-                    confirmButtonText: this.allowLivenessNoncompliance ? 'Estou de acordo' : undefined,
+                    confirmButtonText: this.allowLivenessNoncompliance ? 'Estou de acordo' : 'OK',
                     confirmButtonColor: this.primaryColor || '#0D3F56',
                 }).then((result) => {
                     if (result.value) {
