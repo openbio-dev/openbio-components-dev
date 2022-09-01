@@ -285,6 +285,16 @@ export class OpenbioFaceOmaComponent {
                 });
             }
         }
+        else {
+            return Swal.fire({
+                type: "error",
+                title: 'Falha na verificação de vivacidade',
+                showCloseButton: true,
+                showCancelButton: false,
+                focusConfirm: false,
+                confirmButtonColor: this.primaryColor || '#0D3F56',
+            });
+        }
     }
     async verify() {
         return await OMA.verify(this.getOMAMatcherBody(), this.token).then(async (resolve) => {
