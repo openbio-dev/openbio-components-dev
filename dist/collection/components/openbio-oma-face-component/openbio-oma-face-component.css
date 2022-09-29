@@ -25784,3 +25784,7 @@ span, h6, label, option, select, a, p {
 
 span, h6, label, option, select, a, p {
   font-family: "Poppins" !important; }
+
+.object-fit-contain {
+  -o-object-fit: contain !important;
+     object-fit: contain !important; }
