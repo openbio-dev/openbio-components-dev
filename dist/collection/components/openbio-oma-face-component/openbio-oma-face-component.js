@@ -411,6 +411,7 @@ export class OpenbioFaceOmaComponent {
                             h("img", { id: "img", width: this.cameraWidth || this.defaultWidth, height: this.cameraHeight || this.defaultHeight, class: "webcam-snapshot", style: {
                                     maxWidth: `${this.cameraWidth || this.defaultWidth}px !important`,
                                     maxHeight: `${this.cameraHeight || this.defaultHeight}px !important`,
+                                    width: `${this.cameraWidth || this.defaultWidth}px !important`,
                                     height: `${this.cameraHeight || this.defaultHeight}px !important`,
                                     display: this.captured ? "inline" : "none",
                                     marginBottom: "5px"
