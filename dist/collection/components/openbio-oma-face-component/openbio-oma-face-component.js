@@ -371,10 +371,8 @@ export class OpenbioFaceOmaComponent {
         if (await this.confirmPicture()) {
             this.showFullscreenLoader = true;
             if (this.action === ACTIONS.REGISTER) {
-                this.register();
             }
             else {
-                this.verify();
             }
             this.setResultImage();
         }
@@ -408,12 +406,13 @@ export class OpenbioFaceOmaComponent {
                                 } },
                                 h("video", { id: "video", ref: el => { this.videoElement = el; }, class: "webcam-video", width: this.cameraWidth || this.defaultWidth, height: this.cameraHeight || this.defaultHeight, autoplay: true, muted: true, style: { display: this.captured ? "none" : "inline-block" } }),
                                 h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7" } }, overlay())),
-                            h("img", { id: "img", width: this.cameraWidth || this.defaultWidth, height: this.cameraHeight || this.defaultHeight, class: "webcam-snapshot object-fit-contain", style: {
+                            h("img", { id: "img", height: "300px", class: "webcam-snapshot object-fit-contain", style: {
                                     maxWidth: `${this.cameraWidth || this.defaultWidth}px !important`,
                                     maxHeight: `${this.cameraHeight || this.defaultHeight}px !important`,
-                                    height: `${this.cameraHeight || this.defaultHeight}px !important`,
+                                    height: `300px`,
                                     display: this.captured ? "inline" : "none",
-                                    marginBottom: "5px"
+                                    marginBottom: "5px",
+                                    objectFit: 'contain'
                                 } })),
                         h("div", { class: "row has-text-centered", style: { 'margin-top': '1vh', 'padding-bottom': '2vh' } },
                             h("a", { class: `btn-primary`, style: {
