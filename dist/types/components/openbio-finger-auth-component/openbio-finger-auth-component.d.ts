@@ -24,18 +24,6 @@ declare enum CaptureType {
     FLAT = 0,
     ROLLED = 1
 }
-declare enum Finger {
-    RIGHT_THUMB = 0,
-    RIGHT_INDEX = 1,
-    RIGHT_MIDDLE = 2,
-    RIGHT_RING = 3,
-    RIGHT_LITTLE = 4,
-    LEFT_THUMB = 5,
-    LEFT_INDEX = 6,
-    LEFT_MIDDLE = 7,
-    LEFT_RING = 8,
-    LEFT_LITTLE = 9
-}
 interface AuthLogBody {
     type?: string;
     cpf?: string;
@@ -67,7 +55,7 @@ export declare class OpenbioFingerAuthComponent {
     deviceSerial: string;
     captureType: CaptureType;
     selectedFinger: {
-        index: Finger;
+        index: number;
         name: string;
     };
     currentFingerImage: string;

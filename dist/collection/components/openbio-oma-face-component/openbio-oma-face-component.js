@@ -109,11 +109,24 @@ export class OpenbioFaceOmaComponent {
             this.cameraHeight || this.defaultHeight;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
-            canvas.toBlob((blob) => {
+            const maskPositionX = 0.30;
+            const maskPositionY = 0.15;
+            const srcX = 1440 * maskPositionX;
+            const srcY = 1080 * maskPositionY;
+            const srcWidth = 250;
+            const srcHeight = 333;
+            const cropWidth = (1444 * srcWidth) / this.defaultWidth;
+            const cropHeight = (1080 * srcHeight) / this.defaultHeight;
+            const cropCanvas = document.createElement('canvas');
+            cropCanvas.width = cropWidth;
+            cropCanvas.height = cropHeight;
+            const ctxCrop = cropCanvas.getContext('2d');
+            ctxCrop.drawImage(canvas, srcX, srcY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+            cropCanvas.toBlob((blob) => {
                 var reader = new FileReader();
                 reader.onload = () => {
                     this.capturedImage = {
-                        data: canvas.toDataURL('image/jpeg', 1),
+                        data: cropCanvas.toDataURL('image/jpeg', 1),
                         file: new File([reader.result], "image.jpeg", { type: blob.type })
                     };
                     resolve(true);
@@ -375,7 +388,7 @@ export class OpenbioFaceOmaComponent {
                 h("defs", null,
                     h("mask", { id: "overlay-mask", x: "0", y: "0", width: "100%", height: "100%" },
                         h("rect", { x: "0", y: "0", width: "100%", height: "100%", fill: "#fff" }),
-                        h("ellipse", { cx: "50%", cy: "50%", rx: "130", ry: "200" }))),
+                        h("rect", { x: "30%", y: "15%", width: "250", height: "333" }))),
                 h("rect", { x: "0", y: "0", width: "100%", height: "100%", mask: "url(#overlay-mask)" }));
         };
         return (h("div", { style: { "background-color": this.containerBackgroundColor || "#FFFFFF" } },

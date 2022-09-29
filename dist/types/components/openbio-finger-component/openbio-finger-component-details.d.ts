@@ -110,7 +110,7 @@ export declare class OpenbioFingerComponent {
     isFlatSequence(): boolean;
     isRolledSequence(): boolean;
     checkCaptureNeed(anomalyId?: number): any;
-    getFingersPerStepByFlowType(): 1 | 2 | 4;
+    getFingersPerStepByFlowType(): 4 | 2 | 1;
     saveAnomaly(): void;
     clearSession(): void;
     clearCapture(): void;

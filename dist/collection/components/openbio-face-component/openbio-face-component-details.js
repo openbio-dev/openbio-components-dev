@@ -418,6 +418,7 @@ export class OpenbioFaceComponentDetails {
         this.componentContainer.forceUpdate();
     }
     async componentDidLoad() {
+        this.detached = true;
         this.showLoader = true;
         setTimeout(async () => {
             this.anomalyOptions = await getAnomalies(constants.anomalyTypes.FACE_ANOMALY, !!this.detached);
@@ -459,8 +460,8 @@ export class OpenbioFaceComponentDetails {
                 }, 200);
             }
             else {
-                this.person = JSON.parse(this.tempPerson);
-                this.face = JSON.parse(this.tempFace);
+                this.person = { id: 1, };
+                this.face = {};
             }
             this.wsStatusInterval = setInterval(() => {
                 if (this.ws.status() === 1) {
@@ -537,7 +538,7 @@ export class OpenbioFaceComponentDetails {
                 }
                 const deviceStatuses = data.deviceStatuses;
                 if (deviceStatuses && !this.isWebcam()) {
-                    const previousStatus = JSON.parse(JSON.stringify(this.deviceStatus));
+                    const previousStatus = this.deviceStatus ? JSON.parse(JSON.stringify(this.deviceStatus)) : undefined;
                     this.deviceStatus = deviceStatuses.face && deviceStatuses.face.initialized;
                     if (!this.deviceStatus) {
                         return;

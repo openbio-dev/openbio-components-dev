@@ -1,3 +1,14 @@
+const fingerNamesMap = new Map();
+fingerNamesMap.set(4, "RIGHT-LITTLE");
+fingerNamesMap.set(3, "RIGHT-RING");
+fingerNamesMap.set(2, "RIGHT-MIDDLE");
+fingerNamesMap.set(1, "RIGHT-INDEX");
+fingerNamesMap.set(0, "RIGHT-THUMB");
+fingerNamesMap.set(5, "LEFT-THUMB");
+fingerNamesMap.set(6, "LEFT-INDEX");
+fingerNamesMap.set(7, "LEFT-MIDDLE");
+fingerNamesMap.set(8, "LEFT-RING");
+fingerNamesMap.set(9, "LEFT-LITTLE");
 const constants = {
     SERVER_HOST: "localhost:4000",
     WS_HOST: "localhost:5000",
@@ -54,6 +65,7 @@ const constants = {
         "Anelar esquerdo",
         "Mínimo esquerdo"
     ],
+    fingerNamesMap,
     palmNames: [
         "Hipotenar esquerda",
         "Palma esquerda",

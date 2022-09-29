@@ -359,10 +359,9 @@ export class OpenbioFingerAuthComponent {
         this.ws.componentSocket.addEventListener("message", (event) => {
             const { action, session } = JSON.parse(event.data);
             if (action === "session-data") {
-                console.log('aaaa', session);
-                this.useOpenbioMatcherState = false;
-                this.captureType = session.captureType;
-                this.selectedFinger = { index: parseInt(session.fingerIndex, 10), name: this.fingerNames[parseInt(session.fingerIndex, 10)] };
+                const fingerIndex = parseInt(Finger[session.position.toUpperCase().replace("-", "_")], 10);
+                this.captureType = session.captureType ? parseInt(session.captureType, 10) : CaptureType.FLAT;
+                this.selectedFinger = { index: fingerIndex, name: this.fingerNames[fingerIndex] };
                 this.setCurrentFingerImage();
             }
         });
@@ -474,8 +473,10 @@ export class OpenbioFingerAuthComponent {
         }
         this.getModalSettings();
         this.loadWebsocketListeners();
+        if (!this.useOpenbioMatcherState) {
+            this.session.load();
+        }
         this.device.prepareToPreview();
-        this.session.load();
     }
     componentDidUnload() {
         this.device.close();

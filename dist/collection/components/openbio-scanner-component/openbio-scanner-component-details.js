@@ -542,7 +542,7 @@ export class OpenbioSignatureComponentDetails {
                         this.showLoader = false;
                     });
                 }
-                else if (this.palmFormType === 0) {
+                else if (this.palmFormType === PALM_FORM_TYPE.SINGLE_PALM) {
                     formData.set("palmType", JSON.stringify(this.palmType));
                     loadPalmForm(formData).then(async (result) => {
                         if (result.message) {
@@ -555,6 +555,7 @@ export class OpenbioSignatureComponentDetails {
                         this.form.requiresManualSelection = !this.form.success;
                         if (this.form.success) {
                             this.form.croppedPalm = result.palm;
+                            this.form.palmNfiqScore = result.nfiqScore || '0';
                             const palm = { type_id: this.palmType, palm: this.form.croppedPalm, wsqData: result.wsqBase64, nfiqScore: result.nfiqScore || '0' };
                             if (this.detached) {
                                 this.savePalmToSession(palm);
@@ -1051,6 +1052,7 @@ export class OpenbioSignatureComponentDetails {
                             else {
                                 this.form.croppedPalm = result.palm;
                                 this.form.palmAnomaly = result.anomalyName;
+                                this.form.palmNfiqScore = result.nfiqScore || '0';
                                 const palm = { type_id: this.palmType, palm: this.form.croppedPalm, wsqData: result.wsqBase64, nfiqScore: result.nfiqScore || '0' };
                                 this.insertPalm(palm);
                                 if (this.detached) {
@@ -1182,6 +1184,10 @@ export class OpenbioSignatureComponentDetails {
                 h("div", { style: { minWidth: "150px", minHeight: "170px", maxHeight: "170px", alignItems: "center", display: "flex", justifyContent: "center" } }, palm.palm ?
                     h("img", { src: `data:image/charset=UTF-8;png;base64,${palm.palm}`, style: { border: "1px solid #0000003d", maxHeight: "170px", maxWidth: "170px" }, onClick: () => this.showModal(palm.palm) })
                     : h("div", { style: { minWidth: "170px", minHeight: "170px" } })),
+                h("p", null,
+                    " NFiq: ",
+                    palm.nfiq || palm.nfiqScore,
+                    " "),
                 palm.anomalyName ?
                     h("p", null,
                         " Anomalia: ",
@@ -1218,6 +1224,11 @@ export class OpenbioSignatureComponentDetails {
                 h("div", { class: "flex-center" }, this.form.croppedPalm ?
                     h("img", { src: `data:image/charset=UTF-8;png;base64,${this.form.croppedPalm}`, style: { border: "1px solid #0000003d", maxHeight: "170px", maxWidth: "170px" }, onClick: () => this.showModal(this.form.croppedPalm) })
                     : h("div", { class: "flex-center", style: { minWidth: "170px", minHeight: "170px" } })),
+                h("div", { class: "flex-center" },
+                    h("p", null,
+                        " NFiq: ",
+                        this.form.palmNfiq || this.form.palmNfiqScore,
+                        " ")),
                 this.form.palmAnomaly &&
                     h("div", { class: "flex-center" },
                         h("br", null),
