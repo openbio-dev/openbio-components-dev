@@ -371,8 +371,10 @@ export class OpenbioFaceOmaComponent {
         if (await this.confirmPicture()) {
             this.showFullscreenLoader = true;
             if (this.action === ACTIONS.REGISTER) {
+                this.register();
             }
             else {
+                this.verify();
             }
             this.setResultImage();
         }
