@@ -326,9 +326,10 @@ export class OpenbioFaceOmaComponent {
                     confirmButtonColor: this.primaryColor || '#0D3F56',
                 });
             }
-            if (await this.checkLiveness()) {
+            const livenessOk = await this.checkLiveness();
+            if (livenessOk) {
                 if (this.callback) {
-                    this.callback({ recordId: this.recordId, match: isMatchOk });
+                    this.callback({ recordId: this.recordId, match: isMatchOk, liveness: livenessOk });
                     return Swal.fire({
                         type: 'success',
                         title: 'Autenticado',
@@ -355,7 +356,7 @@ export class OpenbioFaceOmaComponent {
                 }).then((result) => {
                     if (result.value) {
                         if (this.callback) {
-                            return this.callback({ recordId: this.recordId, match: isMatchOk });
+                            return this.callback({ recordId: this.recordId, match: isMatchOk, liveness: livenessOk });
                         }
                         else {
                             return isMatchOk;

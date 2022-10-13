@@ -418,7 +418,6 @@ export class OpenbioFaceComponentDetails {
         this.componentContainer.forceUpdate();
     }
     async componentDidLoad() {
-        this.detached = true;
         this.showLoader = true;
         setTimeout(async () => {
             this.anomalyOptions = await getAnomalies(constants.anomalyTypes.FACE_ANOMALY, !!this.detached);
@@ -460,8 +459,8 @@ export class OpenbioFaceComponentDetails {
                 }, 200);
             }
             else {
-                this.person = { id: 1, };
-                this.face = {};
+                this.person = JSON.parse(this.tempPerson);
+                this.face = JSON.parse(this.tempFace);
             }
             this.wsStatusInterval = setInterval(() => {
                 if (this.ws.status() === 1) {
@@ -580,6 +579,7 @@ export class OpenbioFaceComponentDetails {
                         showImage(this.canvas, data.previewImage, null, null, this.manualEyeSelection);
                     }
                     else if (data.originalImage) {
+                        this.isPreviewing = false;
                         this.isCapturing = false;
                         this.resetAutoCapturing();
                         if (this.crop && data.cropResultCode !== 0) {
@@ -607,7 +607,7 @@ export class OpenbioFaceComponentDetails {
                             this.originalImage = data.originalImage;
                             this.croppedImage = data.croppedImage;
                             this.segmentedImage = data.segmentedImage;
-                            if (this.segmentation) {
+                            if (this.segmentation && this.serviceConfigs.face.segmentationFixTool) {
                                 this.applyImageAdjust();
                             }
                             else {
