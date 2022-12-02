@@ -1,4 +1,5 @@
 import { TranslationUtils } from '../../locales/translation';
+import hexToRgba from 'hex-to-rgba';
 export class ImageSegmentationAdjustmentComponent {
     constructor() {
         this.area_select = false;
@@ -13,6 +14,7 @@ export class ImageSegmentationAdjustmentComponent {
         this.paint_radius = 10;
         this.restorer_radius = 10;
         this.tooltip = false;
+        this.selected_area = false;
     }
     async componentWillLoad() {
         this.translations = await TranslationUtils.fetchTranslations();
@@ -102,100 +104,150 @@ export class ImageSegmentationAdjustmentComponent {
         if (this.isPress && this.tool === 'restore') {
             this.backgroundContext.globalCompositeOperation = 'destination-out';
             if (this.area_select) {
-                this.backgroundContext.rect(this.x_select, this.y_select, this.x_old - this.x_select, this.y_old - this.y_select);
-                this.backgroundContext.fill();
+                let cursor_x = +this.x_select + +12;
+                let cursor_y = +this.y_select + +12;
+                this.backgroundContext.clearRect(cursor_x, cursor_y, this.x_old - this.x_select, this.y_old - this.y_select);
                 this.overlayContext.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
+                this.selected_area = false;
             }
             else if (!this.area_select) {
+                const cursor_style = this.backgroundContext.createRadialGradient(x, y, (this.restorer_radius - 5), (x + 1), (y + 1), (this.restorer_radius + 5));
+                let transparent = hexToRgba(this.color, '0.05');
+                cursor_style.addColorStop(1, transparent);
                 this.backgroundContext.beginPath();
-                this.backgroundContext.arc(x, y, this.restorer_radius, 0, 2 * Math.PI);
+                this.backgroundContext.fillStyle = cursor_style;
+                let cursor_x = +x + +12;
+                let cursor_y = +y + +12;
+                this.backgroundContext.arc(cursor_x, cursor_y, this.restorer_radius, 0, 2 * Math.PI, true);
                 this.backgroundContext.fill();
-                this.backgroundContext.lineWidth = this.restorer_radius * 0.5;
-                this.backgroundContext.stroke();
             }
         }
         else if (this.isPress && this.tool === 'brush') {
             this.backgroundContext.globalCompositeOperation = 'source-over';
             if (this.area_select) {
-                this.backgroundContext.fillStyle = this.color;
-                this.backgroundContext.fillStyle = this.color;
-                this.backgroundContext.rect(this.x_select, this.y_select, this.x_old - this.x_select, this.y_old - this.y_select);
-                this.backgroundContext.fillStyle = this.color;
-                this.backgroundContext.fill();
-                this.overlayContext.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
-            }
-            else if (!this.area_select) {
-                this.backgroundContext.fillStyle = this.color;
+                let cursor_x = +this.x_select + +12;
+                let cursor_y = +this.y_select + +12;
                 this.backgroundContext.beginPath();
                 this.backgroundContext.fillStyle = this.color;
-                this.backgroundContext.arc(x, y, this.paint_radius, 0, 2 * Math.PI);
+                this.backgroundContext.fillRect(cursor_x, cursor_y, this.x_old - this.x_select, this.y_old - this.y_select);
+                this.overlayContext.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
+                this.selected_area = false;
+            }
+            else if (!this.area_select) {
+                let cursor_x = +x + +12;
+                let cursor_y = +y + +12;
+                const cursor_style = this.backgroundContext.createRadialGradient(cursor_x, cursor_y, (this.paint_radius * 0.1), (cursor_x + 1), (cursor_y + 1), (this.paint_radius), true);
+                let transparent = hexToRgba(this.color, '0.05');
+                let transparent_1 = hexToRgba(this.color, '0.1');
+                let transparent_2 = hexToRgba(this.color, '0.15');
+                let transparent_3 = hexToRgba(this.color, '0.2');
+                let transparent_4 = hexToRgba(this.color, '0.25');
+                cursor_style.addColorStop(0.1, transparent_4);
+                cursor_style.addColorStop(0.2, transparent_3);
+                cursor_style.addColorStop(0.3, transparent_2);
+                cursor_style.addColorStop(0.5, transparent_1);
+                cursor_style.addColorStop(1, transparent);
+                this.backgroundContext.beginPath();
+                this.backgroundContext.fillStyle = cursor_style;
+                this.backgroundContext.arc(cursor_x, cursor_y, this.paint_radius, 0, 2 * Math.PI, true);
                 this.backgroundContext.fill();
             }
         }
         else if (this.isPress && this.tool === 'eraser') {
             this.backgroundContext.globalCompositeOperation = 'source-over';
             if (this.area_select) {
-                this.backgroundContext.rect(this.x_select, this.y_select, this.x_old - this.x_select, this.y_old - this.y_select);
+                let cursor_x = +this.x_select + +12;
+                let cursor_y = +this.y_select + +12;
+                this.backgroundContext.beginPath();
                 this.backgroundContext.fillStyle = this.color;
-                this.backgroundContext.fill();
+                this.backgroundContext.fillRect(cursor_x, cursor_y, this.x_old - this.x_select, this.y_old - this.y_select);
                 this.overlayContext.clearRect(0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height);
+                this.selected_area = false;
             }
             else if (!this.area_select) {
+                let cursor_x = +x + +12;
+                let cursor_y = +y + +12;
+                const cursor_style = this.backgroundContext.createRadialGradient(cursor_x, cursor_y, (this.eraser_radius * 0.1), (cursor_x + 1), (cursor_y + 1), (this.eraser_radius), true);
+                let transparent = hexToRgba(this.color, '0.05');
+                let transparent_1 = hexToRgba(this.color, '0.15');
+                let transparent_2 = hexToRgba(this.color, '0.25');
+                cursor_style.addColorStop(0, transparent_2);
+                cursor_style.addColorStop(0.5, transparent_1);
+                cursor_style.addColorStop(1, transparent);
                 this.backgroundContext.beginPath();
-                this.backgroundContext.rect(x, y, this.eraser_radius, this.eraser_radius);
-                this.backgroundContext.fillStyle = this.color;
-                this.backgroundContext.strokeStyle = this.color;
+                this.backgroundContext.fillStyle = cursor_style;
+                this.backgroundContext.arc(cursor_x, cursor_y, this.eraser_radius, 0, 2 * Math.PI);
                 this.backgroundContext.fill();
-                this.backgroundContext.lineWidth = this.eraser_radius * 0.5;
-                this.backgroundContext.stroke();
             }
         }
-        else if (this.isPress && this.area_select) {
+        else if (this.isPress && this.area_select && !this.selected_area) {
             this.x_select = x;
             this.y_select = y;
+        }
+        else if (this.isPress && this.area_select && this.selected_area) {
+            this.x_select = x;
+            this.y_select = y;
+            this.overlayContext.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
+            this.selected_area = false;
         }
     }
     keepUsingTool(e) {
         let x = e.offsetX;
         let y = e.offsetY;
-        if (this.isPress && this.tool === 'restore') {
-            if (!this.area_select) {
-                this.backgroundContext.globalCompositeOperation = 'destination-out';
-                this.backgroundContext.beginPath();
-                this.backgroundContext.arc(x, y, this.restorer_radius, 0, 2 * Math.PI);
-                this.backgroundContext.fill();
-                this.backgroundContext.lineWidth = this.restorer_radius;
-                this.backgroundContext.beginPath();
-                this.backgroundContext.moveTo(this.old.x, this.old.y);
-                this.backgroundContext.stroke();
-            }
+        if (this.isPress && this.tool === 'restore' && !this.area_select) {
+            this.backgroundContext.globalCompositeOperation = 'destination-out';
+            const cursor_style = this.backgroundContext.createRadialGradient(x, y, (this.restorer_radius), (x + 1), (y + 1), (this.restorer_radius));
+            let transparent = hexToRgba(this.color, '0.05');
+            cursor_style.addColorStop(1, transparent);
+            this.backgroundContext.beginPath();
+            this.backgroundContext.fillStyle = cursor_style;
+            let cursor_x = +x + +12;
+            let cursor_y = +y + +12;
+            this.backgroundContext.arc(cursor_x, cursor_y, this.restorer_radius, 0, 2 * Math.PI, true);
+            this.backgroundContext.fill();
         }
-        else if (this.isPress && this.tool === 'brush') {
-            if (!this.area_select) {
-                this.backgroundContext.fillStyle = this.color;
-                this.backgroundContext.globalCompositeOperation = 'source-over';
-                this.backgroundContext.beginPath();
-                this.backgroundContext.fillStyle = this.color;
-                this.backgroundContext.arc(x, y, this.paint_radius, 0, 2 * Math.PI);
-                this.backgroundContext.fill();
-            }
+        else if (this.isPress && this.tool === 'brush' && !this.area_select) {
+            this.backgroundContext.globalCompositeOperation = 'source-over';
+            let cursor_x = +x + +12;
+            let cursor_y = +y + +12;
+            const cursor_style = this.backgroundContext.createRadialGradient(cursor_x, cursor_y, (this.paint_radius * 0.1), (cursor_x + 1), (cursor_y + 1), (this.paint_radius), true);
+            let transparent = hexToRgba(this.color, '0.05');
+            let transparent_1 = hexToRgba(this.color, '0.1');
+            let transparent_2 = hexToRgba(this.color, '0.15');
+            let transparent_3 = hexToRgba(this.color, '0.2');
+            let transparent_4 = hexToRgba(this.color, '0.25');
+            cursor_style.addColorStop(0.1, transparent_4);
+            cursor_style.addColorStop(0.2, transparent_3);
+            cursor_style.addColorStop(0.3, transparent_2);
+            cursor_style.addColorStop(0.5, transparent_1);
+            cursor_style.addColorStop(1, transparent);
+            this.backgroundContext.beginPath();
+            this.backgroundContext.fillStyle = cursor_style;
+            this.backgroundContext.arc(cursor_x, cursor_y, this.paint_radius, 0, 2 * Math.PI, true);
+            this.backgroundContext.fill();
         }
-        else if (this.isPress && this.tool === 'eraser') {
-            if (!this.area_select) {
-                this.backgroundContext.globalCompositeOperation = 'source-over';
-                this.backgroundContext.beginPath();
-                this.backgroundContext.rect(x, y, this.eraser_radius, this.eraser_radius);
-                this.backgroundContext.fillStyle = this.color;
-                this.backgroundContext.fill();
-                this.backgroundContext.lineWidth = this.eraser_radius;
-                this.backgroundContext.stroke();
-            }
+        else if (this.isPress && this.tool === 'eraser' && !this.area_select) {
+            let cursor_x = +x + +12;
+            let cursor_y = +y + +12;
+            const cursor_style = this.backgroundContext.createRadialGradient(cursor_x, cursor_y, (this.eraser_radius * 0.1), (cursor_x + 1), (cursor_y + 1), (this.eraser_radius), true);
+            let transparent = hexToRgba(this.color, '0.05');
+            let transparent_1 = hexToRgba(this.color, '0.15');
+            let transparent_2 = hexToRgba(this.color, '0.25');
+            cursor_style.addColorStop(0, transparent_2);
+            cursor_style.addColorStop(0.5, transparent_1);
+            cursor_style.addColorStop(1, transparent);
+            this.backgroundContext.beginPath();
+            this.backgroundContext.fillStyle = cursor_style;
+            this.backgroundContext.arc(cursor_x, cursor_y, this.eraser_radius, 0, 2 * Math.PI, true);
+            this.backgroundContext.fill();
         }
         else if (this.isPress && this.tool === 'area_select') {
             this.overlayContext.setLineDash([4, 2]);
             this.overlayContext.clearRect(0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height);
             this.overlayContext.setLineDash([4, 2]);
-            this.overlayContext.strokeRect(this.x_select, this.y_select, x - this.x_select, y - this.y_select);
+            let cursor_x = +this.x_select + +12;
+            let cursor_y = +this.y_select + +12;
+            this.overlayContext.strokeRect(cursor_x, cursor_y, x - this.x_select, y - this.y_select);
             this.old = { x: x, y: y };
         }
     }
@@ -211,9 +263,10 @@ export class ImageSegmentationAdjustmentComponent {
             this.imageAdjustmentCallback(this.parentComponentContext, true, dataImage);
             this.area_select = false;
         }
-        else if (this.tool === 'area_select') {
+        else if (this.tool === 'area_select' && !this.selected_area) {
             this.x_old = this.old.x;
             this.y_old = this.old.y;
+            this.selected_area = true;
         }
     }
     imageRestore(tool) {
@@ -401,6 +454,9 @@ export class ImageSegmentationAdjustmentComponent {
         "segmentedImage": {
             "type": "Any",
             "attr": "segmented-image"
+        },
+        "selected_area": {
+            "state": true
         },
         "tool": {
             "state": true

@@ -25777,7 +25777,8 @@ span, h6, label, option, select, a, p {
   margin-top: 8%;
   position: absolute;
   margin-left: 32%;
-  border: 1px solid #e1e1e1; }
+  border: 1px solid #e1e1e1;
+  cursor: url("../../assets/general/plus-circle-outline.png"), auto; }
 
 #button {
   position: absolute;

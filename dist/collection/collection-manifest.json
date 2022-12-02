@@ -346,6 +346,9 @@
           "name": "restorer_radius"
         },
         {
+          "name": "selected_area"
+        },
+        {
           "name": "tool"
         },
         {

@@ -36,6 +36,7 @@ export declare class ImageSegmentationAdjustmentComponent {
     inputColor: any;
     rangeContainer: any;
     tooltip: boolean;
+    selected_area: boolean;
     componentWillLoad(): Promise<void>;
     addCustomLink(url: any): void;
     componentDidLoad(): void;

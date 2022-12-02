@@ -82,7 +82,13 @@ export class OpenbioFaceOmaComponent {
         videoElement.setAttribute('muted', '');
         videoElement.setAttribute('playsinline', '');
         if (navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+            const mediaOptions = {
+                video: {
+                    width: { ideal: 4096 },
+                    height: { ideal: 2160 }
+                }
+            };
+            navigator.mediaDevices.getUserMedia(mediaOptions)
                 .then((stream) => {
                 videoElement.srcObject = stream;
                 setTimeout(() => {
@@ -212,10 +218,7 @@ export class OpenbioFaceOmaComponent {
             this.showFullscreenLoader = true;
             const resolveLiveness = await OMA.checkLiveness(this.getOMALivenessBody(), this.token);
             this.showFullscreenLoader = false;
-            if (resolveLiveness.liveness_prob < this.livenessMin) {
-                resolve(false);
-            }
-            resolve(true);
+            resolve(resolveLiveness.liveness_prob < this.livenessMin);
         });
     }
     async confirmImageUpdate() {
