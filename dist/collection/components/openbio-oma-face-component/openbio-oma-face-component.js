@@ -82,13 +82,13 @@ export class OpenbioFaceOmaComponent {
         videoElement.setAttribute('muted', '');
         videoElement.setAttribute('playsinline', '');
         if (navigator.mediaDevices.getUserMedia) {
-            const mediaOptions = {
+            navigator.mediaDevices.getUserMedia({
                 video: {
-                    width: { ideal: 4096 },
-                    height: { ideal: 2160 }
+                    width: { ideal: 1440 },
+                    height: { ideal: 1080 },
+                    facingMode: "user"
                 }
-            };
-            navigator.mediaDevices.getUserMedia(mediaOptions)
+            })
                 .then((stream) => {
                 videoElement.srcObject = stream;
                 setTimeout(() => {
