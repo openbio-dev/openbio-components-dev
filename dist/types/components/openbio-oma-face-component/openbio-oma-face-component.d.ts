@@ -30,6 +30,8 @@ export declare class OpenbioFaceOmaComponent {
     videoInterval: any;
     videoElement: HTMLVideoElement;
     capturedImage: ICapturedImage;
+    lowerCameraQualityDetected: boolean;
+    videoSettings: any;
     listenLocale(newValue: string): Promise<void>;
     setI18nParameters(locale: any): Promise<void>;
     addCustomLink(url: string): void;

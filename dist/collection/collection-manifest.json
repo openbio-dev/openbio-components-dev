@@ -1784,6 +1784,9 @@
           "name": "capturedImage"
         },
         {
+          "name": "lowerCameraQualityDetected"
+        },
+        {
           "name": "showFullscreenLoader"
         },
         {
@@ -1794,6 +1797,9 @@
         },
         {
           "name": "videoInterval"
+        },
+        {
+          "name": "videoSettings"
         }
       ],
       "hostElement": {

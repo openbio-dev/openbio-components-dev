@@ -36,6 +36,7 @@ export class OpenbioFaceOmaComponent {
         this.showFullscreenLoader = false;
         this.captured = false;
         this.videoInterval = undefined;
+        this.lowerCameraQualityDetected = false;
     }
     async listenLocale(newValue) {
         this.setI18nParameters(newValue);
@@ -93,6 +94,9 @@ export class OpenbioFaceOmaComponent {
                 videoElement.srcObject = stream;
                 setTimeout(() => {
                     videoElement.play();
+                    this.videoSettings = stream.getVideoTracks()[0]
+                        .getSettings();
+                    this.lowerCameraQualityDetected = this.videoSettings.height < 1080;
                 }, 1 * 1000);
             })
                 .catch((e) => {
@@ -109,20 +113,20 @@ export class OpenbioFaceOmaComponent {
     async getImageFromVideo() {
         return new Promise((resolve) => {
             const canvas = document.createElement('canvas');
-            canvas.width = 1440;
-            this.cameraWidth || this.defaultWidth;
-            canvas.height = 1080;
-            this.cameraHeight || this.defaultHeight;
+            const finalWidth = this.lowerCameraQualityDetected ? this.videoSettings.width : 1440;
+            const finalHeight = this.lowerCameraQualityDetected ? this.videoSettings.height : 1080;
+            canvas.width = finalWidth;
+            canvas.height = finalHeight;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
             const maskPositionX = 0.30;
-            const maskPositionY = 0.15;
-            const srcX = 1440 * maskPositionX;
-            const srcY = 1080 * maskPositionY;
+            const maskPositionY = this.lowerCameraQualityDetected ? 0.04 : 0.15;
+            const srcX = finalWidth * maskPositionX;
+            const srcY = finalHeight * maskPositionY;
             const srcWidth = 250;
             const srcHeight = 333;
-            const cropWidth = (1444 * srcWidth) / this.defaultWidth;
-            const cropHeight = (1080 * srcHeight) / this.defaultHeight;
+            const cropWidth = (finalWidth * srcWidth) / this.defaultWidth;
+            const cropHeight = (finalHeight * srcHeight) / (this.lowerCameraQualityDetected ? ((this.videoSettings.height / 2) - 5) : this.defaultHeight);
             const cropCanvas = document.createElement('canvas');
             cropCanvas.width = cropWidth;
             cropCanvas.height = cropHeight;
@@ -218,7 +222,7 @@ export class OpenbioFaceOmaComponent {
             this.showFullscreenLoader = true;
             const resolveLiveness = await OMA.checkLiveness(this.getOMALivenessBody(), this.token);
             this.showFullscreenLoader = false;
-            resolve(resolveLiveness.liveness_prob < this.livenessMin);
+            resolve(resolveLiveness.liveness_prob > this.livenessMin);
         });
     }
     async confirmImageUpdate() {
@@ -393,7 +397,7 @@ export class OpenbioFaceOmaComponent {
                     h("mask", { id: "overlay-mask", x: "0", y: "0", width: "100%", height: "100%" },
                         h("rect", { x: "0", y: "0", width: "100%", height: "100%", fill: "#fff" }),
                         h("rect", { x: "30%", y: "15%", width: "250", height: "333" }))),
-                h("rect", { x: "0", y: "0", width: "100%", height: "100%", mask: "url(#overlay-mask)" }));
+                h("rect", { x: "0", y: "0", width: "100%", height: "99%", mask: "url(#overlay-mask)" }));
         };
         return (h("div", { style: { "background-color": this.containerBackgroundColor || "#FFFFFF" } },
             h("div", { class: "window-size", style: { "padding": '0' } },
@@ -410,8 +414,15 @@ export class OpenbioFaceOmaComponent {
                                     height: `${this.cameraHeight}px` || `${this.defaultHeight}px`,
                                     display: this.captured ? "none" : "inline-block"
                                 } },
-                                h("video", { id: "video", ref: el => { this.videoElement = el; }, class: "webcam-video", width: this.cameraWidth || this.defaultWidth, height: this.cameraHeight || this.defaultHeight, autoplay: true, muted: true, style: { display: this.captured ? "none" : "inline-block" } }),
-                                h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7" } }, overlay())),
+                                h("video", { id: "video", ref: el => { this.videoElement = el; }, class: "webcam-video", autoplay: true, muted: true, style: {
+                                        display: this.captured ? "none" : "inline-block",
+                                        height: '480px !important'
+                                    } }),
+                                h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7" } }, overlay()),
+                                this.lowerCameraQualityDetected &&
+                                    h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7", backgroundColor: "red", height: "30px", color: "white", paddingTop: "2px", fontWeight: "600" } },
+                                        h("img", { src: "./assets/general/alert-outline.png", class: "icon-24", style: { marginRight: "5px" }, "aria-hidden": "true" }),
+                                        "A c\u00E2mera detectada n\u00E3o possui o requisito m\u00EDnimo recomendado de 1080p")),
                             h("img", { id: "img", height: "300px", class: "webcam-snapshot object-fit-contain", style: {
                                     maxWidth: `${this.cameraWidth || this.defaultWidth}px !important`,
                                     maxHeight: `${this.cameraHeight || this.defaultHeight}px !important`,
@@ -476,6 +487,9 @@ export class OpenbioFaceOmaComponent {
             "mutable": true,
             "watchCallbacks": ["listenLocale"]
         },
+        "lowerCameraQualityDetected": {
+            "state": true
+        },
         "primaryColor": {
             "type": String,
             "attr": "primary-color"
@@ -514,6 +528,9 @@ export class OpenbioFaceOmaComponent {
             "state": true
         },
         "videoInterval": {
+            "state": true
+        },
+        "videoSettings": {
             "state": true
         }
     }; }

@@ -25747,9 +25747,6 @@ span, h6, label, option, select, a, p {
 .margin-left-fix {
   margin-left: -30px !important; }
 
-.webcam-video {
-  margin-top: 10px; }
-
 .webcam-snapshot {
   margin-top: 8px; }
 
@@ -25788,3 +25785,7 @@ span, h6, label, option, select, a, p {
 .object-fit-contain {
   -o-object-fit: contain !important;
      object-fit: contain !important; }
+
+video {
+  width: 640px !important;
+  height: 480px !important; }

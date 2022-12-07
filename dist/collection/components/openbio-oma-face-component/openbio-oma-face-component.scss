@@ -11,7 +11,6 @@
 }
 
 .webcam-video {
-  margin-top: 10px;
 }
 
 .webcam-snapshot {
@@ -55,4 +54,9 @@ span, h6, label, option, select, a, p {
 
 .object-fit-contain {
   object-fit: contain !important;
+}
+
+video {
+  width: 640px !important;
+  height: 480px !important;
 }
