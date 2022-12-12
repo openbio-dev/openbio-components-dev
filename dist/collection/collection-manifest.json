@@ -1703,6 +1703,11 @@
           "attr": "allow-liveness-noncompliance"
         },
         {
+          "name": "allowNoncomplianceRecordUpdate",
+          "type": "Boolean",
+          "attr": "allow-noncompliance-record-update"
+        },
+        {
           "name": "callback",
           "attr": "callback"
         },
@@ -1784,7 +1789,16 @@
           "name": "capturedImage"
         },
         {
+          "name": "currentStream"
+        },
+        {
+          "name": "deviceList"
+        },
+        {
           "name": "lowerCameraQualityDetected"
+        },
+        {
+          "name": "selectedDevice"
         },
         {
           "name": "showFullscreenLoader"

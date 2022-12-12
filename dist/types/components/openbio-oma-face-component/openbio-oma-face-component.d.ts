@@ -12,6 +12,7 @@ export declare class OpenbioFaceOmaComponent {
     requestKey: string;
     token: string;
     livenessMin: number;
+    allowNoncomplianceRecordUpdate: boolean;
     allowLivenessNoncompliance: boolean;
     locale: string;
     headerTitle: string;
@@ -30,16 +31,21 @@ export declare class OpenbioFaceOmaComponent {
     videoInterval: any;
     videoElement: HTMLVideoElement;
     capturedImage: ICapturedImage;
+    deviceList: any;
     lowerCameraQualityDetected: boolean;
     videoSettings: any;
+    selectedDevice: any;
+    currentStream: any;
     listenLocale(newValue: string): Promise<void>;
     setI18nParameters(locale: any): Promise<void>;
     addCustomLink(url: string): void;
     componentWillLoad(): Promise<void>;
     componentDidLoad(): void;
     screenUpdate(): void;
+    getDeviceList(): void;
     startCamera(): void;
     stopVideo(): void;
+    getVideoAspectRatio(): number;
     getImageFromVideo(): Promise<{}>;
     setResultImage(): void;
     getCaptureText(): any;
@@ -54,6 +60,7 @@ export declare class OpenbioFaceOmaComponent {
     register(): Promise<any>;
     verify(): Promise<any>;
     takeSnapShot(): Promise<void>;
+    setDevice(event: any): void;
     render(): JSX.Element;
 }
 export {};

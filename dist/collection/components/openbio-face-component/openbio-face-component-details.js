@@ -1176,7 +1176,7 @@ export class OpenbioFaceComponentDetails {
         _this.adjustedImage = adjustedImage;
     }
     closeImageAdjustment(_this) {
-        let backgroundImage = 'data:image/jpeg;base64, ' + _this.croppedImage;
+        let backgroundImage = 'data:image/jpeg;base64, ' + (_this.croppedImage || _this.originalImage);
         if (!_this.adjustment) {
             _this.adjustedImage = backgroundImage;
         }
@@ -1215,7 +1215,7 @@ export class OpenbioFaceComponentDetails {
         let temp = document.createElement('canvas');
         let temp_ctx = temp.getContext('2d');
         let img = new Image();
-        img.src = 'data:image/jpeg;base64, ' + _this.croppedImage;
+        img.src = 'data:image/jpeg;base64, ' + (_this.croppedImage || _this.originalImage);
         img.onload = () => {
             let width = img.width;
             let height = img.height;
@@ -1290,12 +1290,12 @@ export class OpenbioFaceComponentDetails {
                     h("div", { class: "modal-content modal-content-container", style: { overflowY: "hidden" } },
                         h("image-filter-component", { src: this.imageFilterBase64, parentComponentContext: this, parentElementTag: "openbio-face", currentElementTag: "openbio-face-details", filterCallback: this.filterCallback })),
                     h("button", { class: "modal-close is-large", "aria-label": "close", onClick: () => this.imageFilterModal = false })) : null,
-            this.imageAdjustmentModal ?
+            this.imageAdjustmentModal &&
                 h("div", { class: `modal is-active` },
                     h("div", { class: "modal-background" }),
                     h("div", { class: "modal-content image-cropper-modal-content-container", id: "image-adjustment" },
-                        h("image-segmentation-adjustment-component", { class: "justify-content-center", parentElementTag: "openbio-face", currentElementTag: "openbio-face-details", parentComponentContext: this, imageAdjustmentCallback: this.imageAdjustmentCallback, saveAdjustedImageCallback: this.closeImageAdjustment, originalImage: this.croppedImage || this.croppedImageURL, segmentedImage: this.segmentedImage })),
-                    h("button", { class: "modal-close is-large", id: "close-image-adjustment", "aria-label": "close", onClick: () => this.closeImageAdjustment(this) })) : null,
+                        h("image-segmentation-adjustment-component", { class: "justify-content-center", parentElementTag: "openbio-face", currentElementTag: "openbio-face-details", parentComponentContext: this, imageAdjustmentCallback: this.imageAdjustmentCallback, saveAdjustedImageCallback: this.closeImageAdjustment, originalImage: this.croppedImage || this.croppedImageURL || this.originalImage, segmentedImage: this.segmentedImage })),
+                    h("button", { class: "modal-close is-large", id: "close-image-adjustment", "aria-label": "close", onClick: () => this.closeImageAdjustment(this) })),
             h("div", { class: "tabs is-left is-boxed" },
                 h("ul", null,
                     h("li", { class: this.activeTabClass(tabs.PREVIEW) },

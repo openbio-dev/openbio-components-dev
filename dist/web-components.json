@@ -515,6 +515,11 @@
           "required": false
         },
         {
+          "label": "allow-noncompliance-record-update",
+          "description": "",
+          "required": false
+        },
+        {
           "label": "camera-height",
           "description": "",
           "required": false

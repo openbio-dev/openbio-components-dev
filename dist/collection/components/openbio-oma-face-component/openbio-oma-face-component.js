@@ -31,6 +31,7 @@ export class OpenbioFaceOmaComponent {
         this.defaultWidth = 640;
         this.defaultHeight = 480;
         this.livenessMin = 0.8;
+        this.allowNoncomplianceRecordUpdate = false;
         this.locale = 'pt';
         this.showHeader = true;
         this.showFullscreenLoader = false;
@@ -45,7 +46,7 @@ export class OpenbioFaceOmaComponent {
     async setI18nParameters(locale) {
         TranslationUtils.setLocale(locale);
         this.translations = await TranslationUtils.fetchTranslations();
-        this.componentContainer.forceUpdate();
+        this.screenUpdate();
     }
     addCustomLink(url) {
         let element = document.querySelector(`link[href="${url}"]`);
@@ -71,10 +72,19 @@ export class OpenbioFaceOmaComponent {
             console.log(_global);
             location = _global.location;
         }
+        this.getDeviceList();
         this.startCamera();
     }
     screenUpdate() {
         this.componentContainer.forceUpdate();
+    }
+    getDeviceList() {
+        if (navigator.mediaDevices.enumerateDevices) {
+            navigator.mediaDevices.enumerateDevices().then((devices) => {
+                this.deviceList = devices.filter((d) => d.kind === 'videoinput');
+                this.screenUpdate();
+            });
+        }
     }
     startCamera() {
         this.captured = false;
@@ -82,20 +92,28 @@ export class OpenbioFaceOmaComponent {
         videoElement.setAttribute('autoplay', '');
         videoElement.setAttribute('muted', '');
         videoElement.setAttribute('playsinline', '');
+        if (this.currentStream) {
+            this.currentStream.getTracks().forEach((track) => {
+                track.stop();
+            });
+        }
         if (navigator.mediaDevices.getUserMedia) {
             navigator.mediaDevices.getUserMedia({
                 video: {
                     width: { ideal: 1440 },
                     height: { ideal: 1080 },
-                    facingMode: "user"
-                }
+                    deviceId: { exact: this.selectedDevice || undefined },
+                },
             })
                 .then((stream) => {
+                this.currentStream = stream;
+                this.getDeviceList();
                 videoElement.srcObject = stream;
                 setTimeout(() => {
                     videoElement.play();
-                    this.videoSettings = stream.getVideoTracks()[0]
-                        .getSettings();
+                    this.videoSettings = stream.getVideoTracks()[0].getSettings();
+                    this.selectedDevice = this.videoSettings.deviceId;
+                    this.screenUpdate();
                     this.lowerCameraQualityDetected = this.videoSettings.height < 1080;
                 }, 1 * 1000);
             })
@@ -110,6 +128,9 @@ export class OpenbioFaceOmaComponent {
         this.videoElement.pause();
         this.screenUpdate();
     }
+    getVideoAspectRatio() {
+        return this.videoSettings.width / this.videoSettings.height;
+    }
     async getImageFromVideo() {
         return new Promise((resolve) => {
             const canvas = document.createElement('canvas');
@@ -119,14 +140,15 @@ export class OpenbioFaceOmaComponent {
             canvas.height = finalHeight;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
+            const aspectRatio = this.getVideoAspectRatio();
             const maskPositionX = 0.30;
-            const maskPositionY = this.lowerCameraQualityDetected ? 0.04 : 0.15;
+            const maskPositionY = aspectRatio.toFixed(2) === '1.33' ? 0.15 : 0.04;
             const srcX = finalWidth * maskPositionX;
             const srcY = finalHeight * maskPositionY;
             const srcWidth = 250;
             const srcHeight = 333;
             const cropWidth = (finalWidth * srcWidth) / this.defaultWidth;
-            const cropHeight = (finalHeight * srcHeight) / (this.lowerCameraQualityDetected ? ((this.videoSettings.height / 2) - 5) : this.defaultHeight);
+            const cropHeight = (finalHeight * srcHeight) / (aspectRatio.toFixed(2) === '1.33' ? this.defaultHeight : ((this.videoSettings.height / 2) - 5));
             const cropCanvas = document.createElement('canvas');
             cropCanvas.width = cropWidth;
             cropCanvas.height = cropHeight;
@@ -265,7 +287,7 @@ export class OpenbioFaceOmaComponent {
             this.showFullscreenLoader = false;
             return Swal.fire({
                 type: "error",
-                title: 'Falha ao atualizar cadastro',
+                title: 'Falha ao atualizar cadastro. Autenticidade não verificada.',
                 text: 'O ID fornecido já está vinculado a outra pessoa',
                 showCloseButton: true,
                 showCancelButton: false,
@@ -327,10 +349,15 @@ export class OpenbioFaceOmaComponent {
                 return Swal.fire({
                     type: 'error',
                     title: 'Falha na verificação de autenticidade do registro.',
+                    text: this.allowNoncomplianceRecordUpdate ? 'Deseja substituir a foto mesmo assim?' : '',
                     showCloseButton: true,
-                    showCancelButton: false,
+                    showCancelButton: this.allowNoncomplianceRecordUpdate,
                     focusConfirm: false,
                     confirmButtonColor: this.primaryColor || '#0D3F56',
+                }).then((result) => {
+                    if (result.value) {
+                        return this.allowNoncomplianceRecordUpdate;
+                    }
                 });
             }
             const livenessOk = await this.checkLiveness();
@@ -390,7 +417,16 @@ export class OpenbioFaceOmaComponent {
             this.startCamera();
         }
     }
+    setDevice(event) {
+        const value = event.target.value;
+        this.selectedDevice = value;
+        this.stopVideo();
+        this.startCamera();
+    }
     render() {
+        const deviceOptions = (this.deviceList || []).map((device) => {
+            return (h("option", { value: device.deviceId, selected: this.selectedDevice === device.deviceId }, device.label || device.deviceId));
+        });
         const overlay = () => {
             return h("svg", { width: "100%", height: "100%", className: "svg", viewBox: "0 0 640 480", version: "1.1", xmlns: "http://www.w3.org/2000/svg", xmlnsXlink: "http://www.w3.org/1999/xlink" },
                 h("defs", null,
@@ -407,6 +443,12 @@ export class OpenbioFaceOmaComponent {
                     h("div", { class: 'title is-3 has-text-centered', style: { "width": "100%", "color": this.textColor || "#FFFFFF", "padding-top": "7px" } }, this.headerTitle || this.translations.BIOMETRIC_AUTHENTICATION)),
                 h("div", { class: 'level', style: { "margin-top": "30px" } },
                     h("div", { class: 'rows has-text-centered', style: { width: "100%" } },
+                        this.deviceList && this.deviceList.length > 0 &&
+                            h("div", { class: "columns is-mobile is-centered" },
+                                h("div", { class: "column" },
+                                    h("span", { style: { fontSize: '0.9em' } }, " C\u00E2mera: "),
+                                    h("div", { class: "select is-small inline" },
+                                        h("select", { onChange: this.setDevice.bind(this), name: "device" }, deviceOptions)))),
                         h("div", { class: "row", style: { display: "inline-block" } },
                             h("div", { style: {
                                     position: "relative",
@@ -448,6 +490,10 @@ export class OpenbioFaceOmaComponent {
             "type": Boolean,
             "attr": "allow-liveness-noncompliance"
         },
+        "allowNoncomplianceRecordUpdate": {
+            "type": Boolean,
+            "attr": "allow-noncompliance-record-update"
+        },
         "callback": {
             "type": "Any",
             "attr": "callback"
@@ -472,6 +518,12 @@ export class OpenbioFaceOmaComponent {
         "containerBackgroundColor": {
             "type": String,
             "attr": "container-background-color"
+        },
+        "currentStream": {
+            "state": true
+        },
+        "deviceList": {
+            "state": true
         },
         "headerTitle": {
             "type": String,
@@ -505,6 +557,9 @@ export class OpenbioFaceOmaComponent {
         "requestKey": {
             "type": String,
             "attr": "request-key"
+        },
+        "selectedDevice": {
+            "state": true
         },
         "showFullscreenLoader": {
             "state": true
