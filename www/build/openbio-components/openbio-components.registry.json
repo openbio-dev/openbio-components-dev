@@ -1,0 +1,146 @@
+{
+  "namespace": "OpenbioComponents",
+  "fsNamespace": "openbio-components",
+  "loader": "../openbio-components.js",
+  "core": "openbio-components.ov79wmdd.js",
+  "corePolyfilled": "openbio-components.shny3xmw.js",
+  "components": {
+    "cnh-preview": {
+      "bundleIds": {
+        "$": "ycbztx8b"
+      },
+      "encapsulation": "shadow"
+    },
+    "help-component": {
+      "bundleIds": {
+        "$": "oqoplalq"
+      },
+      "encapsulation": "shadow"
+    },
+    "image-cropper-component": {
+      "bundleIds": {
+        "$": "dbmmvrd1"
+      },
+      "encapsulation": "shadow"
+    },
+    "image-filter-component": {
+      "bundleIds": {
+        "$": "dbmmvrd1"
+      },
+      "encapsulation": "shadow"
+    },
+    "image-segmentation-adjustment-component": {
+      "bundleIds": {
+        "$": "dbmmvrd1"
+      },
+      "encapsulation": "shadow"
+    },
+    "loader-component": {
+      "bundleIds": {
+        "$": "oqoplalq"
+      },
+      "encapsulation": "shadow"
+    },
+    "my-component": {
+      "bundleIds": {
+        "$": "fo2aaq5h"
+      },
+      "encapsulation": "shadow"
+    },
+    "notification-component": {
+      "bundleIds": {
+        "$": "3icftsqp"
+      },
+      "encapsulation": "shadow"
+    },
+    "openbio-face": {
+      "bundleIds": {
+        "$": "vfmchwol"
+      },
+      "encapsulation": "shadow"
+    },
+    "openbio-face-auth": {
+      "bundleIds": {
+        "$": "clphnvft"
+      },
+      "encapsulation": "shadow"
+    },
+    "openbio-face-details": {
+      "bundleIds": {
+        "$": "dbmmvrd1"
+      },
+      "encapsulation": "shadow"
+    },
+    "openbio-face-validation-box-component": {
+      "bundleIds": {
+        "$": "dbmmvrd1"
+      },
+      "encapsulation": "shadow"
+    },
+    "openbio-finger": {
+      "bundleIds": {
+        "$": "cqdjpbbv"
+      },
+      "encapsulation": "shadow"
+    },
+    "openbio-finger-auth": {
+      "bundleIds": {
+        "$": "gvek1kta"
+      },
+      "encapsulation": "shadow"
+    },
+    "openbio-finger-details": {
+      "bundleIds": {
+        "$": "nnicyakl"
+      },
+      "encapsulation": "shadow"
+    },
+    "openbio-finger-image-component": {
+      "bundleIds": {
+        "$": "nnicyakl"
+      },
+      "encapsulation": "shadow"
+    },
+    "openbio-mugshot": {
+      "bundleIds": {
+        "$": "o6conm7l"
+      },
+      "encapsulation": "shadow"
+    },
+    "openbio-mugshot-details": {
+      "bundleIds": {
+        "$": "o6conm7l"
+      },
+      "encapsulation": "shadow"
+    },
+    "openbio-oma-face": {
+      "bundleIds": {
+        "$": "gpxi8qew"
+      }
+    },
+    "openbio-scanner": {
+      "bundleIds": {
+        "$": "xda6aeli"
+      },
+      "encapsulation": "shadow"
+    },
+    "openbio-scanner-details": {
+      "bundleIds": {
+        "$": "xda6aeli"
+      },
+      "encapsulation": "shadow"
+    },
+    "openbio-signature": {
+      "bundleIds": {
+        "$": "ssiahqcp"
+      },
+      "encapsulation": "shadow"
+    },
+    "openbio-signature-details": {
+      "bundleIds": {
+        "$": "ssiahqcp"
+      },
+      "encapsulation": "shadow"
+    }
+  }
+}
