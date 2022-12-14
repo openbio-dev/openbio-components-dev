@@ -1,1 +1,0 @@
-var session={person:{id:0},document:{},signature:{},face:{},modal:{fingers:[]},mugshot:[]};function setFingers(s){return session.modal.fingers=s}function setFace(s){return session.face=s}function setSignature(s){return session.signature=s}export{setFace as a,setFingers as b,setSignature as c};

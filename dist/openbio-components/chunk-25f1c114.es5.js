@@ -1,1 +1,0 @@
-OpenbioComponents.loadBundle("chunk-25f1c114.js",["exports"],function(n){var e={person:{id:0},document:{},signature:{},face:{},modal:{fingers:[]},mugshot:[]};n.setFace=function(n){return e.face=n},n.setFingers=function(n){return e.modal.fingers=n},n.setSignature=function(n){return e.signature=n}});

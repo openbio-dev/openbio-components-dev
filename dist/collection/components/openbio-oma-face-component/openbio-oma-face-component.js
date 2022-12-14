@@ -1,4 +1,6 @@
 import Swal from 'sweetalert2/dist/sweetalert2.all.min.js';
+import { Component, Element, Prop, h, State, Watch, forceUpdate } from "@stencil/core";
+import * as faceapi from 'face-api.js';
 import OMA from './api';
 import { TranslationUtils } from '../../locales/translation';
 const VERSION = 3.7;
@@ -28,6 +30,7 @@ var RESULT_STATUS;
 })(RESULT_STATUS || (RESULT_STATUS = {}));
 export class OpenbioFaceOmaComponent {
     constructor() {
+        this.MODEL_URL = 'https://openbio-components-files.s3.sa-east-1.amazonaws.com/models/';
         this.defaultWidth = 640;
         this.defaultHeight = 480;
         this.livenessMin = 0.8;
@@ -43,6 +46,9 @@ export class OpenbioFaceOmaComponent {
         this.setI18nParameters(newValue);
     }
     ;
+    // ===========================================
+    // COMPONENT GENERAL
+    // ===========================================
     async setI18nParameters(locale) {
         TranslationUtils.setLocale(locale);
         this.translations = await TranslationUtils.fetchTranslations();
@@ -64,19 +70,20 @@ export class OpenbioFaceOmaComponent {
         this.addCustomLink("https://fonts.googleapis.com/css?family=Poppins");
     }
     componentDidLoad() {
-        let location = undefined;
-        let queryObj = undefined;
-        window.global = window;
-        const _global = window || global;
-        if (_global) {
-            console.log(_global);
-            location = _global.location;
-        }
+        console.log('alo');
         this.getDeviceList();
-        this.startCamera();
+        // this.startCamera();
+        this.startFaceApi();
+        console.log('alo 2');
     }
     screenUpdate() {
-        this.componentContainer.forceUpdate();
+        forceUpdate(this);
+    }
+    startFaceApi() {
+        Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri(this.MODEL_URL),
+            faceapi.nets.faceRecognitionNet.loadFromUri(this.MODEL_URL),
+        ]).then(() => this.startCamera());
     }
     getDeviceList() {
         if (navigator.mediaDevices.enumerateDevices) {
@@ -109,12 +116,55 @@ export class OpenbioFaceOmaComponent {
                 this.currentStream = stream;
                 this.getDeviceList();
                 videoElement.srcObject = stream;
-                setTimeout(() => {
+                setTimeout(async () => {
+                    faceapi.env.setEnv(Object.assign({}, faceapi.env.createBrowserEnv()));
                     videoElement.play();
                     this.videoSettings = stream.getVideoTracks()[0].getSettings();
                     this.selectedDevice = this.videoSettings.deviceId;
                     this.screenUpdate();
                     this.lowerCameraQualityDetected = this.videoSettings.height < 1080;
+                    const canvas = document.getElementsByTagName("openbio-oma-face")[0].lastElementChild.getElementsByClassName("face-canvas")[0];
+                    console.log('face canvas', canvas);
+                    const displaySize = { width: 640, height: 480 };
+                    faceapi.matchDimensions(canvas, displaySize);
+                    this.videoInterval = setInterval(async () => {
+                        this.screenUpdate();
+                        const detections = await faceapi.detectAllFaces(videoElement, new faceapi.TinyFaceDetectorOptions());
+                        const resizedDetections = faceapi.resizeResults(detections, displaySize);
+                        // console.log(resizedDetections);
+                        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+                        faceapi.draw.drawDetections(canvas, resizedDetections);
+                        if (resizedDetections.length) {
+                            const { box } = resizedDetections[0];
+                            const x1 = box.topLeft.x;
+                            const x2 = box.topRight.x;
+                            const y1 = box.topLeft.y;
+                            const y2 = box.bottomLeft.y;
+                            const frameWidth = 640 * 0.3;
+                            const frameHeight = 480 * 0.15;
+                            const isInside = x1 > frameWidth && x2 < (frameWidth + 250) && y1 > frameHeight && y2 < (frameHeight + 333);
+                            const drawOptions = {
+                                lineWidth: 2,
+                                boxColor: 'red',
+                            };
+                            if (isInside) {
+                                const alertType = box.width > 250 || (box.width < 125) ? -1 :
+                                    box.width < 195 && box.width > 125 ? 0 : 1;
+                                drawOptions.boxColor = alertType === -1 ? 'red' : alertType === 0 ? 'yellow' : 'green';
+                                drawOptions.label = alertType === -1 ? 'Muito distante' : alertType === 0 ? 'Levemente afastado' : 'Posição OK';
+                                if (alertType === 0) {
+                                    drawOptions.drawLabelOptions = {
+                                        fontColor: 'black'
+                                    };
+                                }
+                            }
+                            else {
+                                drawOptions.label = 'Fora de enquadramento';
+                            }
+                            const drawBox = new faceapi.draw.DrawBox(box, drawOptions);
+                            drawBox.draw(canvas);
+                        }
+                    }, 100);
                 }, 1 * 1000);
             })
                 .catch((e) => {
@@ -136,8 +186,8 @@ export class OpenbioFaceOmaComponent {
             const canvas = document.createElement('canvas');
             const finalWidth = this.lowerCameraQualityDetected ? this.videoSettings.width : 1440;
             const finalHeight = this.lowerCameraQualityDetected ? this.videoSettings.height : 1080;
-            canvas.width = finalWidth;
-            canvas.height = finalHeight;
+            canvas.width = finalWidth; // this.cameraWidth || this.defaultWidth;
+            canvas.height = finalHeight; // this.cameraHeight || this.defaultHeight;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
             const aspectRatio = this.getVideoAspectRatio();
@@ -179,6 +229,9 @@ export class OpenbioFaceOmaComponent {
     getCaptureText() {
         return this.captured ? this.translations.TRY_AGAIN : this.translations.MANUAL_CAPTURE;
     }
+    // ===========================================
+    // BUSINESS RULES AND API CALLS
+    // ===========================================
     confirmPicture() {
         const html = `
       <div>
@@ -423,12 +476,15 @@ export class OpenbioFaceOmaComponent {
         this.stopVideo();
         this.startCamera();
     }
+    // ===========================================
+    // RENDER
+    // ===========================================
     render() {
         const deviceOptions = (this.deviceList || []).map((device) => {
             return (h("option", { value: device.deviceId, selected: this.selectedDevice === device.deviceId }, device.label || device.deviceId));
         });
         const overlay = () => {
-            return h("svg", { width: "100%", height: "100%", className: "svg", viewBox: "0 0 640 480", version: "1.1", xmlns: "http://www.w3.org/2000/svg", xmlnsXlink: "http://www.w3.org/1999/xlink" },
+            return h("svg", { width: "100%", height: "100%", viewBox: "0 0 640 480", version: "1.1", xmlns: "http://www.w3.org/2000/svg" },
                 h("defs", null,
                     h("mask", { id: "overlay-mask", x: "0", y: "0", width: "100%", height: "100%" },
                         h("rect", { x: "0", y: "0", width: "100%", height: "100%", fill: "#fff" }),
@@ -456,6 +512,7 @@ export class OpenbioFaceOmaComponent {
                                     height: `${this.cameraHeight}px` || `${this.defaultHeight}px`,
                                     display: this.captured ? "none" : "inline-block"
                                 } },
+                                h("canvas", { class: "face-canvas", width: "333", height: "250", style: { display: "inline-block" } }),
                                 h("video", { id: "video", ref: el => { this.videoElement = el; }, class: "webcam-video", autoplay: true, muted: true, style: {
                                         display: this.captured ? "none" : "inline-block",
                                         height: '480px !important'
@@ -481,113 +538,325 @@ export class OpenbioFaceOmaComponent {
                                 }, onClick: () => this.captured ? this.startCamera() : this.takeSnapShot() }, this.getCaptureText())))))));
     }
     static get is() { return "openbio-oma-face"; }
+    static get originalStyleUrls() { return {
+        "$": ["openbio-oma-face-component.scss"]
+    }; }
+    static get styleUrls() { return {
+        "$": ["openbio-oma-face-component.css"]
+    }; }
     static get properties() { return {
-        "action": {
-            "type": String,
-            "attr": "action"
-        },
-        "allowLivenessNoncompliance": {
-            "type": Boolean,
-            "attr": "allow-liveness-noncompliance"
-        },
-        "allowNoncomplianceRecordUpdate": {
-            "type": Boolean,
-            "attr": "allow-noncompliance-record-update"
-        },
-        "callback": {
-            "type": "Any",
-            "attr": "callback"
-        },
-        "cameraHeight": {
-            "type": Number,
-            "attr": "camera-height"
-        },
-        "cameraWidth": {
-            "type": Number,
-            "attr": "camera-width"
-        },
-        "captured": {
-            "state": true
-        },
-        "capturedImage": {
-            "state": true
-        },
-        "componentContainer": {
-            "elementRef": true
-        },
-        "containerBackgroundColor": {
-            "type": String,
-            "attr": "container-background-color"
-        },
-        "currentStream": {
-            "state": true
-        },
-        "deviceList": {
-            "state": true
-        },
-        "headerTitle": {
-            "type": String,
-            "attr": "header-title"
-        },
-        "livenessMin": {
-            "type": Number,
-            "attr": "liveness-min"
-        },
-        "locale": {
-            "type": String,
-            "attr": "locale",
-            "mutable": true,
-            "watchCallbacks": ["listenLocale"]
-        },
-        "lowerCameraQualityDetected": {
-            "state": true
-        },
-        "primaryColor": {
-            "type": String,
-            "attr": "primary-color"
-        },
         "projectId": {
-            "type": String,
-            "attr": "project-id"
+            "type": "string",
+            "mutable": false,
+            "complexType": {
+                "original": "string",
+                "resolved": "string",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "project-id",
+            "reflect": false
         },
         "recordId": {
-            "type": String,
-            "attr": "record-id"
+            "type": "string",
+            "mutable": false,
+            "complexType": {
+                "original": "string",
+                "resolved": "string",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "record-id",
+            "reflect": false
         },
         "requestKey": {
-            "type": String,
-            "attr": "request-key"
-        },
-        "selectedDevice": {
-            "state": true
-        },
-        "showFullscreenLoader": {
-            "state": true
-        },
-        "showHeader": {
-            "type": Boolean,
-            "attr": "show-header"
-        },
-        "textColor": {
-            "type": String,
-            "attr": "text-color"
+            "type": "string",
+            "mutable": false,
+            "complexType": {
+                "original": "string",
+                "resolved": "string",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "request-key",
+            "reflect": false
         },
         "token": {
-            "type": String,
-            "attr": "token"
+            "type": "string",
+            "mutable": false,
+            "complexType": {
+                "original": "string",
+                "resolved": "string",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "token",
+            "reflect": false
         },
-        "translations": {
-            "state": true
+        "livenessMin": {
+            "type": "number",
+            "mutable": false,
+            "complexType": {
+                "original": "number",
+                "resolved": "number",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "liveness-min",
+            "reflect": false,
+            "defaultValue": "0.8"
         },
-        "videoElement": {
-            "state": true
+        "allowNoncomplianceRecordUpdate": {
+            "type": "boolean",
+            "mutable": false,
+            "complexType": {
+                "original": "boolean",
+                "resolved": "boolean",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "allow-noncompliance-record-update",
+            "reflect": false,
+            "defaultValue": "false"
         },
-        "videoInterval": {
-            "state": true
+        "allowLivenessNoncompliance": {
+            "type": "boolean",
+            "mutable": false,
+            "complexType": {
+                "original": "boolean",
+                "resolved": "boolean",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "allow-liveness-noncompliance",
+            "reflect": false
         },
-        "videoSettings": {
-            "state": true
+        "locale": {
+            "type": "string",
+            "mutable": true,
+            "complexType": {
+                "original": "string",
+                "resolved": "string",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "locale",
+            "reflect": false,
+            "defaultValue": "'pt'"
+        },
+        "headerTitle": {
+            "type": "string",
+            "mutable": false,
+            "complexType": {
+                "original": "string",
+                "resolved": "string",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "header-title",
+            "reflect": false
+        },
+        "action": {
+            "type": "string",
+            "mutable": false,
+            "complexType": {
+                "original": "'REGISTER' | 'VERIFY'",
+                "resolved": "\"REGISTER\" | \"VERIFY\"",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "action",
+            "reflect": false
+        },
+        "showHeader": {
+            "type": "boolean",
+            "mutable": false,
+            "complexType": {
+                "original": "boolean",
+                "resolved": "boolean",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "show-header",
+            "reflect": false,
+            "defaultValue": "true"
+        },
+        "primaryColor": {
+            "type": "string",
+            "mutable": false,
+            "complexType": {
+                "original": "string",
+                "resolved": "string",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "primary-color",
+            "reflect": false
+        },
+        "textColor": {
+            "type": "string",
+            "mutable": false,
+            "complexType": {
+                "original": "string",
+                "resolved": "string",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "text-color",
+            "reflect": false
+        },
+        "containerBackgroundColor": {
+            "type": "string",
+            "mutable": false,
+            "complexType": {
+                "original": "string",
+                "resolved": "string",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "container-background-color",
+            "reflect": false
+        },
+        "cameraWidth": {
+            "type": "number",
+            "mutable": false,
+            "complexType": {
+                "original": "number",
+                "resolved": "number",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "camera-width",
+            "reflect": false
+        },
+        "cameraHeight": {
+            "type": "number",
+            "mutable": false,
+            "complexType": {
+                "original": "number",
+                "resolved": "number",
+                "references": {}
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            },
+            "attribute": "camera-height",
+            "reflect": false
+        },
+        "callback": {
+            "type": "unknown",
+            "mutable": false,
+            "complexType": {
+                "original": "Function",
+                "resolved": "Function",
+                "references": {
+                    "Function": {
+                        "location": "global"
+                    }
+                }
+            },
+            "required": false,
+            "optional": false,
+            "docs": {
+                "tags": [],
+                "text": ""
+            }
         }
     }; }
-    static get style() { return "/**style-placeholder:openbio-oma-face:**/"; }
+    static get states() { return {
+        "showFullscreenLoader": {},
+        "translations": {},
+        "captured": {},
+        "videoInterval": {},
+        "videoElement": {},
+        "capturedImage": {},
+        "deviceList": {},
+        "lowerCameraQualityDetected": {},
+        "videoSettings": {},
+        "selectedDevice": {},
+        "currentStream": {}
+    }; }
+    static get elementRef() { return "componentContainer"; }
+    static get watchers() { return [{
+            "propName": "locale",
+            "methodName": "listenLocale"
+        }]; }
 }
