@@ -1,4 +1,5 @@
 import { IOMAMatcherBody } from './interfaces';
+import { HTMLStencilElement } from '../../stencil.core';
 interface ICapturedImage {
     data: string;
     file: File;
@@ -24,7 +25,7 @@ export declare class OpenbioFaceOmaComponent {
     cameraWidth: number;
     cameraHeight: number;
     callback: Function;
-    componentContainer: any;
+    componentContainer: HTMLStencilElement;
     showFullscreenLoader: boolean;
     translations: any;
     captured: boolean;

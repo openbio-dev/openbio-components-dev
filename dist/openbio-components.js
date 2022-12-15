@@ -13,18 +13,15 @@
   var scriptElm = doc.createElement('script');
   scriptElm.setAttribute('type', 'module');
   scriptElm.src = url + '/openbio-components.esm.js';
-  warn.push(scriptElm.outerHTML);
-  scriptElm.setAttribute('data-stencil-namespace', 'openbio-components');
   doc.head.appendChild(scriptElm);
+  warn.push(scriptElm.outerHTML);
 
-  
   scriptElm = doc.createElement('script');
   scriptElm.setAttribute('nomodule', '');
   scriptElm.src = url + '/openbio-components.js';
+  doc.head.appendChild(scriptElm);
   warn.push(scriptElm.outerHTML);
-  scriptElm.setAttribute('data-stencil-namespace', 'openbio-components');
-  doc.head.appendChild(scriptElm)
-  
+
   console.warn(warn.join('\n'));
 
 })(document);

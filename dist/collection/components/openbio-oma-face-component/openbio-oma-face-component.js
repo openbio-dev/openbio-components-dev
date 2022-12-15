@@ -1,5 +1,5 @@
 import Swal from 'sweetalert2/dist/sweetalert2.all.min.js';
-import { Component, Element, Prop, h, State, Watch, forceUpdate } from "@stencil/core";
+import { h } from "@stencil/core";
 import * as faceapi from 'face-api.js';
 import OMA from './api';
 import { TranslationUtils } from '../../locales/translation';
@@ -77,7 +77,7 @@ export class OpenbioFaceOmaComponent {
         console.log('alo 2');
     }
     screenUpdate() {
-        forceUpdate(this);
+        this.componentContainer.forceUpdate();
     }
     startFaceApi() {
         Promise.all([
