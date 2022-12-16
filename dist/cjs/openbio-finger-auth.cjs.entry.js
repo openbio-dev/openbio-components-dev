@@ -8,9 +8,9 @@ const __chunk_4 = require('./chunk-c5f2ac0b.js');
 const __chunk_5 = require('./chunk-131fee9b.js');
 const __chunk_6 = require('./chunk-128e8b8e.js');
 const __chunk_8 = require('./chunk-1e1a7f08.js');
-const __chunk_9 = require('./chunk-0f193d81.js');
-const __chunk_11 = require('./chunk-f34cc637.js');
-const __chunk_12 = require('./chunk-d001bf05.js');
+const __chunk_9 = require('./chunk-f34cc637.js');
+const __chunk_10 = require('./chunk-0f193d81.js');
+const __chunk_11 = require('./chunk-0f967347.js');
 
 let config, authServicesUrl;
 function authServicesToken() {
@@ -21,7 +21,7 @@ function authServicesToken() {
 }
 async function getPeople(cpf) {
     if (!authServicesUrl) {
-        config = await __chunk_9.getAppConfig();
+        config = await __chunk_10.getAppConfig();
         authServicesUrl = config.urls.authServicesUrl;
     }
     await authServicesToken();
@@ -187,11 +187,11 @@ class OpenbioFingerAuthComponent {
         this.componentContainer.forceUpdate();
     }
     clearCanvasFingerImage() {
-        __chunk_11.showImage(this.fingerPreviewCanvas, "");
+        __chunk_9.showImage(this.fingerPreviewCanvas, "");
     }
     async getModalSettings() {
         try {
-            this.modalSettings = await __chunk_12.getModalSettings();
+            this.modalSettings = await __chunk_11.getModalSettings();
             this.payload.deviceName = this.modalSettings.device ? __chunk_6.constants.device[this.modalSettings.device] : __chunk_6.constants.device.IB;
         }
         catch (e) {
@@ -212,7 +212,7 @@ class OpenbioFingerAuthComponent {
     saveLog(authLogBody) {
         authLogBody.type = "FINGER";
         authLogBody.cpf = this.cpfState || this.cpf;
-        __chunk_12.authLog(authLogBody);
+        __chunk_11.authLog(authLogBody);
     }
     loadWebsocketListeners() {
         this.ws.deviceSocket.addEventListener("message", (event) => {
@@ -236,7 +236,7 @@ class OpenbioFingerAuthComponent {
             }
             if (previewImage) {
                 if (!["DIGITALPERSONA", "SECUGEN", "M421"].includes(deviceInfo.manufacturName.toUpperCase())) {
-                    __chunk_11.showImage(this.fingerPreviewCanvas, previewImage, this.fingerPreviewCurrentRollingStatus, this.fingerPreviewCurrentStatusLineX);
+                    __chunk_9.showImage(this.fingerPreviewCanvas, previewImage, this.fingerPreviewCurrentRollingStatus, this.fingerPreviewCurrentStatusLineX);
                 }
                 this.fingerNfiqScore = nfiqScore > 0 && nfiqScore <= 5 ? nfiqScore : 0;
             }
@@ -260,10 +260,10 @@ class OpenbioFingerAuthComponent {
                 }
                 this.componentContainer.forceUpdate();
                 if (fingersData.fingerCount > 1) {
-                    __chunk_11.showImage(this.fingerPreviewCanvas, originalImage, 0);
+                    __chunk_9.showImage(this.fingerPreviewCanvas, originalImage, 0);
                 }
                 else {
-                    __chunk_11.showImage(this.fingerPreviewCanvas, fingersData.images[0].image, 0);
+                    __chunk_9.showImage(this.fingerPreviewCanvas, fingersData.images[0].image, 0);
                 }
                 this.fingerOriginalImage = originalImage;
                 this.deviceModel = deviceInfo.modelName;
@@ -303,7 +303,7 @@ class OpenbioFingerAuthComponent {
                             this.componentContainer.forceUpdate();
                         }
                         else {
-                            __chunk_12.fingerAuthenticate({
+                            __chunk_11.fingerAuthenticate({
                                 cpf: this.cpfState,
                                 finger: {
                                     finger_index: this.selectedFinger.index,

@@ -36,11 +36,13 @@ export class OpenbioFaceOmaComponent {
         this.livenessMin = 0.8;
         this.allowNoncomplianceRecordUpdate = false;
         this.locale = 'pt';
-        this.showHeader = true;
+        this.showHeader = false;
         this.showFullscreenLoader = false;
         this.captured = false;
         this.videoInterval = undefined;
         this.lowerCameraQualityDetected = false;
+        this.isMobile = false;
+        this.mobileCameraStartControl = 0;
     }
     async listenLocale(newValue) {
         this.setI18nParameters(newValue);
@@ -69,12 +71,46 @@ export class OpenbioFaceOmaComponent {
         this.addCustomLink("https://cdn.jsdelivr.net/npm/@mdi/font@6.6.96/css/materialdesignicons.min.css");
         this.addCustomLink("https://fonts.googleapis.com/css?family=Poppins");
     }
+    checkMobile() {
+        const toMatch = [
+            /Android/i,
+            /webOS/i,
+            /iPhone/i,
+            /iPad/i,
+            /iPod/i,
+            /BlackBerry/i,
+            /Windows Phone/i
+        ];
+        return toMatch.some((toMatchItem) => {
+            return navigator.userAgent.match(toMatchItem);
+        });
+    }
+    showHelpModal() {
+        const html = `
+      - Limpe a área da câmera <br/>
+      - Procure um local com boa iluminação <br/>
+      - Capture uma imagem que apareça somente você <br/>
+      - Todo o seu rosto deve estar visível <br/>
+    `;
+        return Swal.fire({
+            type: "info",
+            html,
+            showCloseButton: true,
+            focusConfirm: false,
+            confirmButtonColor: this.primaryColor || '#0D3F56',
+            confirmButtonText: 'Entendi',
+        });
+    }
     componentDidLoad() {
-        console.log('alo');
         this.getDeviceList();
-        // this.startCamera();
-        this.startFaceApi();
-        console.log('alo 2');
+        this.isMobile = this.checkMobile();
+        if (this.isMobile) {
+            this.showHelpModal();
+            this.startCamera();
+        }
+        else {
+            this.startFaceApi();
+        }
     }
     screenUpdate() {
         this.componentContainer.forceUpdate();
@@ -105,6 +141,7 @@ export class OpenbioFaceOmaComponent {
             });
         }
         if (navigator.mediaDevices.getUserMedia) {
+            console.log("Starting camera...");
             navigator.mediaDevices.getUserMedia({
                 video: {
                     width: { ideal: 1440 },
@@ -117,57 +154,64 @@ export class OpenbioFaceOmaComponent {
                 this.getDeviceList();
                 videoElement.srcObject = stream;
                 setTimeout(async () => {
-                    faceapi.env.setEnv(Object.assign({}, faceapi.env.createBrowserEnv()));
+                    if (!this.isMobile) {
+                        faceapi.env.setEnv(Object.assign({}, faceapi.env.createBrowserEnv()));
+                    }
                     videoElement.play();
                     this.videoSettings = stream.getVideoTracks()[0].getSettings();
                     this.selectedDevice = this.videoSettings.deviceId;
+                    if (this.isMobile && this.mobileCameraStartControl === 0) {
+                        this.setDevice({ target: { value: this.selectedDevice } });
+                        this.mobileCameraStartControl++;
+                    }
                     this.screenUpdate();
                     this.lowerCameraQualityDetected = this.videoSettings.height < 1080;
                     const canvas = document.getElementsByTagName("openbio-oma-face")[0].lastElementChild.getElementsByClassName("face-canvas")[0];
-                    console.log('face canvas', canvas);
-                    const displaySize = { width: 640, height: 480 };
-                    faceapi.matchDimensions(canvas, displaySize);
-                    this.videoInterval = setInterval(async () => {
-                        this.screenUpdate();
-                        const detections = await faceapi.detectAllFaces(videoElement, new faceapi.TinyFaceDetectorOptions());
-                        const resizedDetections = faceapi.resizeResults(detections, displaySize);
-                        // console.log(resizedDetections);
-                        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-                        faceapi.draw.drawDetections(canvas, resizedDetections);
-                        if (resizedDetections.length) {
-                            const { box } = resizedDetections[0];
-                            const x1 = box.topLeft.x;
-                            const x2 = box.topRight.x;
-                            const y1 = box.topLeft.y;
-                            const y2 = box.bottomLeft.y;
-                            const frameWidth = 640 * 0.3;
-                            const frameHeight = 480 * 0.15;
-                            const isInside = x1 > frameWidth && x2 < (frameWidth + 250) && y1 > frameHeight && y2 < (frameHeight + 333);
-                            const drawOptions = {
-                                lineWidth: 2,
-                                boxColor: 'red',
-                            };
-                            if (isInside) {
-                                const alertType = box.width > 250 || (box.width < 125) ? -1 :
-                                    box.width < 195 && box.width > 125 ? 0 : 1;
-                                drawOptions.boxColor = alertType === -1 ? 'red' : alertType === 0 ? 'yellow' : 'green';
-                                drawOptions.label = alertType === -1 ? 'Muito distante' : alertType === 0 ? 'Levemente afastado' : 'Posição OK';
-                                if (alertType === 0) {
-                                    drawOptions.drawLabelOptions = {
-                                        fontColor: 'black'
-                                    };
+                    if (!this.isMobile) {
+                        const displaySize = { width: 640, height: 480 };
+                        faceapi.matchDimensions(canvas, displaySize);
+                        this.videoInterval = setInterval(async () => {
+                            this.screenUpdate();
+                            const detections = await faceapi.detectAllFaces(videoElement, new faceapi.TinyFaceDetectorOptions());
+                            const resizedDetections = faceapi.resizeResults(detections, displaySize);
+                            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+                            faceapi.draw.drawDetections(canvas, resizedDetections);
+                            if (resizedDetections.length) {
+                                const { box } = resizedDetections[0];
+                                const x1 = box.topLeft.x;
+                                const x2 = box.topRight.x;
+                                const y1 = box.topLeft.y;
+                                const y2 = box.bottomLeft.y;
+                                const frameWidth = 640 * 0.3;
+                                const frameHeight = 480 * 0.15;
+                                const isInside = x1 > frameWidth && x2 < (frameWidth + 250) && y1 > frameHeight && y2 < (frameHeight + 333);
+                                const drawOptions = {
+                                    lineWidth: 2,
+                                    boxColor: 'red',
+                                };
+                                if (isInside) {
+                                    const alertType = box.width > 250 || (box.width < 125) ? -1 :
+                                        box.width < 195 && box.width > 125 ? 0 : 1;
+                                    drawOptions.boxColor = alertType === -1 ? 'red' : alertType === 0 ? 'yellow' : 'green';
+                                    drawOptions.label = alertType === -1 ? 'Muito distante' : alertType === 0 ? 'Levemente afastado' : 'Posição OK';
+                                    if (alertType === 0) {
+                                        drawOptions.drawLabelOptions = {
+                                            fontColor: 'black'
+                                        };
+                                    }
                                 }
+                                else {
+                                    drawOptions.label = 'Fora de enquadramento';
+                                }
+                                const drawBox = new faceapi.draw.DrawBox(box, drawOptions);
+                                drawBox.draw(canvas);
                             }
-                            else {
-                                drawOptions.label = 'Fora de enquadramento';
-                            }
-                            const drawBox = new faceapi.draw.DrawBox(box, drawOptions);
-                            drawBox.draw(canvas);
-                        }
-                    }, 100);
+                        }, 100);
+                    }
                 }, 1 * 1000);
             })
                 .catch((e) => {
+                alert(e);
                 console.error(e);
             });
         }
@@ -183,38 +227,58 @@ export class OpenbioFaceOmaComponent {
     }
     async getImageFromVideo() {
         return new Promise((resolve) => {
-            const canvas = document.createElement('canvas');
-            const finalWidth = this.lowerCameraQualityDetected ? this.videoSettings.width : 1440;
-            const finalHeight = this.lowerCameraQualityDetected ? this.videoSettings.height : 1080;
-            canvas.width = finalWidth; // this.cameraWidth || this.defaultWidth;
-            canvas.height = finalHeight; // this.cameraHeight || this.defaultHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
-            const aspectRatio = this.getVideoAspectRatio();
-            const maskPositionX = 0.30;
-            const maskPositionY = aspectRatio.toFixed(2) === '1.33' ? 0.15 : 0.04;
-            const srcX = finalWidth * maskPositionX;
-            const srcY = finalHeight * maskPositionY;
-            const srcWidth = 250;
-            const srcHeight = 333;
-            const cropWidth = (finalWidth * srcWidth) / this.defaultWidth;
-            const cropHeight = (finalHeight * srcHeight) / (aspectRatio.toFixed(2) === '1.33' ? this.defaultHeight : ((this.videoSettings.height / 2) - 5));
-            const cropCanvas = document.createElement('canvas');
-            cropCanvas.width = cropWidth;
-            cropCanvas.height = cropHeight;
-            const ctxCrop = cropCanvas.getContext('2d');
-            ctxCrop.drawImage(canvas, srcX, srcY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-            cropCanvas.toBlob((blob) => {
-                var reader = new FileReader();
-                reader.onload = () => {
-                    this.capturedImage = {
-                        data: cropCanvas.toDataURL('image/jpeg', 1),
-                        file: new File([reader.result], "image.jpeg", { type: blob.type })
+            if (this.isMobile) {
+                const canvas = document.createElement('canvas');
+                canvas.width = this.videoElement.videoWidth;
+                canvas.height = this.videoElement.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob((blob) => {
+                    var reader = new FileReader();
+                    reader.onload = () => {
+                        this.capturedImage = {
+                            data: canvas.toDataURL('image/jpeg', 1),
+                            file: new File([reader.result], "image.jpeg", { type: blob.type })
+                        };
+                        resolve(true);
                     };
-                    resolve(true);
-                };
-                reader.readAsArrayBuffer(blob);
-            });
+                    reader.readAsArrayBuffer(blob);
+                });
+            }
+            else {
+                const canvas = document.createElement('canvas');
+                const finalWidth = this.lowerCameraQualityDetected ? this.videoSettings.width : 1440;
+                const finalHeight = this.lowerCameraQualityDetected ? this.videoSettings.height : 1080;
+                canvas.width = finalWidth; // this.cameraWidth || this.defaultWidth;
+                canvas.height = finalHeight; // this.cameraHeight || this.defaultHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
+                const aspectRatio = this.getVideoAspectRatio();
+                const maskPositionX = 0.30;
+                const maskPositionY = aspectRatio.toFixed(2) === '1.33' ? 0.15 : 0.04;
+                const srcX = finalWidth * maskPositionX;
+                const srcY = finalHeight * maskPositionY;
+                const srcWidth = 250;
+                const srcHeight = 333;
+                const cropWidth = (finalWidth * srcWidth) / this.defaultWidth;
+                const cropHeight = (finalHeight * srcHeight) / (aspectRatio.toFixed(2) === '1.33' ? this.defaultHeight : ((this.videoSettings.height / 2) - 5));
+                const cropCanvas = document.createElement('canvas');
+                cropCanvas.width = cropWidth;
+                cropCanvas.height = cropHeight;
+                const ctxCrop = cropCanvas.getContext('2d');
+                ctxCrop.drawImage(canvas, srcX, srcY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+                cropCanvas.toBlob((blob) => {
+                    var reader = new FileReader();
+                    reader.onload = () => {
+                        this.capturedImage = {
+                            data: cropCanvas.toDataURL('image/jpeg', 1),
+                            file: new File([reader.result], "image.jpeg", { type: blob.type })
+                        };
+                        resolve(true);
+                    };
+                    reader.readAsArrayBuffer(blob);
+                });
+            }
         });
     }
     setResultImage() {
@@ -297,7 +361,21 @@ export class OpenbioFaceOmaComponent {
             this.showFullscreenLoader = true;
             const resolveLiveness = await OMA.checkLiveness(this.getOMALivenessBody(), this.token);
             this.showFullscreenLoader = false;
-            resolve(resolveLiveness.liveness_prob > this.livenessMin);
+            const msg = `
+        [INFO] Liveness min definido: ${this.livenessMin}\n
+        [PROP] Tipo Liveness min definido: ${typeof this.livenessMin}\n
+        [PROP] Cast Liveness min definido: ${Number(this.livenessMin)}\n
+        [PROP] Tipo pós-cast Liveness min definido: ${typeof Number(this.livenessMin)}\n
+        [INFO] Liveness prob: ${resolveLiveness.liveness_prob}\n
+        [INFO] Liveness ok? ${Number(resolveLiveness.liveness_prob) >= Number(this.livenessMin) ? 'Sim' : 'Não'}
+      `;
+            if (this.isMobile) {
+                alert(msg);
+            }
+            else {
+                console.log(msg);
+            }
+            resolve(Number(resolveLiveness.liveness_prob) >= Number(this.livenessMin));
         });
     }
     async confirmImageUpdate() {
@@ -517,7 +595,7 @@ export class OpenbioFaceOmaComponent {
                                         display: this.captured ? "none" : "inline-block",
                                         height: '480px !important'
                                     } }),
-                                h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7" } }, overlay()),
+                                !this.isMobile && h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7" } }, overlay()),
                                 this.lowerCameraQualityDetected &&
                                     h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7", backgroundColor: "red", height: "30px", color: "white", paddingTop: "2px", fontWeight: "600" } },
                                         h("img", { src: "./assets/general/alert-outline.png", class: "icon-24", style: { marginRight: "5px" }, "aria-hidden": "true" }),
@@ -614,11 +692,11 @@ export class OpenbioFaceOmaComponent {
             "reflect": false
         },
         "livenessMin": {
-            "type": "number",
+            "type": "any",
             "mutable": false,
             "complexType": {
-                "original": "number",
-                "resolved": "number",
+                "original": "any",
+                "resolved": "any",
                 "references": {}
             },
             "required": false,
@@ -734,7 +812,7 @@ export class OpenbioFaceOmaComponent {
             },
             "attribute": "show-header",
             "reflect": false,
-            "defaultValue": "true"
+            "defaultValue": "false"
         },
         "primaryColor": {
             "type": "string",
@@ -852,7 +930,9 @@ export class OpenbioFaceOmaComponent {
         "lowerCameraQualityDetected": {},
         "videoSettings": {},
         "selectedDevice": {},
-        "currentStream": {}
+        "currentStream": {},
+        "isMobile": {},
+        "mobileCameraStartControl": {}
     }; }
     static get elementRef() { return "componentContainer"; }
     static get watchers() { return [{

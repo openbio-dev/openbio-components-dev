@@ -4,10 +4,10 @@ import { T as TranslationUtils } from './chunk-58df5f73.js';
 import { W as WS } from './chunk-26865a00.js';
 import { c as constants } from './chunk-df3525b2.js';
 import { g as getLocalization } from './chunk-27543d6d.js';
+import { s as showImage } from './chunk-6b607eaa.js';
 import { g as getAppConfig, s as saveServiceTime } from './chunk-745c836f.js';
 import { g as getSignatureSettings, a as getAnomalies, b as saveSignature } from './chunk-cb21ae7c.js';
-import { s as showImage } from './chunk-6b607eaa.js';
-import { s as setSignature } from './chunk-18906bfd.js';
+import { b as setSignature } from './chunk-dad23f95.js';
 import { c as changeDPI } from './chunk-4fd3b7c6.js';
 
 const BASE64_IMAGE = 'data:image/charset=UTF-8;png;base64,';

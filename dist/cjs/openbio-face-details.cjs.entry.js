@@ -8,13 +8,13 @@ const __chunk_4 = require('./chunk-c5f2ac0b.js');
 const __chunk_5 = require('./chunk-131fee9b.js');
 const __chunk_6 = require('./chunk-128e8b8e.js');
 const __chunk_7 = require('./chunk-50de27dd.js');
-const __chunk_9 = require('./chunk-0f193d81.js');
-const __chunk_11 = require('./chunk-f34cc637.js');
+const __chunk_9 = require('./chunk-f34cc637.js');
+const __chunk_10 = require('./chunk-0f193d81.js');
 const __chunk_13 = require('./chunk-3599eff8.js');
 const __chunk_14 = require('./chunk-8452b8b9.js');
 
 let config, url, localUrl, sendToRemote;
-__chunk_9.getAppConfig().then((response) => {
+__chunk_10.getAppConfig().then((response) => {
     config = response;
     url = `${config.serviceServerType}://${config.urls.apiService}:${config.ports.apiService}`;
     localUrl = `http://${config.urls.localService}:${config.ports.localService}`;
@@ -22,7 +22,7 @@ __chunk_9.getAppConfig().then((response) => {
 });
 async function getAnomalies(type, detached) {
     if (!url) {
-        config = await __chunk_9.getAppConfig();
+        config = await __chunk_10.getAppConfig();
         url = `${config.serviceServerType}://${config.urls.apiService}:${config.ports.apiService}`;
         localUrl = `http://${config.urls.localService}:${config.ports.localService}`;
         sendToRemote = !config.apiService && !config.asyncPersistency;
@@ -45,7 +45,7 @@ function saveCameraSettings(data) {
 }
 async function saveFace(data) {
     if (!url) {
-        config = await __chunk_9.getAppConfig();
+        config = await __chunk_10.getAppConfig();
         url = `${config.serviceServerType}://${config.urls.apiService}:${config.ports.apiService}`;
         localUrl = `http://${config.urls.localService}:${config.ports.localService}`;
         sendToRemote = !config.apiService && !config.asyncPersistency;
@@ -486,9 +486,9 @@ class OpenbioFaceComponentDetails {
             this.segmentation = faceSettings.segmentation;
             this.autoCapture = faceSettings.autoCapture;
             this.dpiValue = __chunk_6.constants.dpiValue[faceSettings.dpiOption] || 0;
-            this.cameraPresetOptions = await __chunk_9.getCameraPresets();
+            this.cameraPresetOptions = await __chunk_10.getCameraPresets();
             this.payload.deviceName = faceSettings.device ? __chunk_6.constants.device[faceSettings.device] : __chunk_6.constants.device.AKYSCAM;
-            this.serviceConfigs = await __chunk_9.getAppConfig();
+            this.serviceConfigs = await __chunk_10.getAppConfig();
             if (this.serviceConfigs) {
                 this.allowConfiguration = this.serviceConfigs.ui.allowDeviceConfiguration;
                 this.showCameraConfiguration = this.serviceConfigs.ui.showCameraConfiguration;
@@ -635,15 +635,15 @@ class OpenbioFaceComponentDetails {
                         return;
                     }
                     else if (data.previewImage) {
-                        __chunk_11.showImage(this.canvas, data.previewImage, null, null, this.manualEyeSelection);
+                        __chunk_9.showImage(this.canvas, data.previewImage, null, null, this.manualEyeSelection);
                     }
                     else if (data.originalImage) {
                         this.isPreviewing = false;
                         this.isCapturing = false;
                         this.resetAutoCapturing();
                         if (this.crop && data.cropResultCode !== 0) {
-                            __chunk_11.showImage(this.canvas, undefined, null, null, this.manualEyeSelection);
-                            __chunk_11.showImage(this.canvas, this.uploadedBase64 ? this.uploadedBase64 : data.originalImage, null, null, this.manualEyeSelection);
+                            __chunk_9.showImage(this.canvas, undefined, null, null, this.manualEyeSelection);
+                            __chunk_9.showImage(this.canvas, this.uploadedBase64 ? this.uploadedBase64 : data.originalImage, null, null, this.manualEyeSelection);
                             this.originalImage = this.uploadedBase64 ? this.uploadedBase64 : data.originalImage;
                             this.croppedImage = this.uploadedBase64 ? this.uploadedBase64 : data.croppedImage;
                             this.segmentedImage = this.uploadedBase64 ? this.uploadedBase64 : data.segmentedImage;
@@ -658,11 +658,11 @@ class OpenbioFaceComponentDetails {
                             });
                         }
                         else {
-                            this.serviceConfigs = await __chunk_9.getAppConfig();
+                            this.serviceConfigs = await __chunk_10.getAppConfig();
                             this.uploadedBase64 = undefined;
                             const dataImage = data.segmentedImage || data.croppedImage || data.originalImage;
-                            __chunk_11.showImage(this.canvas, undefined, null, null, this.manualEyeSelection);
-                            __chunk_11.showImage(this.canvas, dataImage, null, null, this.manualEyeSelection);
+                            __chunk_9.showImage(this.canvas, undefined, null, null, this.manualEyeSelection);
+                            __chunk_9.showImage(this.canvas, dataImage, null, null, this.manualEyeSelection);
                             this.originalImage = data.originalImage;
                             this.croppedImage = data.croppedImage;
                             this.segmentedImage = data.segmentedImage;
@@ -714,7 +714,7 @@ class OpenbioFaceComponentDetails {
     componentDidUnload() {
         this.stopPreview();
         if (!this.detached && this.serviceTime.hasCapture) {
-            __chunk_9.saveServiceTime("FACE", new Date().getTime() - this.serviceTime.start, this.person.id);
+            __chunk_10.saveServiceTime("FACE", new Date().getTime() - this.serviceTime.start, this.person.id);
         }
     }
     findSetting(settings, name) {
@@ -734,7 +734,7 @@ class OpenbioFaceComponentDetails {
     }
     clearImages() {
         this.clearImagesObjects();
-        __chunk_11.showImage(this.canvas, EMPTY_IMAGE, null, null, this.manualEyeSelection);
+        __chunk_9.showImage(this.canvas, EMPTY_IMAGE, null, null, this.manualEyeSelection);
     }
     close() {
         this.payload.action = "close";
@@ -1345,8 +1345,8 @@ class OpenbioFaceComponentDetails {
             __chunk_1.h("div", { class: "overlay" }, __chunk_1.h("span", null, " ", 3 - Math.floor(this.autoCaptureCount), " ")) : null, this.isPreviewing && this.showPreviewTemplate && !this.autoCapturing ? __chunk_1.h("div", { class: this.isWebcam() ? "face-template" : "face-template-akyscam" }, __chunk_1.h("img", { src: `${FACE_TEMPLATE}` })) : null, __chunk_1.h("canvas", { width: "460", height: "300", class: `canvas`, ref: el => {
                 this.canvas = el;
                 if (!this.isPreviewing && this.originalImage) {
-                    __chunk_11.showImage(this.canvas, undefined, null, null, this.manualEyeSelection);
-                    __chunk_11.showImage(this.canvas, this.segmentedImage || this.croppedImage || this.originalImage, null, null, this.manualEyeSelection);
+                    __chunk_9.showImage(this.canvas, undefined, null, null, this.manualEyeSelection);
+                    __chunk_9.showImage(this.canvas, this.segmentedImage || this.croppedImage || this.originalImage, null, null, this.manualEyeSelection);
                 }
             } }), __chunk_1.h("div", { class: "columns is-mobile anomaly-buttons-container" }, __chunk_1.h("div", { class: "column" }, __chunk_1.h("div", { class: "select is-small inline is-pulled-left" }, __chunk_1.h("select", { onChange: this.setSelection.bind(this), name: "anomaly" }, __chunk_1.h("option", { value: undefined }, " ", this.translations.CHOOSE_IN_ANOMALY_CASE.toUpperCase()), anomalyOptions))), __chunk_1.h("div", { class: "column", style: { display: "flex", justifyContent: "flex-end" } }, __chunk_1.h("button", { class: "button is-small", id: "button", onClick: () => this.saveAnomaly() }, __chunk_1.h("span", null, this.translations.SAVE_ANOMALY)))), this.serviceConfigs && this.serviceConfigs.face.uploadSettings.enabled &&
             __chunk_1.h("button", { class: "button is-info is-small", id: "button" }, __chunk_1.h("input", { class: "file-input", onInput: ($event) => this.onInputChange($event.target.files), type: "file", name: "resume", accept: `image/${this.serviceConfigs.face.imageType}` }), __chunk_1.h("span", { class: "icon is-small" }, __chunk_1.h("i", { class: "mdi mdi-upload icon-16", style: { color: "white", marginRight: "3px", marginTop: "2px" }, "aria-hidden": "true" })), __chunk_1.h("span", null, this.translations.LOAD_FILE))), __chunk_1.h("div", { class: "columns is-mobile action-buttons-container" }, __chunk_1.h("span", null, " ", this.manualEyeSelection.enabled, " "), __chunk_1.h("div", { class: "column has-text-left" }, __chunk_1.h("div", { class: "is-full" }, __chunk_1.h("img", { src: "./assets/general/image-search-outline.png", class: `fab-icon  is-pulled-left ${this.isPreviewing ? "disabled" : ""} `, onClick: () => this.restartPreview() }), __chunk_1.h("span", { class: "icon-text" }, this.translations.PREVIEW)), __chunk_1.h("div", { class: "is-full" }, __chunk_1.h("img", { src: "./assets/general/camera.png", class: "fab-icon is-pulled-left", onClick: () => this.capture(true) }), __chunk_1.h("span", { class: "icon-text" }, " ", this.translations.MAKE_CAPTURE, " ")), !this.faceDetected ? __chunk_1.h("hr", null) : null, !this.faceDetected ?

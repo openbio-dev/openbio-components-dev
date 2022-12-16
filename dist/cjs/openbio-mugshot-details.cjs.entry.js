@@ -8,11 +8,11 @@ const __chunk_5 = require('./chunk-131fee9b.js');
 const __chunk_6 = require('./chunk-128e8b8e.js');
 const __chunk_7 = require('./chunk-50de27dd.js');
 const __chunk_8 = require('./chunk-1e1a7f08.js');
-const __chunk_9 = require('./chunk-0f193d81.js');
-const __chunk_11 = require('./chunk-f34cc637.js');
+const __chunk_9 = require('./chunk-f34cc637.js');
+const __chunk_10 = require('./chunk-0f193d81.js');
 
 let config, url, localUrl, sendToRemote;
-__chunk_9.getAppConfig().then((response) => {
+__chunk_10.getAppConfig().then((response) => {
     config = response;
     url = `${config.serviceServerType}://${config.urls.apiService}:${config.ports.apiService}`;
     localUrl = `${config.serviceServerType}://${config.urls.localService}:${config.ports.localService}`;
@@ -41,7 +41,7 @@ function getFaceSettings() {
 }
 async function saveMugshotPhoto(data) {
     if (!url) {
-        config = await __chunk_9.getAppConfig();
+        config = await __chunk_10.getAppConfig();
         url = `${config.serviceServerType}://${config.urls.apiService}:${config.ports.apiService}`;
         localUrl = `http://${config.urls.localService}:${config.ports.localService}`;
         sendToRemote = !config.apiService && !config.asyncPersistency;
@@ -55,7 +55,7 @@ async function saveMugshotPhoto(data) {
 }
 async function deleteMugshotPhoto(id) {
     if (!url) {
-        config = await __chunk_9.getAppConfig();
+        config = await __chunk_10.getAppConfig();
         url = `${config.serviceServerType}://${config.urls.apiService}:${config.ports.apiService}`;
         localUrl = `http://${config.urls.localService}:${config.ports.localService}`;
         sendToRemote = !config.apiService && !config.asyncPersistency;
@@ -243,7 +243,7 @@ class OpenbioMugshotComponentDetails {
         this.showLoader = true;
         setTimeout(async () => {
             this.fetchCurrentCameraSettings();
-            this.serviceConfigs = await __chunk_9.getAppConfig();
+            this.serviceConfigs = await __chunk_10.getAppConfig();
             if (this.serviceConfigs) {
                 this.allowConfiguration = this.serviceConfigs.ui.allowDeviceConfiguration;
                 this.showCameraConfiguration = this.serviceConfigs.ui.showCameraConfiguration;
@@ -251,7 +251,7 @@ class OpenbioMugshotComponentDetails {
             }
             const faceSettings = await getFaceSettings();
             this.payload.deviceName = faceSettings.device ? __chunk_6.constants.device[faceSettings.device] : __chunk_6.constants.device.AKYSCAM;
-            this.cameraPresetOptions = await __chunk_9.getCameraPresets();
+            this.cameraPresetOptions = await __chunk_10.getCameraPresets();
             this.crop = false;
             this.autoCapture = false;
             this.segmentation = false;
@@ -323,13 +323,13 @@ class OpenbioMugshotComponentDetails {
                     }
                 }
                 if (data.previewImage) {
-                    __chunk_11.showImage(this.canvas, data.previewImage);
+                    __chunk_9.showImage(this.canvas, data.previewImage);
                 }
                 else if (data.originalImage) {
                     this.isCapturing = false;
                     const dataImage = data.originalImage;
-                    __chunk_11.showImage(this.canvas, undefined);
-                    __chunk_11.showImage(this.canvas, dataImage);
+                    __chunk_9.showImage(this.canvas, undefined);
+                    __chunk_9.showImage(this.canvas, dataImage);
                     this.originalImage = data.originalImage;
                     this.model = data.deviceInfo.modelName;
                     this.brand = data.deviceInfo.manufacturName;
@@ -346,7 +346,7 @@ class OpenbioMugshotComponentDetails {
     componentDidUnload() {
         this.stopPreview();
         if (!this.detached && this.serviceTime.hasCapture) {
-            __chunk_9.saveServiceTime("MUGSHOT", new Date().getTime() - this.serviceTime.start, this.person.id);
+            __chunk_10.saveServiceTime("MUGSHOT", new Date().getTime() - this.serviceTime.start, this.person.id);
         }
     }
     setMugshotsFromBackendSession() {
@@ -373,7 +373,7 @@ class OpenbioMugshotComponentDetails {
         });
     }
     clearImages() {
-        __chunk_11.showImage(this.canvas, "");
+        __chunk_9.showImage(this.canvas, "");
     }
     close() {
         this.payload.action = "close";
@@ -648,8 +648,8 @@ class OpenbioMugshotComponentDetails {
             __chunk_1.h("help-component", { src: this.serviceConfigs.mugshot.help.guideImage, "help-text": this.serviceConfigs.mugshot.help.content }) : null, __chunk_1.h("div", { class: "mugshot-form" }, __chunk_1.h("form", null, __chunk_1.h("label", null, this.translations.INDEX_REFERENCE, ":", __chunk_1.h("br", null), __chunk_1.h("input", { class: "input is-small", type: "number", value: this.mugshotIndex, name: "mugshotIndex", onInput: (event) => this.handleChange(event) })), __chunk_1.h("label", null, this.translations.DESCRIPTION, ":", __chunk_1.h("br", null), __chunk_1.h("input", { class: "input is-small", type: "text", value: this.mugshotDescription, name: "mugshotDescription", onInput: (event) => this.handleChange(event) })))))), __chunk_1.h("div", { class: "column text-align-left" }, __chunk_1.h("canvas", { width: "460", height: "300", class: "canvas", ref: el => {
                 this.canvas = el;
                 if (!this.isCapturing && this.originalImage) {
-                    __chunk_11.showImage(this.canvas, undefined);
-                    __chunk_11.showImage(this.canvas, this.originalImage);
+                    __chunk_9.showImage(this.canvas, undefined);
+                    __chunk_9.showImage(this.canvas, this.originalImage);
                 }
             } }), __chunk_1.h("div", { class: "columns is-mobile action-buttons-container" }, __chunk_1.h("div", { class: "column" }, __chunk_1.h("a", { class: `button is-small is-pulled-left action-button ${this.isCapturing ? "disabled" : ""}`, onClick: () => this.startPreview() }, this.translations.PREVIEW_INIT.toUpperCase())), __chunk_1.h("div", { class: "column has-text-centered" }, __chunk_1.h("a", { class: "button is-small is-pulled-right action-button", onClick: () => this.capture() }, this.translations.MAKE_CAPTURE.toUpperCase())), this.detached && !this.isTagComponent ? __chunk_1.h("div", { class: "column has-text-centered" }, __chunk_1.h("a", { class: "button is-small is-pulled-right action-button", onClick: () => this.acceptData() }, this.translations.FINISH.toUpperCase())) : null))), this.tab === tabs.RESULT ? __chunk_1.h("div", { class: "tab-content" }, __chunk_1.h("div", { class: "columns" }, __chunk_1.h("div", { class: "column has-text-centered preview-result" }, this.originalImage ? __chunk_1.h("img", { src: `${BASE64_IMAGE}${this.originalImage}` }) : null, __chunk_1.h("hr", null), __chunk_1.h("div", { class: "has-text-centered mugshot-preview-result" }, __chunk_1.h("div", { class: "columns is-multiline" }, mugshotPhotos))))) : null, this.tab === tabs.VALIDATION ? __chunk_1.h("div", null) : null, this.tab === tabs.CONFIG ? __chunk_1.h("div", { class: "tab-content" }, __chunk_1.h("div", { class: "columns is-mobile settings-container" }, __chunk_1.h("div", { class: "column" }, __chunk_1.h("div", { class: "field" }, __chunk_1.h("label", { class: "label" }, this.translations.SHUTTER_SPEED), __chunk_1.h("div", { class: "control" }, __chunk_1.h("div", { class: "select is-small inline" }, __chunk_1.h("select", { onChange: this.setCameraValue.bind(this), name: "shutterSpeed" }, __chunk_1.h("option", { value: "0" }, this.translations.SELECT_OPTION.toUpperCase()), shutterSpeedOptions)))), __chunk_1.h("div", { class: "field" }, __chunk_1.h("label", { class: "label" }, this.translations.ISO.toUpperCase()), __chunk_1.h("div", { class: "control" }, __chunk_1.h("div", { class: "select is-small inline" }, __chunk_1.h("select", { onChange: this.setCameraValue.bind(this), name: "isoValue" }, __chunk_1.h("option", { value: "0" }, this.translations.SELECT_OPTION.toUpperCase()), isoOptions)))), __chunk_1.h("div", { class: "field" }, __chunk_1.h("label", { class: "label" }, this.translations.APERTURE.toUpperCase()), __chunk_1.h("div", { class: "control" }, __chunk_1.h("div", { class: "select is-small inline" }, __chunk_1.h("select", { onChange: this.setCameraValue.bind(this), name: "aperture" }, __chunk_1.h("option", { value: "0" }, this.translations.SELECT_OPTION.toUpperCase()), apertureOptions))))), __chunk_1.h("div", { class: "column" }, __chunk_1.h("div", { class: "field" }, __chunk_1.h("label", { class: "label" }, this.translations.WHITE_BALANCE.toUpperCase()), __chunk_1.h("div", { class: "select is-small inline" }, __chunk_1.h("select", { onChange: this.setCameraValue.bind(this), name: "whiteBalance" }, __chunk_1.h("option", { value: "0" }, this.translations.SELECT_OPTION.toUpperCase()), whiteBalanceOptions))), __chunk_1.h("div", { class: "field" }, __chunk_1.h("label", { class: "label" }, this.translations.FORMAT.toUpperCase()), __chunk_1.h("div", { class: "select is-small inline" }, __chunk_1.h("select", { onChange: this.setCameraValue.bind(this), name: "imageFormat" }, __chunk_1.h("option", { value: "0" }, this.translations.SELECT_OPTION.toUpperCase()), formatOptions)))), __chunk_1.h("div", { class: "column" }, __chunk_1.h("div", { class: "field" }, __chunk_1.h("label", { class: "label" }, this.translations.FLASH_STATUS.toUpperCase()), __chunk_1.h("div", { class: "select is-small inline" }, __chunk_1.h("select", { onChange: this.setCameraValue.bind(this), name: "flashProperty" }, __chunk_1.h("option", { value: "0" }, this.translations.SELECT_OPTION.toUpperCase()), flashPropertyOptions))), __chunk_1.h("div", { class: "field" }, __chunk_1.h("label", { class: "label" }, this.translations.FLASH_APERTURE.toUpperCase()), __chunk_1.h("div", { class: "select is-small inline" }, __chunk_1.h("select", { onChange: this.setCameraValue.bind(this), name: "flashWidth" }, __chunk_1.h("option", { value: "0" }, this.translations.SELECT_OPTION.toUpperCase()), flashWidthOptions)))), __chunk_1.h("div", { class: "column" }, __chunk_1.h("div", { class: "field" }, __chunk_1.h("label", { class: "label" }, this.translations.PRESETS.toUpperCase()), __chunk_1.h("div", { class: "select is-small inline" }, __chunk_1.h("select", { onChange: this.setPresetValues.bind(this), name: "preset" }, __chunk_1.h("option", { value: "0" }, this.translations.SELECT_OPTION.toUpperCase()), presetOptions))))), __chunk_1.h("hr", null), __chunk_1.h("div", { class: "columns" }, __chunk_1.h("div", { class: "column has-text-left" }, __chunk_1.h("div", null, __chunk_1.h("label", { class: "label" }, this.translations.ZOOM_CONTROL)), __chunk_1.h("a", { class: "button is-small action-button", style: { 'margin-right': '10px' }, onClick: this.increaseZoom.bind(this) }, this.translations.ZOOM_PLUS), __chunk_1.h("a", { class: "button is-small action-button", onClick: this.decreaseZoom.bind(this) }, this.translations.ZOOM_MINUS)))) : null));
     }

@@ -4,9 +4,9 @@ import { T as TranslationUtils } from './chunk-58df5f73.js';
 import { W as WS } from './chunk-26865a00.js';
 import { c as constants } from './chunk-df3525b2.js';
 import { g as getLocalization } from './chunk-27543d6d.js';
-import { g as getAppConfig, a as getCameraPresets, s as saveServiceTime } from './chunk-745c836f.js';
 import { s as showImage } from './chunk-6b607eaa.js';
-import { b as setFace } from './chunk-18906bfd.js';
+import { g as getAppConfig, a as getCameraPresets, s as saveServiceTime } from './chunk-745c836f.js';
+import { s as setFace } from './chunk-dad23f95.js';
 import { c as changeDPI } from './chunk-4fd3b7c6.js';
 
 let config, url, localUrl, sendToRemote;

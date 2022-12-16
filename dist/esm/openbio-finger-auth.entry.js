@@ -4,9 +4,9 @@ import { T as TranslationUtils } from './chunk-58df5f73.js';
 import { W as WS } from './chunk-26865a00.js';
 import { c as constants } from './chunk-df3525b2.js';
 import { n as notify } from './chunk-4447ae2a.js';
-import { g as getAppConfig } from './chunk-745c836f.js';
 import { s as showImage } from './chunk-6b607eaa.js';
-import { g as getModalSettings, a as authLog, f as fingerAuthenticate } from './chunk-706989c4.js';
+import { g as getAppConfig } from './chunk-745c836f.js';
+import { g as getModalSettings, a as authLog, f as fingerAuthenticate } from './chunk-ceaa4a16.js';
 
 let config, authServicesUrl;
 function authServicesToken() {

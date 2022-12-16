@@ -8,7 +8,7 @@ const __chunk_5 = require('./chunk-131fee9b.js');
 require('./chunk-128e8b8e.js');
 const __chunk_8 = require('./chunk-1e1a7f08.js');
 require('./chunk-0f193d81.js');
-const __chunk_10 = require('./chunk-3603a7fa.js');
+const __chunk_12 = require('./chunk-c06ed90f.js');
 
 class OpenbioSignatureComponent {
     constructor(hostRef) {
@@ -60,7 +60,7 @@ class OpenbioSignatureComponent {
                 const url = window.URL.createObjectURL(this.captureInput.files[0]);
                 image.onload = async () => {
                     try {
-                        await __chunk_10.saveSignatureFile({
+                        await __chunk_12.saveSignatureFile({
                             personId: 34,
                             signature: {},
                         }, this.captureInput.files[0]);

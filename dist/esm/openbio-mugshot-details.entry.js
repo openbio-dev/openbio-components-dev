@@ -4,8 +4,8 @@ import { W as WS } from './chunk-26865a00.js';
 import { c as constants } from './chunk-df3525b2.js';
 import { g as getLocalization } from './chunk-27543d6d.js';
 import { n as notify } from './chunk-4447ae2a.js';
-import { g as getAppConfig, a as getCameraPresets, s as saveServiceTime } from './chunk-745c836f.js';
 import { s as showImage } from './chunk-6b607eaa.js';
+import { g as getAppConfig, a as getCameraPresets, s as saveServiceTime } from './chunk-745c836f.js';
 
 let config, url, localUrl, sendToRemote;
 getAppConfig().then((response) => {

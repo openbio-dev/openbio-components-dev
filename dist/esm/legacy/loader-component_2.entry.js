@@ -191,11 +191,13 @@ var OpenbioFaceOmaComponent = /** @class */ (function () {
         this.livenessMin = 0.8;
         this.allowNoncomplianceRecordUpdate = false;
         this.locale = 'pt';
-        this.showHeader = true;
+        this.showHeader = false;
         this.showFullscreenLoader = false;
         this.captured = false;
         this.videoInterval = undefined;
         this.lowerCameraQualityDetected = false;
+        this.isMobile = false;
+        this.mobileCameraStartControl = 0;
     }
     OpenbioFaceOmaComponent.prototype.listenLocale = function (newValue) {
         return __awaiter(this, void 0, void 0, function () {
@@ -246,12 +248,41 @@ var OpenbioFaceOmaComponent = /** @class */ (function () {
             });
         });
     };
+    OpenbioFaceOmaComponent.prototype.checkMobile = function () {
+        var toMatch = [
+            /Android/i,
+            /webOS/i,
+            /iPhone/i,
+            /iPad/i,
+            /iPod/i,
+            /BlackBerry/i,
+            /Windows Phone/i
+        ];
+        return toMatch.some(function (toMatchItem) {
+            return navigator.userAgent.match(toMatchItem);
+        });
+    };
+    OpenbioFaceOmaComponent.prototype.showHelpModal = function () {
+        var html = "\n      - Limpe a \u00E1rea da c\u00E2mera <br/>\n      - Procure um local com boa ilumina\u00E7\u00E3o <br/>\n      - Capture uma imagem que apare\u00E7a somente voc\u00EA <br/>\n      - Todo o seu rosto deve estar vis\u00EDvel <br/>\n    ";
+        return Swal.fire({
+            type: "info",
+            html: html,
+            showCloseButton: true,
+            focusConfirm: false,
+            confirmButtonColor: this.primaryColor || '#0D3F56',
+            confirmButtonText: 'Entendi',
+        });
+    };
     OpenbioFaceOmaComponent.prototype.componentDidLoad = function () {
-        console.log('alo');
         this.getDeviceList();
-        // this.startCamera();
-        this.startFaceApi();
-        console.log('alo 2');
+        this.isMobile = this.checkMobile();
+        if (this.isMobile) {
+            this.showHelpModal();
+            this.startCamera();
+        }
+        else {
+            this.startFaceApi();
+        }
     };
     OpenbioFaceOmaComponent.prototype.screenUpdate = function () {
         this.componentContainer.forceUpdate();
@@ -285,6 +316,7 @@ var OpenbioFaceOmaComponent = /** @class */ (function () {
             });
         }
         if (navigator.mediaDevices.getUserMedia) {
+            console.log("Starting camera...");
             navigator.mediaDevices.getUserMedia({
                 video: {
                     width: { ideal: 1440 },
@@ -297,71 +329,78 @@ var OpenbioFaceOmaComponent = /** @class */ (function () {
                 _this.getDeviceList();
                 videoElement.srcObject = stream;
                 setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
-                    var canvas, displaySize;
+                    var canvas, displaySize_1;
                     var _this = this;
                     return __generator(this, function (_a) {
-                        env.setEnv(Object.assign({}, env.createBrowserEnv()));
+                        if (!this.isMobile) {
+                            env.setEnv(Object.assign({}, env.createBrowserEnv()));
+                        }
                         videoElement.play();
                         this.videoSettings = stream.getVideoTracks()[0].getSettings();
                         this.selectedDevice = this.videoSettings.deviceId;
+                        if (this.isMobile && this.mobileCameraStartControl === 0) {
+                            this.setDevice({ target: { value: this.selectedDevice } });
+                            this.mobileCameraStartControl++;
+                        }
                         this.screenUpdate();
                         this.lowerCameraQualityDetected = this.videoSettings.height < 1080;
                         canvas = document.getElementsByTagName("openbio-oma-face")[0].lastElementChild.getElementsByClassName("face-canvas")[0];
-                        console.log('face canvas', canvas);
-                        displaySize = { width: 640, height: 480 };
-                        matchDimensions(canvas, displaySize);
-                        this.videoInterval = setInterval(function () { return __awaiter(_this, void 0, void 0, function () {
-                            var detections, resizedDetections, box, x1, x2, y1, y2, frameWidth, frameHeight, isInside, drawOptions, alertType, drawBox;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        this.screenUpdate();
-                                        return [4 /*yield*/, detectAllFaces(videoElement, new TinyFaceDetectorOptions())];
-                                    case 1:
-                                        detections = _a.sent();
-                                        resizedDetections = resizeResults(detections, displaySize);
-                                        // console.log(resizedDetections);
-                                        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-                                        drawDetections(canvas, resizedDetections);
-                                        if (resizedDetections.length) {
-                                            box = resizedDetections[0].box;
-                                            x1 = box.topLeft.x;
-                                            x2 = box.topRight.x;
-                                            y1 = box.topLeft.y;
-                                            y2 = box.bottomLeft.y;
-                                            frameWidth = 640 * 0.3;
-                                            frameHeight = 480 * 0.15;
-                                            isInside = x1 > frameWidth && x2 < (frameWidth + 250) && y1 > frameHeight && y2 < (frameHeight + 333);
-                                            drawOptions = {
-                                                lineWidth: 2,
-                                                boxColor: 'red',
-                                            };
-                                            if (isInside) {
-                                                alertType = box.width > 250 || (box.width < 125) ? -1 :
-                                                    box.width < 195 && box.width > 125 ? 0 : 1;
-                                                drawOptions.boxColor = alertType === -1 ? 'red' : alertType === 0 ? 'yellow' : 'green';
-                                                drawOptions.label = alertType === -1 ? 'Muito distante' : alertType === 0 ? 'Levemente afastado' : 'Posição OK';
-                                                if (alertType === 0) {
-                                                    drawOptions.drawLabelOptions = {
-                                                        fontColor: 'black'
-                                                    };
+                        if (!this.isMobile) {
+                            displaySize_1 = { width: 640, height: 480 };
+                            matchDimensions(canvas, displaySize_1);
+                            this.videoInterval = setInterval(function () { return __awaiter(_this, void 0, void 0, function () {
+                                var detections, resizedDetections, box, x1, x2, y1, y2, frameWidth, frameHeight, isInside, drawOptions, alertType, drawBox;
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0:
+                                            this.screenUpdate();
+                                            return [4 /*yield*/, detectAllFaces(videoElement, new TinyFaceDetectorOptions())];
+                                        case 1:
+                                            detections = _a.sent();
+                                            resizedDetections = resizeResults(detections, displaySize_1);
+                                            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+                                            drawDetections(canvas, resizedDetections);
+                                            if (resizedDetections.length) {
+                                                box = resizedDetections[0].box;
+                                                x1 = box.topLeft.x;
+                                                x2 = box.topRight.x;
+                                                y1 = box.topLeft.y;
+                                                y2 = box.bottomLeft.y;
+                                                frameWidth = 640 * 0.3;
+                                                frameHeight = 480 * 0.15;
+                                                isInside = x1 > frameWidth && x2 < (frameWidth + 250) && y1 > frameHeight && y2 < (frameHeight + 333);
+                                                drawOptions = {
+                                                    lineWidth: 2,
+                                                    boxColor: 'red',
+                                                };
+                                                if (isInside) {
+                                                    alertType = box.width > 250 || (box.width < 125) ? -1 :
+                                                        box.width < 195 && box.width > 125 ? 0 : 1;
+                                                    drawOptions.boxColor = alertType === -1 ? 'red' : alertType === 0 ? 'yellow' : 'green';
+                                                    drawOptions.label = alertType === -1 ? 'Muito distante' : alertType === 0 ? 'Levemente afastado' : 'Posição OK';
+                                                    if (alertType === 0) {
+                                                        drawOptions.drawLabelOptions = {
+                                                            fontColor: 'black'
+                                                        };
+                                                    }
                                                 }
+                                                else {
+                                                    drawOptions.label = 'Fora de enquadramento';
+                                                }
+                                                drawBox = new DrawBox(box, drawOptions);
+                                                drawBox.draw(canvas);
                                             }
-                                            else {
-                                                drawOptions.label = 'Fora de enquadramento';
-                                            }
-                                            drawBox = new DrawBox(box, drawOptions);
-                                            drawBox.draw(canvas);
-                                        }
-                                        return [2 /*return*/];
-                                }
-                            });
-                        }); }, 100);
+                                            return [2 /*return*/];
+                                    }
+                                });
+                            }); }, 100);
+                        }
                         return [2 /*return*/];
                     });
                 }); }, 1 * 1000);
             })
                 .catch(function (e) {
+                alert(e);
                 console.error(e);
             });
         }
@@ -380,38 +419,58 @@ var OpenbioFaceOmaComponent = /** @class */ (function () {
             var _this = this;
             return __generator(this, function (_a) {
                 return [2 /*return*/, new Promise(function (resolve) {
-                        var canvas = document.createElement('canvas');
-                        var finalWidth = _this.lowerCameraQualityDetected ? _this.videoSettings.width : 1440;
-                        var finalHeight = _this.lowerCameraQualityDetected ? _this.videoSettings.height : 1080;
-                        canvas.width = finalWidth; // this.cameraWidth || this.defaultWidth;
-                        canvas.height = finalHeight; // this.cameraHeight || this.defaultHeight;
-                        var ctx = canvas.getContext('2d');
-                        ctx.drawImage(_this.videoElement, 0, 0, canvas.width, canvas.height);
-                        var aspectRatio = _this.getVideoAspectRatio();
-                        var maskPositionX = 0.30;
-                        var maskPositionY = aspectRatio.toFixed(2) === '1.33' ? 0.15 : 0.04;
-                        var srcX = finalWidth * maskPositionX;
-                        var srcY = finalHeight * maskPositionY;
-                        var srcWidth = 250;
-                        var srcHeight = 333;
-                        var cropWidth = (finalWidth * srcWidth) / _this.defaultWidth;
-                        var cropHeight = (finalHeight * srcHeight) / (aspectRatio.toFixed(2) === '1.33' ? _this.defaultHeight : ((_this.videoSettings.height / 2) - 5));
-                        var cropCanvas = document.createElement('canvas');
-                        cropCanvas.width = cropWidth;
-                        cropCanvas.height = cropHeight;
-                        var ctxCrop = cropCanvas.getContext('2d');
-                        ctxCrop.drawImage(canvas, srcX, srcY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-                        cropCanvas.toBlob(function (blob) {
-                            var reader = new FileReader();
-                            reader.onload = function () {
-                                _this.capturedImage = {
-                                    data: cropCanvas.toDataURL('image/jpeg', 1),
-                                    file: new File([reader.result], "image.jpeg", { type: blob.type })
+                        if (_this.isMobile) {
+                            var canvas_1 = document.createElement('canvas');
+                            canvas_1.width = _this.videoElement.videoWidth;
+                            canvas_1.height = _this.videoElement.videoHeight;
+                            var ctx = canvas_1.getContext('2d');
+                            ctx.drawImage(_this.videoElement, 0, 0, canvas_1.width, canvas_1.height);
+                            canvas_1.toBlob(function (blob) {
+                                var reader = new FileReader();
+                                reader.onload = function () {
+                                    _this.capturedImage = {
+                                        data: canvas_1.toDataURL('image/jpeg', 1),
+                                        file: new File([reader.result], "image.jpeg", { type: blob.type })
+                                    };
+                                    resolve(true);
                                 };
-                                resolve(true);
-                            };
-                            reader.readAsArrayBuffer(blob);
-                        });
+                                reader.readAsArrayBuffer(blob);
+                            });
+                        }
+                        else {
+                            var canvas = document.createElement('canvas');
+                            var finalWidth = _this.lowerCameraQualityDetected ? _this.videoSettings.width : 1440;
+                            var finalHeight = _this.lowerCameraQualityDetected ? _this.videoSettings.height : 1080;
+                            canvas.width = finalWidth; // this.cameraWidth || this.defaultWidth;
+                            canvas.height = finalHeight; // this.cameraHeight || this.defaultHeight;
+                            var ctx = canvas.getContext('2d');
+                            ctx.drawImage(_this.videoElement, 0, 0, canvas.width, canvas.height);
+                            var aspectRatio = _this.getVideoAspectRatio();
+                            var maskPositionX = 0.30;
+                            var maskPositionY = aspectRatio.toFixed(2) === '1.33' ? 0.15 : 0.04;
+                            var srcX = finalWidth * maskPositionX;
+                            var srcY = finalHeight * maskPositionY;
+                            var srcWidth = 250;
+                            var srcHeight = 333;
+                            var cropWidth = (finalWidth * srcWidth) / _this.defaultWidth;
+                            var cropHeight = (finalHeight * srcHeight) / (aspectRatio.toFixed(2) === '1.33' ? _this.defaultHeight : ((_this.videoSettings.height / 2) - 5));
+                            var cropCanvas_1 = document.createElement('canvas');
+                            cropCanvas_1.width = cropWidth;
+                            cropCanvas_1.height = cropHeight;
+                            var ctxCrop = cropCanvas_1.getContext('2d');
+                            ctxCrop.drawImage(canvas, srcX, srcY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+                            cropCanvas_1.toBlob(function (blob) {
+                                var reader = new FileReader();
+                                reader.onload = function () {
+                                    _this.capturedImage = {
+                                        data: cropCanvas_1.toDataURL('image/jpeg', 1),
+                                        file: new File([reader.result], "image.jpeg", { type: blob.type })
+                                    };
+                                    resolve(true);
+                                };
+                                reader.readAsArrayBuffer(blob);
+                            });
+                        }
                     })];
             });
         });
@@ -484,7 +543,7 @@ var OpenbioFaceOmaComponent = /** @class */ (function () {
             var _this = this;
             return __generator(this, function (_a) {
                 return [2 /*return*/, new Promise(function (resolve) { return __awaiter(_this, void 0, void 0, function () {
-                        var resolveLiveness;
+                        var resolveLiveness, msg;
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
@@ -493,7 +552,14 @@ var OpenbioFaceOmaComponent = /** @class */ (function () {
                                 case 1:
                                     resolveLiveness = _a.sent();
                                     this.showFullscreenLoader = false;
-                                    resolve(resolveLiveness.liveness_prob > this.livenessMin);
+                                    msg = "\n        [INFO] Liveness min definido: " + this.livenessMin + "\n\n        [PROP] Tipo Liveness min definido: " + typeof this.livenessMin + "\n\n        [PROP] Cast Liveness min definido: " + Number(this.livenessMin) + "\n\n        [PROP] Tipo p\u00F3s-cast Liveness min definido: " + typeof Number(this.livenessMin) + "\n\n        [INFO] Liveness prob: " + resolveLiveness.liveness_prob + "\n\n        [INFO] Liveness ok? " + (Number(resolveLiveness.liveness_prob) >= Number(this.livenessMin) ? 'Sim' : 'Não') + "\n      ";
+                                    if (this.isMobile) {
+                                        alert(msg);
+                                    }
+                                    else {
+                                        console.log(msg);
+                                    }
+                                    resolve(Number(resolveLiveness.liveness_prob) >= Number(this.livenessMin));
                                     return [2 /*return*/];
                             }
                         });
@@ -768,7 +834,7 @@ var OpenbioFaceOmaComponent = /** @class */ (function () {
             } }, h("canvas", { class: "face-canvas", width: "333", height: "250", style: { display: "inline-block" } }), h("video", { id: "video", ref: function (el) { _this.videoElement = el; }, class: "webcam-video", autoplay: true, muted: true, style: {
                 display: this.captured ? "none" : "inline-block",
                 height: '480px !important'
-            } }), h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7" } }, overlay()), this.lowerCameraQualityDetected &&
+            } }), !this.isMobile && h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7" } }, overlay()), this.lowerCameraQualityDetected &&
             h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7", backgroundColor: "red", height: "30px", color: "white", paddingTop: "2px", fontWeight: "600" } }, h("img", { src: "./assets/general/alert-outline.png", class: "icon-24", style: { marginRight: "5px" }, "aria-hidden": "true" }), "A c\u00E2mera detectada n\u00E3o possui o requisito m\u00EDnimo recomendado de 1080p")), h("img", { id: "img", height: "300px", class: "webcam-snapshot object-fit-contain", style: {
                 maxWidth: (this.cameraWidth || this.defaultWidth) + "px !important",
                 maxHeight: (this.cameraHeight || this.defaultHeight) + "px !important",

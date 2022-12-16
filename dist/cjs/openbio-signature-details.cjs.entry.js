@@ -8,9 +8,9 @@ const __chunk_4 = require('./chunk-c5f2ac0b.js');
 const __chunk_5 = require('./chunk-131fee9b.js');
 const __chunk_6 = require('./chunk-128e8b8e.js');
 const __chunk_7 = require('./chunk-50de27dd.js');
-const __chunk_9 = require('./chunk-0f193d81.js');
-const __chunk_10 = require('./chunk-3603a7fa.js');
-const __chunk_11 = require('./chunk-f34cc637.js');
+const __chunk_9 = require('./chunk-f34cc637.js');
+const __chunk_10 = require('./chunk-0f193d81.js');
+const __chunk_12 = require('./chunk-c06ed90f.js');
 const __chunk_13 = require('./chunk-3599eff8.js');
 const __chunk_14 = require('./chunk-8452b8b9.js');
 
@@ -84,7 +84,7 @@ class OpenbioSignatureComponentDetails {
         this.componentContainer.forceUpdate();
     }
     clearImages() {
-        __chunk_11.showImage(this.canvas, "");
+        __chunk_9.showImage(this.canvas, "");
         this.signature.originalImage = undefined;
     }
     clearImagesObjects() {
@@ -136,9 +136,9 @@ class OpenbioSignatureComponentDetails {
         this.showLoader = true;
         setTimeout(async () => {
             try {
-                const faceSettings = await __chunk_10.getSignatureSettings();
+                const faceSettings = await __chunk_12.getSignatureSettings();
                 this.dpiValue = __chunk_6.constants.dpiValue[faceSettings.dpiOption] || 0;
-                this.serviceConfigs = await __chunk_9.getAppConfig();
+                this.serviceConfigs = await __chunk_10.getAppConfig();
                 this.componentContainer.forceUpdate();
                 if (this.detached && this.isTagComponent) {
                     const _this = this;
@@ -163,7 +163,7 @@ class OpenbioSignatureComponentDetails {
                     this.person = JSON.parse(this.tempPerson);
                     this.signature = JSON.parse(this.tempSignature);
                 }
-                this.anomalyOptions = await __chunk_10.getAnomalies(__chunk_6.constants.anomalyTypes.SIGNATURE_ANOMALY, !!this.detached);
+                this.anomalyOptions = await __chunk_12.getAnomalies(__chunk_6.constants.anomalyTypes.SIGNATURE_ANOMALY, !!this.detached);
                 this.wsStatusInterval = setInterval(() => {
                     if (this.ws.status() === 1) {
                         clearInterval(this.wsStatusInterval);
@@ -246,11 +246,11 @@ class OpenbioSignatureComponentDetails {
                             return;
                         }
                         else if (data.previewImage) {
-                            __chunk_11.showImage(this.canvas, data.previewImage);
+                            __chunk_9.showImage(this.canvas, data.previewImage);
                         }
                         else if (data.originalImage) {
                             this.isCapturing = false;
-                            __chunk_11.showImage(this.canvas, data.originalImage);
+                            __chunk_9.showImage(this.canvas, data.originalImage);
                             this.originalImage = data.originalImage;
                             this.points = data.points;
                             this.model = data.deviceInfo ? data.deviceInfo.modelName : "";
@@ -274,7 +274,7 @@ class OpenbioSignatureComponentDetails {
     componentDidUnload() {
         this.stopPreview();
         if (!this.detached && this.serviceTime.hasCapture) {
-            __chunk_9.saveServiceTime("SIGNATURE", new Date().getTime() - this.serviceTime.start, this.person.id);
+            __chunk_10.saveServiceTime("SIGNATURE", new Date().getTime() - this.serviceTime.start, this.person.id);
         }
     }
     acceptData() {
@@ -315,7 +315,7 @@ class OpenbioSignatureComponentDetails {
         this.tab = num;
         if (num === TABS.CAPTURE && this.signature.originalImage !== undefined) {
             setTimeout(() => {
-                __chunk_11.showImage(this.canvas, this.signature.originalImage);
+                __chunk_9.showImage(this.canvas, this.signature.originalImage);
             }, 200);
         }
         this.componentContainer.forceUpdate();
@@ -348,7 +348,7 @@ class OpenbioSignatureComponentDetails {
             localization,
         };
         if (!this.detached) {
-            const saveSignatureResult = await __chunk_10.saveSignature({
+            const saveSignatureResult = await __chunk_12.saveSignature({
                 personId: this.person.id,
                 signature: signature
             });

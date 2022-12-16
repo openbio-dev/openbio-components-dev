@@ -8,12 +8,12 @@ const __chunk_4 = require('./chunk-c5f2ac0b.js');
 const __chunk_5 = require('./chunk-131fee9b.js');
 const __chunk_6 = require('./chunk-128e8b8e.js');
 const __chunk_8 = require('./chunk-1e1a7f08.js');
-const __chunk_9 = require('./chunk-0f193d81.js');
-const __chunk_11 = require('./chunk-f34cc637.js');
-const __chunk_12 = require('./chunk-d001bf05.js');
+const __chunk_9 = require('./chunk-f34cc637.js');
+const __chunk_10 = require('./chunk-0f193d81.js');
+const __chunk_11 = require('./chunk-0f967347.js');
 
 let config, localUrl, url, sendToRemote;
-__chunk_9.getAppConfig().then((response) => {
+__chunk_10.getAppConfig().then((response) => {
     config = response;
     console.log("app config fetched");
     url = `${config.serviceServerType}://${config.urls.apiService}:${config.ports.apiService}`;
@@ -34,7 +34,7 @@ function loadPalmForm(data) {
 }
 async function savePalm(data) {
     if (!url) {
-        config = await __chunk_9.getAppConfig();
+        config = await __chunk_10.getAppConfig();
         url = `${config.serviceServerType}://${config.urls.apiService}:${config.ports.apiService}`;
         localUrl = `http://${config.urls.localService}:${config.ports.localService}`;
         sendToRemote = !config.apiService && !config.asyncPersistency;
@@ -48,7 +48,7 @@ async function savePalm(data) {
 }
 async function saveFingers(data) {
     if (!url) {
-        config = await __chunk_9.getAppConfig();
+        config = await __chunk_10.getAppConfig();
         url = `${config.serviceServerType}://${config.urls.apiService}:${config.ports.apiService}`;
         localUrl = `http://${config.urls.localService}:${config.ports.localService}`;
         sendToRemote = !config.apiService && !config.asyncPersistency;
@@ -201,7 +201,7 @@ class OpenbioSignatureComponentDetails {
         this.componentContainer.forceUpdate();
     }
     clearImages() {
-        __chunk_11.showImage(this.canvas, "");
+        __chunk_9.showImage(this.canvas, "");
     }
     start() {
         this.payload.action = "scanner-start";
@@ -309,8 +309,8 @@ class OpenbioSignatureComponentDetails {
         setTimeout(async () => {
             try {
                 this.setQueryParams();
-                this.serviceConfigs = await __chunk_9.getAppConfig();
-                this.anomalyOptions = await __chunk_12.getAnomalies(__chunk_6.constants.anomalyTypes.MODAL_ANOMALY, !!this.detached);
+                this.serviceConfigs = await __chunk_10.getAppConfig();
+                this.anomalyOptions = await __chunk_11.getAnomalies(__chunk_6.constants.anomalyTypes.MODAL_ANOMALY, !!this.detached);
                 if (this.serviceConfigs) {
                     this.form.configs = this.serviceConfigs.form;
                 }

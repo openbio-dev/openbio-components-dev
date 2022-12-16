@@ -151,7 +151,7 @@ export namespace Components {
     'cameraWidth': number;
     'containerBackgroundColor': string;
     'headerTitle': string;
-    'livenessMin': number;
+    'livenessMin': any;
     'locale': string;
     'primaryColor': string;
     'projectId': string;
@@ -493,7 +493,7 @@ declare namespace LocalJSX {
     'cameraWidth'?: number;
     'containerBackgroundColor'?: string;
     'headerTitle'?: string;
-    'livenessMin'?: number;
+    'livenessMin'?: any;
     'locale'?: string;
     'primaryColor'?: string;
     'projectId'?: string;

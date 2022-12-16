@@ -8,9 +8,9 @@ const __chunk_4 = require('./chunk-c5f2ac0b.js');
 const __chunk_5 = require('./chunk-131fee9b.js');
 const __chunk_6 = require('./chunk-128e8b8e.js');
 const __chunk_7 = require('./chunk-50de27dd.js');
-const __chunk_9 = require('./chunk-0f193d81.js');
-const __chunk_11 = require('./chunk-f34cc637.js');
-const __chunk_12 = require('./chunk-d001bf05.js');
+const __chunk_9 = require('./chunk-f34cc637.js');
+const __chunk_10 = require('./chunk-0f193d81.js');
+const __chunk_11 = require('./chunk-0f967347.js');
 const __chunk_13 = require('./chunk-3599eff8.js');
 
 var flowTypes;
@@ -144,7 +144,7 @@ class OpenbioFingerComponent {
         this.setI18nParameters(this.locale);
     }
     clearImages() {
-        __chunk_11.showImage(this.canvas, "");
+        __chunk_9.showImage(this.canvas, "");
     }
     startPreview() {
         this.nfiqScore = 0;
@@ -242,7 +242,7 @@ class OpenbioFingerComponent {
         try {
             _this.stopPreviewprocessor();
             _this.stopPreview();
-            const result = await __chunk_12.saveFingerFile(data, image);
+            const result = await __chunk_11.saveFingerFile(data, image);
             if (result.error) {
                 __chunk_2.Swal.fire({
                     type: "warning",
@@ -258,7 +258,7 @@ class OpenbioFingerComponent {
             let rawData = new ArrayBuffer(image.size);
             reader.onload = async () => {
                 rawData = reader.result;
-                const saveFingersResult = await __chunk_12.saveFingers({
+                const saveFingersResult = await __chunk_11.saveFingers({
                     personId: _this.person.id,
                     fingers: JSON.stringify([{
                             id: _this.isEditing ? _this.editingId : null,
@@ -493,7 +493,7 @@ class OpenbioFingerComponent {
         }
     }
     async getPersonInfo() {
-        this.personInfo = await __chunk_12.getPeople(this.cpfSt, this.captureType === 0 ? 1 : this.captureType);
+        this.personInfo = await __chunk_11.getPeople(this.cpfSt, this.captureType === 0 ? 1 : this.captureType);
         try {
             const fingerprintBiometries = (this.personInfo.Biometries.find(item => item.biometry_type === 2)).FingerprintBiometries.map(item => item.finger_index).sort((a, b) => a - b);
             this.selectedFinger = { id: fingerprintBiometries[0], name: this.fingerNames[fingerprintBiometries[0]] };
@@ -519,16 +519,16 @@ class OpenbioFingerComponent {
                 if (this.useOpenbioMatcherSt && this.singleCaptureSt) {
                     this.getPersonInfo();
                 }
-                this.anomalyOptions = await __chunk_12.getAnomalies(__chunk_6.constants.anomalyTypes.MODAL_ANOMALY, !!this.detached);
+                this.anomalyOptions = await __chunk_11.getAnomalies(__chunk_6.constants.anomalyTypes.MODAL_ANOMALY, !!this.detached);
                 try {
-                    this.flowOptions = await __chunk_12.getFlowOptions();
+                    this.flowOptions = await __chunk_11.getFlowOptions();
                 }
                 catch (e) {
                     console.log('error on getFlowOptions');
                     console.log(e);
                 }
                 try {
-                    this.modalSettings = await __chunk_12.getModalSettings();
+                    this.modalSettings = await __chunk_11.getModalSettings();
                     this.storeOriginalImage = this.modalSettings.storeOriginalImage;
                     this.repetitionControl = this.modalSettings.repetitionControl;
                     this.generateBMP = this.modalSettings.generateBMP;
@@ -752,7 +752,7 @@ class OpenbioFingerComponent {
                         }
                         else if (data.previewImage) {
                             if (data.deviceInfo && data.deviceInfo.manufacturName !== "DigitalPersona" && data.deviceInfo.modelName !== "M421") {
-                                __chunk_11.showImage(this.canvas, data.previewImage, this.currentRollingStatus, this.currentStatusLineX);
+                                __chunk_9.showImage(this.canvas, data.previewImage, this.currentRollingStatus, this.currentStatusLineX);
                             }
                             this.nfiqScore = data.nfiqScore > 0 && data.nfiqScore <= 5 ? data.nfiqScore : 0;
                         }
@@ -761,10 +761,10 @@ class OpenbioFingerComponent {
                             this.stopPreview();
                             this.showLoader = true;
                             if (data.fingersData.fingerCount > 1) {
-                                __chunk_11.showImage(this.canvas, data.originalImage, 0);
+                                __chunk_9.showImage(this.canvas, data.originalImage, 0);
                             }
                             else {
-                                __chunk_11.showImage(this.canvas, data.fingersData.images[0].image, 0);
+                                __chunk_9.showImage(this.canvas, data.fingersData.images[0].image, 0);
                             }
                             this.originalImage = data.originalImage;
                             this.model = data.deviceInfo.modelName;
@@ -776,7 +776,7 @@ class OpenbioFingerComponent {
                         }
                     }
                 });
-                this.serviceConfigs = await __chunk_9.getAppConfig();
+                this.serviceConfigs = await __chunk_10.getAppConfig();
                 if (this.serviceConfigs) {
                     this.showControlDisable = this.serviceConfigs.finger.showControlDisable;
                     this.componentContainer.forceUpdate();
@@ -791,7 +791,7 @@ class OpenbioFingerComponent {
     }
     componentDidUnload() {
         if (!this.detached && this.serviceTime.hasCapture) {
-            __chunk_9.saveServiceTime("FINGER", new Date().getTime() - this.serviceTime.start, this.person.id);
+            __chunk_10.saveServiceTime("FINGER", new Date().getTime() - this.serviceTime.start, this.person.id);
         }
         if (this.deviceReady) {
             this.stopPreview();
@@ -1072,7 +1072,7 @@ class OpenbioFingerComponent {
                 if (this.storeOriginalImage)
                     await this.saveOriginalImage();
                 // console.log("fingers to be saved", fingers, "\n");
-                const saveFingersResult = await __chunk_12.saveFingers({
+                const saveFingersResult = await __chunk_11.saveFingers({
                     personId: this.person.id,
                     fingers: JSON.stringify(fingers)
                 });
@@ -1138,7 +1138,7 @@ class OpenbioFingerComponent {
                         brand: this.brand,
                     }])
             };
-            await __chunk_12.saveFingers(fingersStructure);
+            await __chunk_11.saveFingers(fingersStructure);
         }
     }
     storeCapturedFinger(saveFingersResult) {

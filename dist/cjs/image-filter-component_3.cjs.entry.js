@@ -6,12 +6,12 @@ const __chunk_1 = require('./chunk-5ff55b14.js');
 const __chunk_2 = require('./chunk-02c088c7.js');
 const __chunk_4 = require('./chunk-c5f2ac0b.js');
 require('./chunk-128e8b8e.js');
-const __chunk_9 = require('./chunk-0f193d81.js');
+const __chunk_10 = require('./chunk-0f193d81.js');
 
 let config, localUrl;
 const updateConfigs = async () => {
     return new Promise((resolve) => {
-        __chunk_9.getAppConfig().then((response) => {
+        __chunk_10.getAppConfig().then((response) => {
             config = response;
             localUrl = `http://${config.urls.localService}:${config.ports.localService}`;
             resolve(config);

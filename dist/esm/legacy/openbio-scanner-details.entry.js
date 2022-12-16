@@ -39,9 +39,9 @@ import { T as TranslationUtils } from './chunk-58df5f73.js';
 import { W as WS } from './chunk-26865a00.js';
 import { c as constants } from './chunk-df3525b2.js';
 import { n as notify } from './chunk-4447ae2a.js';
-import { g as getAppConfig } from './chunk-745c836f.js';
 import { s as showImage } from './chunk-6b607eaa.js';
-import { b as getAnomalies } from './chunk-706989c4.js';
+import { g as getAppConfig } from './chunk-745c836f.js';
+import { d as getAnomalies } from './chunk-ceaa4a16.js';
 var config, localUrl, url, sendToRemote;
 getAppConfig().then(function (response) {
     config = response;
