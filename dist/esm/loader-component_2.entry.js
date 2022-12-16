@@ -460,12 +460,7 @@ class OpenbioFaceOmaComponent {
         [INFO] Liveness prob: ${resolveLiveness.liveness_prob}\n
         [INFO] Liveness ok? ${Number(resolveLiveness.liveness_prob) >= Number(this.livenessMin) ? 'Sim' : 'Não'}
       `;
-            if (this.isMobile) {
-                alert(msg);
-            }
-            else {
-                console.log(msg);
-            }
+            alert(msg);
             resolve(Number(resolveLiveness.liveness_prob) >= Number(this.livenessMin));
         });
     }

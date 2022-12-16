@@ -553,12 +553,7 @@ var OpenbioFaceOmaComponent = /** @class */ (function () {
                                     resolveLiveness = _a.sent();
                                     this.showFullscreenLoader = false;
                                     msg = "\n        [INFO] Liveness min definido: " + this.livenessMin + "\n\n        [PROP] Tipo Liveness min definido: " + typeof this.livenessMin + "\n\n        [PROP] Cast Liveness min definido: " + Number(this.livenessMin) + "\n\n        [PROP] Tipo p\u00F3s-cast Liveness min definido: " + typeof Number(this.livenessMin) + "\n\n        [INFO] Liveness prob: " + resolveLiveness.liveness_prob + "\n\n        [INFO] Liveness ok? " + (Number(resolveLiveness.liveness_prob) >= Number(this.livenessMin) ? 'Sim' : 'Não') + "\n      ";
-                                    if (this.isMobile) {
-                                        alert(msg);
-                                    }
-                                    else {
-                                        console.log(msg);
-                                    }
+                                    alert(msg);
                                     resolve(Number(resolveLiveness.liveness_prob) >= Number(this.livenessMin));
                                     return [2 /*return*/];
                             }
