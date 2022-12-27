@@ -185,6 +185,7 @@ var RESULT_STATUS;
 var OpenbioFaceOmaComponent = /** @class */ (function () {
     function OpenbioFaceOmaComponent(hostRef) {
         registerInstance(this, hostRef);
+        this.DEBUG = true;
         this.MODEL_URL = 'https://openbio-components-files.s3.sa-east-1.amazonaws.com/models/';
         this.defaultWidth = 640;
         this.defaultHeight = 480;
@@ -277,7 +278,7 @@ var OpenbioFaceOmaComponent = /** @class */ (function () {
         this.getDeviceList();
         this.isMobile = this.checkMobile();
         if (this.isMobile) {
-            this.showHelpModal();
+            // this.showHelpModal();
             this.startCamera();
         }
         else {
@@ -418,60 +419,45 @@ var OpenbioFaceOmaComponent = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve) {
-                        if (_this.isMobile) {
-                            var canvas_1 = document.createElement('canvas');
-                            canvas_1.width = _this.videoElement.videoWidth;
-                            canvas_1.height = _this.videoElement.videoHeight;
-                            var ctx = canvas_1.getContext('2d');
-                            ctx.drawImage(_this.videoElement, 0, 0, canvas_1.width, canvas_1.height);
-                            canvas_1.toBlob(function (blob) {
-                                var reader = new FileReader();
-                                reader.onload = function () {
-                                    _this.capturedImage = {
-                                        data: canvas_1.toDataURL('image/jpeg', 1),
-                                        file: new File([reader.result], "image.jpeg", { type: blob.type })
-                                    };
-                                    resolve(true);
-                                };
-                                reader.readAsArrayBuffer(blob);
-                            });
-                        }
-                        else {
-                            var canvas = document.createElement('canvas');
-                            var finalWidth = _this.lowerCameraQualityDetected ? _this.videoSettings.width : 1440;
-                            var finalHeight = _this.lowerCameraQualityDetected ? _this.videoSettings.height : 1080;
+                return [2 /*return*/, new Promise(function (resolve) { return __awaiter(_this, void 0, void 0, function () {
+                        var canvas, finalWidth, finalHeight, ctx, aspectRatio, maskPositionX, maskPositionY, srcX, srcY, srcWidth, srcHeight, cropWidth, cropHeight, cropCanvas, ctxCrop;
+                        var _this = this;
+                        return __generator(this, function (_a) {
+                            canvas = document.createElement('canvas');
+                            finalWidth = this.lowerCameraQualityDetected || this.isMobile ? this.videoSettings.width : 1440;
+                            finalHeight = this.lowerCameraQualityDetected || this.isMobile ? this.videoSettings.height : 1080;
                             canvas.width = finalWidth; // this.cameraWidth || this.defaultWidth;
                             canvas.height = finalHeight; // this.cameraHeight || this.defaultHeight;
-                            var ctx = canvas.getContext('2d');
-                            ctx.drawImage(_this.videoElement, 0, 0, canvas.width, canvas.height);
-                            var aspectRatio = _this.getVideoAspectRatio();
-                            var maskPositionX = 0.30;
-                            var maskPositionY = aspectRatio.toFixed(2) === '1.33' ? 0.15 : 0.04;
-                            var srcX = finalWidth * maskPositionX;
-                            var srcY = finalHeight * maskPositionY;
-                            var srcWidth = 250;
-                            var srcHeight = 333;
-                            var cropWidth = (finalWidth * srcWidth) / _this.defaultWidth;
-                            var cropHeight = (finalHeight * srcHeight) / (aspectRatio.toFixed(2) === '1.33' ? _this.defaultHeight : ((_this.videoSettings.height / 2) - 5));
-                            var cropCanvas_1 = document.createElement('canvas');
-                            cropCanvas_1.width = cropWidth;
-                            cropCanvas_1.height = cropHeight;
-                            var ctxCrop = cropCanvas_1.getContext('2d');
+                            ctx = canvas.getContext('2d');
+                            ctx.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
+                            aspectRatio = this.getVideoAspectRatio();
+                            maskPositionX = this.isMobile ? 0.15 : 0.30;
+                            maskPositionY = this.isMobile || aspectRatio.toFixed(2) === '1.33' ? 0.15 : 0.04;
+                            srcX = finalWidth * maskPositionX;
+                            srcY = finalHeight * maskPositionY;
+                            srcWidth = 250;
+                            srcHeight = 333;
+                            cropWidth = (finalWidth * srcWidth) / (this.isMobile ? 340 : this.defaultWidth);
+                            cropHeight = (finalHeight * srcHeight) / (this.isMobile || aspectRatio.toFixed(2) === '1.33' ? this.defaultHeight : ((this.videoSettings.height / 2) - 5));
+                            cropCanvas = document.createElement('canvas');
+                            cropCanvas.width = cropWidth;
+                            cropCanvas.height = cropHeight;
+                            ctxCrop = cropCanvas.getContext('2d');
                             ctxCrop.drawImage(canvas, srcX, srcY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-                            cropCanvas_1.toBlob(function (blob) {
+                            cropCanvas.toBlob(function (blob) {
                                 var reader = new FileReader();
                                 reader.onload = function () {
                                     _this.capturedImage = {
-                                        data: cropCanvas_1.toDataURL('image/jpeg', 1),
+                                        data: cropCanvas.toDataURL('image/jpeg', 1),
                                         file: new File([reader.result], "image.jpeg", { type: blob.type })
                                     };
                                     resolve(true);
                                 };
                                 reader.readAsArrayBuffer(blob);
                             });
-                        }
-                    })];
+                            return [2 /*return*/];
+                        });
+                    }); })];
             });
         });
     };
@@ -553,7 +539,9 @@ var OpenbioFaceOmaComponent = /** @class */ (function () {
                                     resolveLiveness = _a.sent();
                                     this.showFullscreenLoader = false;
                                     msg = "\n        [INFO] Liveness min definido: " + this.livenessMin + "\n\n        [PROP] Tipo Liveness min definido: " + typeof this.livenessMin + "\n\n        [PROP] Cast Liveness min definido: " + Number(this.livenessMin) + "\n\n        [PROP] Tipo p\u00F3s-cast Liveness min definido: " + typeof Number(this.livenessMin) + "\n\n        [INFO] Liveness prob: " + resolveLiveness.liveness_prob + "\n\n        [INFO] Liveness ok? " + (Number(resolveLiveness.liveness_prob) >= Number(this.livenessMin) ? 'Sim' : 'Não') + "\n      ";
-                                    alert(msg);
+                                    if (this.DEBUG) {
+                                        alert(msg);
+                                    }
                                     resolve(Number(resolveLiveness.liveness_prob) >= Number(this.livenessMin));
                                     return [2 /*return*/];
                             }
@@ -818,7 +806,7 @@ var OpenbioFaceOmaComponent = /** @class */ (function () {
             return (h("option", { value: device.deviceId, selected: _this.selectedDevice === device.deviceId }, device.label || device.deviceId));
         });
         var overlay = function () {
-            return h("svg", { width: "100%", height: "100%", viewBox: "0 0 640 480", version: "1.1", xmlns: "http://www.w3.org/2000/svg" }, h("defs", null, h("mask", { id: "overlay-mask", x: "0", y: "0", width: "100%", height: "100%" }, h("rect", { x: "0", y: "0", width: "100%", height: "100%", fill: "#fff" }), h("rect", { x: "30%", y: "15%", width: "250", height: "333" }))), h("rect", { x: "0", y: "0", width: "100%", height: "99%", mask: "url(#overlay-mask)" }));
+            return h("svg", { width: "100%", height: "100%", viewBox: _this.isMobile ? "0 0 360 480" : "0 0 640 480", version: "1.1", xmlns: "http://www.w3.org/2000/svg" }, h("defs", null, h("mask", { id: "overlay-mask", x: "0", y: "0", width: "100%", height: "100%" }, h("rect", { x: "0", y: "0", width: "100%", height: "100%", fill: "#fff" }), h("rect", { x: _this.isMobile ? "15%" : "30%", y: "15%", width: "250", height: "333" }))), h("rect", { x: "0", y: "0", width: "100%", height: "99%", mask: "url(#overlay-mask)" }));
         };
         return (h("div", { style: { "background-color": this.containerBackgroundColor || "#FFFFFF" } }, h("div", { class: "window-size", style: { "padding": '0' } }, h("loader-component", { enabled: this.showFullscreenLoader }), h("div", { id: "notification-container" }), this.showHeader && h("nav", { class: 'navbar', style: { "background-color": this.primaryColor || "#0D3F56" } }, h("div", { class: 'title is-3 has-text-centered', style: { "width": "100%", "color": this.textColor || "#FFFFFF", "padding-top": "7px" } }, this.headerTitle || this.translations.BIOMETRIC_AUTHENTICATION)), h("div", { class: 'level', style: { "margin-top": "30px" } }, h("div", { class: 'rows has-text-centered', style: { width: "100%" } }, this.deviceList && this.deviceList.length > 0 &&
             h("div", { class: "columns is-mobile is-centered" }, h("div", { class: "column" }, h("span", { style: { fontSize: '0.9em' } }, " C\u00E2mera: "), h("div", { class: "select is-small inline" }, h("select", { onChange: this.setDevice.bind(this), name: "device" }, deviceOptions)))), h("div", { class: "row", style: { display: "inline-block" } }, h("div", { style: {
@@ -829,7 +817,7 @@ var OpenbioFaceOmaComponent = /** @class */ (function () {
             } }, h("canvas", { class: "face-canvas", width: "333", height: "250", style: { display: "inline-block" } }), h("video", { id: "video", ref: function (el) { _this.videoElement = el; }, class: "webcam-video", autoplay: true, muted: true, style: {
                 display: this.captured ? "none" : "inline-block",
                 height: '480px !important'
-            } }), !this.isMobile && h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7" } }, overlay()), this.lowerCameraQualityDetected &&
+            } }), h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7" } }, overlay()), this.lowerCameraQualityDetected &&
             h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7", backgroundColor: "red", height: "30px", color: "white", paddingTop: "2px", fontWeight: "600" } }, h("img", { src: "./assets/general/alert-outline.png", class: "icon-24", style: { marginRight: "5px" }, "aria-hidden": "true" }), "A c\u00E2mera detectada n\u00E3o possui o requisito m\u00EDnimo recomendado de 1080p")), h("img", { id: "img", height: "300px", class: "webcam-snapshot object-fit-contain", style: {
                 maxWidth: (this.cameraWidth || this.defaultWidth) + "px !important",
                 maxHeight: (this.cameraHeight || this.defaultHeight) + "px !important",

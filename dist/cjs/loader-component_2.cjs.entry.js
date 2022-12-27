@@ -125,6 +125,7 @@ var RESULT_STATUS;
 class OpenbioFaceOmaComponent {
     constructor(hostRef) {
         __chunk_1.registerInstance(this, hostRef);
+        this.DEBUG = true;
         this.MODEL_URL = 'https://openbio-components-files.s3.sa-east-1.amazonaws.com/models/';
         this.defaultWidth = 640;
         this.defaultHeight = 480;
@@ -200,7 +201,7 @@ class OpenbioFaceOmaComponent {
         this.getDeviceList();
         this.isMobile = this.checkMobile();
         if (this.isMobile) {
-            this.showHelpModal();
+            // this.showHelpModal();
             this.startCamera();
         }
         else {
@@ -321,59 +322,58 @@ class OpenbioFaceOmaComponent {
         return this.videoSettings.width / this.videoSettings.height;
     }
     async getImageFromVideo() {
-        return new Promise((resolve) => {
-            if (this.isMobile) {
-                const canvas = document.createElement('canvas');
-                canvas.width = this.videoElement.videoWidth;
-                canvas.height = this.videoElement.videoHeight;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
-                canvas.toBlob((blob) => {
-                    var reader = new FileReader();
-                    reader.onload = () => {
-                        this.capturedImage = {
-                            data: canvas.toDataURL('image/jpeg', 1),
-                            file: new File([reader.result], "image.jpeg", { type: blob.type })
-                        };
-                        resolve(true);
+        return new Promise(async (resolve) => {
+            // if (this.isMobile) {
+            //   const canvas = document.createElement('canvas');
+            //   canvas.width = this.videoElement.videoWidth;
+            //   canvas.height = this.videoElement.videoHeight;
+            //   const ctx = canvas.getContext('2d');
+            //   ctx.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
+            //   canvas.toBlob((blob) => {
+            //     var reader = new FileReader();
+            //     reader.onload = () => {
+            //       this.capturedImage = {
+            //         data: canvas.toDataURL('image/jpeg', 1),
+            //         file: new File([reader.result], "image.jpeg", { type: blob.type })
+            //       }
+            //       resolve(true);
+            //     };
+            //     reader.readAsArrayBuffer(blob);
+            //   });
+            // } else {
+            const canvas = document.createElement('canvas');
+            const finalWidth = this.lowerCameraQualityDetected || this.isMobile ? this.videoSettings.width : 1440;
+            const finalHeight = this.lowerCameraQualityDetected || this.isMobile ? this.videoSettings.height : 1080;
+            canvas.width = finalWidth; // this.cameraWidth || this.defaultWidth;
+            canvas.height = finalHeight; // this.cameraHeight || this.defaultHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
+            const aspectRatio = this.getVideoAspectRatio();
+            const maskPositionX = this.isMobile ? 0.15 : 0.30;
+            const maskPositionY = this.isMobile || aspectRatio.toFixed(2) === '1.33' ? 0.15 : 0.04;
+            const srcX = finalWidth * maskPositionX;
+            const srcY = finalHeight * maskPositionY;
+            const srcWidth = 250;
+            const srcHeight = 333;
+            const cropWidth = (finalWidth * srcWidth) / (this.isMobile ? 340 : this.defaultWidth);
+            const cropHeight = (finalHeight * srcHeight) / (this.isMobile || aspectRatio.toFixed(2) === '1.33' ? this.defaultHeight : ((this.videoSettings.height / 2) - 5));
+            const cropCanvas = document.createElement('canvas');
+            cropCanvas.width = cropWidth;
+            cropCanvas.height = cropHeight;
+            const ctxCrop = cropCanvas.getContext('2d');
+            ctxCrop.drawImage(canvas, srcX, srcY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+            cropCanvas.toBlob((blob) => {
+                var reader = new FileReader();
+                reader.onload = () => {
+                    this.capturedImage = {
+                        data: cropCanvas.toDataURL('image/jpeg', 1),
+                        file: new File([reader.result], "image.jpeg", { type: blob.type })
                     };
-                    reader.readAsArrayBuffer(blob);
-                });
-            }
-            else {
-                const canvas = document.createElement('canvas');
-                const finalWidth = this.lowerCameraQualityDetected ? this.videoSettings.width : 1440;
-                const finalHeight = this.lowerCameraQualityDetected ? this.videoSettings.height : 1080;
-                canvas.width = finalWidth; // this.cameraWidth || this.defaultWidth;
-                canvas.height = finalHeight; // this.cameraHeight || this.defaultHeight;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(this.videoElement, 0, 0, canvas.width, canvas.height);
-                const aspectRatio = this.getVideoAspectRatio();
-                const maskPositionX = 0.30;
-                const maskPositionY = aspectRatio.toFixed(2) === '1.33' ? 0.15 : 0.04;
-                const srcX = finalWidth * maskPositionX;
-                const srcY = finalHeight * maskPositionY;
-                const srcWidth = 250;
-                const srcHeight = 333;
-                const cropWidth = (finalWidth * srcWidth) / this.defaultWidth;
-                const cropHeight = (finalHeight * srcHeight) / (aspectRatio.toFixed(2) === '1.33' ? this.defaultHeight : ((this.videoSettings.height / 2) - 5));
-                const cropCanvas = document.createElement('canvas');
-                cropCanvas.width = cropWidth;
-                cropCanvas.height = cropHeight;
-                const ctxCrop = cropCanvas.getContext('2d');
-                ctxCrop.drawImage(canvas, srcX, srcY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-                cropCanvas.toBlob((blob) => {
-                    var reader = new FileReader();
-                    reader.onload = () => {
-                        this.capturedImage = {
-                            data: cropCanvas.toDataURL('image/jpeg', 1),
-                            file: new File([reader.result], "image.jpeg", { type: blob.type })
-                        };
-                        resolve(true);
-                    };
-                    reader.readAsArrayBuffer(blob);
-                });
-            }
+                    resolve(true);
+                };
+                reader.readAsArrayBuffer(blob);
+            });
+            // }
         });
     }
     setResultImage() {
@@ -464,7 +464,9 @@ class OpenbioFaceOmaComponent {
         [INFO] Liveness prob: ${resolveLiveness.liveness_prob}\n
         [INFO] Liveness ok? ${Number(resolveLiveness.liveness_prob) >= Number(this.livenessMin) ? 'Sim' : 'Não'}
       `;
-            alert(msg);
+            if (this.DEBUG) {
+                alert(msg);
+            }
             resolve(Number(resolveLiveness.liveness_prob) >= Number(this.livenessMin));
         });
     }
@@ -652,7 +654,7 @@ class OpenbioFaceOmaComponent {
             return (__chunk_1.h("option", { value: device.deviceId, selected: this.selectedDevice === device.deviceId }, device.label || device.deviceId));
         });
         const overlay = () => {
-            return __chunk_1.h("svg", { width: "100%", height: "100%", viewBox: "0 0 640 480", version: "1.1", xmlns: "http://www.w3.org/2000/svg" }, __chunk_1.h("defs", null, __chunk_1.h("mask", { id: "overlay-mask", x: "0", y: "0", width: "100%", height: "100%" }, __chunk_1.h("rect", { x: "0", y: "0", width: "100%", height: "100%", fill: "#fff" }), __chunk_1.h("rect", { x: "30%", y: "15%", width: "250", height: "333" }))), __chunk_1.h("rect", { x: "0", y: "0", width: "100%", height: "99%", mask: "url(#overlay-mask)" }));
+            return __chunk_1.h("svg", { width: "100%", height: "100%", viewBox: this.isMobile ? "0 0 360 480" : "0 0 640 480", version: "1.1", xmlns: "http://www.w3.org/2000/svg" }, __chunk_1.h("defs", null, __chunk_1.h("mask", { id: "overlay-mask", x: "0", y: "0", width: "100%", height: "100%" }, __chunk_1.h("rect", { x: "0", y: "0", width: "100%", height: "100%", fill: "#fff" }), __chunk_1.h("rect", { x: this.isMobile ? "15%" : "30%", y: "15%", width: "250", height: "333" }))), __chunk_1.h("rect", { x: "0", y: "0", width: "100%", height: "99%", mask: "url(#overlay-mask)" }));
         };
         return (__chunk_1.h("div", { style: { "background-color": this.containerBackgroundColor || "#FFFFFF" } }, __chunk_1.h("div", { class: "window-size", style: { "padding": '0' } }, __chunk_1.h("loader-component", { enabled: this.showFullscreenLoader }), __chunk_1.h("div", { id: "notification-container" }), this.showHeader && __chunk_1.h("nav", { class: 'navbar', style: { "background-color": this.primaryColor || "#0D3F56" } }, __chunk_1.h("div", { class: 'title is-3 has-text-centered', style: { "width": "100%", "color": this.textColor || "#FFFFFF", "padding-top": "7px" } }, this.headerTitle || this.translations.BIOMETRIC_AUTHENTICATION)), __chunk_1.h("div", { class: 'level', style: { "margin-top": "30px" } }, __chunk_1.h("div", { class: 'rows has-text-centered', style: { width: "100%" } }, this.deviceList && this.deviceList.length > 0 &&
             __chunk_1.h("div", { class: "columns is-mobile is-centered" }, __chunk_1.h("div", { class: "column" }, __chunk_1.h("span", { style: { fontSize: '0.9em' } }, " C\u00E2mera: "), __chunk_1.h("div", { class: "select is-small inline" }, __chunk_1.h("select", { onChange: this.setDevice.bind(this), name: "device" }, deviceOptions)))), __chunk_1.h("div", { class: "row", style: { display: "inline-block" } }, __chunk_1.h("div", { style: {
@@ -663,7 +665,7 @@ class OpenbioFaceOmaComponent {
             } }, __chunk_1.h("canvas", { class: "face-canvas", width: "333", height: "250", style: { display: "inline-block" } }), __chunk_1.h("video", { id: "video", ref: el => { this.videoElement = el; }, class: "webcam-video", autoplay: true, muted: true, style: {
                 display: this.captured ? "none" : "inline-block",
                 height: '480px !important'
-            } }), !this.isMobile && __chunk_1.h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7" } }, overlay()), this.lowerCameraQualityDetected &&
+            } }), __chunk_1.h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7" } }, overlay()), this.lowerCameraQualityDetected &&
             __chunk_1.h("div", { style: { position: "absolute", top: "0", right: "0", bottom: "0", left: "0", opacity: "0.7", backgroundColor: "red", height: "30px", color: "white", paddingTop: "2px", fontWeight: "600" } }, __chunk_1.h("img", { src: "./assets/general/alert-outline.png", class: "icon-24", style: { marginRight: "5px" }, "aria-hidden": "true" }), "A c\u00E2mera detectada n\u00E3o possui o requisito m\u00EDnimo recomendado de 1080p")), __chunk_1.h("img", { id: "img", height: "300px", class: "webcam-snapshot object-fit-contain", style: {
                 maxWidth: `${this.cameraWidth || this.defaultWidth}px !important`,
                 maxHeight: `${this.cameraHeight || this.defaultHeight}px !important`,

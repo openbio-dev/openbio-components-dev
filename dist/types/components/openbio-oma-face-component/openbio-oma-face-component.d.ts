@@ -5,6 +5,7 @@ interface ICapturedImage {
     file: File;
 }
 export declare class OpenbioFaceOmaComponent {
+    private DEBUG;
     private MODEL_URL;
     private defaultWidth;
     private defaultHeight;
