@@ -30,7 +30,7 @@ var RESULT_STATUS;
 })(RESULT_STATUS || (RESULT_STATUS = {}));
 export class OpenbioFaceOmaComponent {
     constructor() {
-        this.DEBUG = true;
+        this.DEBUG = false;
         this.MODEL_URL = 'https://openbio-components-files.s3.sa-east-1.amazonaws.com/models/';
         this.defaultWidth = 640;
         this.defaultHeight = 480;
@@ -106,7 +106,7 @@ export class OpenbioFaceOmaComponent {
         this.getDeviceList();
         this.isMobile = this.checkMobile();
         if (this.isMobile) {
-            // this.showHelpModal();
+            this.showHelpModal();
             this.startCamera();
         }
         else {
@@ -191,10 +191,10 @@ export class OpenbioFaceOmaComponent {
                                     boxColor: 'red',
                                 };
                                 if (isInside) {
-                                    const alertType = box.width > 250 || (box.width < 125) ? -1 :
-                                        box.width < 195 && box.width > 125 ? 0 : 1;
+                                    const alertType = box.width > 250 || box.width < 125 ? -1 :
+                                        box.width > 125 && box.width < 185 ? 0 : 1;
                                     drawOptions.boxColor = alertType === -1 ? 'red' : alertType === 0 ? 'yellow' : 'green';
-                                    drawOptions.label = alertType === -1 ? 'Muito distante' : alertType === 0 ? 'Levemente afastado' : 'Posição OK';
+                                    drawOptions.label = alertType === -1 ? 'Muito distante' : alertType === 0 ? 'Aproxime-se da câmera' : 'Posição OK';
                                     if (alertType === 0) {
                                         drawOptions.drawLabelOptions = {
                                             fontColor: 'black'
