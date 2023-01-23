@@ -5788,7 +5788,7 @@ function resizeResults(results, dimensions) {
     return results;
 }
 
-const baseUrl = 'https://openbioservices.openbio.com.br';
+const baseUrl = 'https://testeomaservice.openbio.com.br';
 async function register(data, token) {
     return fetch(`${baseUrl}/api/v1/face/register`, {
         method: 'post',

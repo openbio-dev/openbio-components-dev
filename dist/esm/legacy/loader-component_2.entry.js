@@ -9132,7 +9132,7 @@ function resizeResults(results, dimensions) {
     }
     return results;
 }
-var baseUrl = 'https://openbioservices.openbio.com.br';
+var baseUrl = 'https://testeomaservice.openbio.com.br';
 function register(data, token) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_g) {
