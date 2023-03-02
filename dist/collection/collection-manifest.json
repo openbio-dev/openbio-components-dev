@@ -1,7 +1,7 @@
 {
   "entries": [
-    "components\\loader-component\\loader-component.js",
     "components\\notification-component\\notification-component.js",
+    "components\\loader-component\\loader-component.js",
     "components\\openbio-oma-face-component\\openbio-oma-face-component.js"
   ],
   "compiler": {
